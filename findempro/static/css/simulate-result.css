@@ -1,0 +1,777 @@
+/* ============================================================
+   simulate-result.css — Kapitalya dark theme
+   ============================================================
+   Uses :root:root {} (specificity 0,0,2) to beat body-level
+   <style> blocks from tab includes (specificity 0,0,1).
+   All tab variable systems are mapped here so each tab's
+   var() calls resolve to the correct Kapitalya token.
+   ============================================================ */
+
+/* ── 1. VARIABLE REMAPPING — beats body <style> :root{} ── */
+:root:root {
+    /* ── Restore Kapitalya tokens that tabs clobber ── */
+    --text-primary:   #e8edf5;
+    --text-secondary: #9ba8b8;
+    --text-muted:     #6b7a8f;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.35);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.45);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.55);
+
+    /* ── Tab naming convention: --color-bg-* (overview-tab) ── */
+    --color-bg-primary:   #0d1117;
+    --color-bg-secondary: #141b24;
+    --color-bg-card:      #1a2332;
+    --color-bg-hover:     #1e2a3a;
+    --color-text-primary:   #e8edf5;
+    --color-text-secondary: #9ba8b8;
+    --color-text-muted:     #6b7a8f;
+    --color-primary:     #00d4c8;
+    --color-secondary:   #9ba8b8;
+    --color-success:     #00c896;
+    --color-warning:     #ffb627;
+    --color-danger:      #ff3b50;
+    --color-info:        #0096ff;
+    --color-border:      #1e2d40;
+    --color-border-light: #253347;
+    --color-shadow:      rgba(0,0,0,0.45);
+
+    /* ── Tab naming: --bg-primary (demand-tab, endogenous-tab) ── */
+    --bg-primary:   #0d1117;
+    --bg-secondary: #141b24;
+    --bg-card:      #1a2332;
+    --bg-hover:     #1e2a3a;
+    --bg-light:     #141b24;
+
+    /* ── Tab naming: --primary-color (finantial-tab, ksvalidation-tab, operations-tab) ── */
+    --primary-color:   #00d4c8;
+    --secondary-color: #9ba8b8;
+    --success-color:   #00c896;
+    --warning-color:   #ffb627;
+    --danger-color:    #ff3b50;
+    --info-color:      #0096ff;
+
+    /* ── Light-mode primitives (tabs assume these exist) ── */
+    --white:        #1a2332;
+    --light-bg:     #141b24;
+    --dark:         #e8edf5;
+    --gray-100:     #141b24;
+    --gray-200:     #1a2332;
+    --gray-300:     #1e2d40;
+    --gray-400:     #253347;
+    --gray-500:     #3d4f62;
+    --gray-600:     #6b7a8f;
+    --gray-700:     #9ba8b8;
+    --gray-800:     #bcc6d4;
+    --gray-900:     #e8edf5;
+
+    /* ── Font stacks ── */
+    --font-brand: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    --font-ui:    'Inter', system-ui, sans-serif;
+    --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ── 2. GLOBAL RESETS ── */
+.main-content,
+.page-content,
+.container-fluid {
+    background: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+/* ── 3. CHART TABS NAV ── */
+.chart-tabs {
+    background: var(--bg-elevated) !important;
+    border-radius: var(--r-lg) !important;
+    border: 1px solid var(--border) !important;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.chart-tabs .nav-tabs {
+    background: var(--bg-surface) !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 0 1rem;
+    gap: 0;
+}
+
+.chart-tabs .nav-tabs .nav-link {
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
+    color: var(--text-muted) !important;
+    font: 500 13px/1 var(--font-ui) !important;
+    padding: 0.875rem 1.25rem !important;
+    transition: color 0.15s, border-color 0.15s !important;
+    margin-bottom: -1px;
+}
+
+.chart-tabs .nav-tabs .nav-link:hover {
+    color: var(--text-primary) !important;
+    border-bottom-color: var(--border-strong) !important;
+}
+
+.chart-tabs .nav-tabs .nav-link.active {
+    background: transparent !important;
+    color: var(--product) !important;
+    border-bottom-color: var(--product) !important;
+    font-weight: 600 !important;
+}
+
+.chart-tabs .tab-content {
+    padding: 1.5rem;
+    background: var(--bg-elevated) !important;
+}
+
+/* ── 4. CARDS ── */
+.card,
+.metric-card,
+.chart-card,
+.analysis-card,
+.info-card,
+.summary-card,
+.kpi-card,
+.stat-card {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r-lg) !important;
+    box-shadow: var(--shadow-sm) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-header {
+    background: var(--bg-surface) !important;
+    border-bottom: 1px solid var(--border) !important;
+    color: var(--text-primary) !important;
+    padding: 1rem 1.25rem !important;
+}
+
+.card-header h5,
+.card-header h6,
+.card-header .card-title {
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+}
+
+.card-body {
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+}
+
+.card-footer {
+    background: var(--bg-surface) !important;
+    border-top: 1px solid var(--border) !important;
+    color: var(--text-muted) !important;
+}
+
+/* Colored card header variants used across tabs */
+.card-header.bg-primary,
+.card-header.bg-gradient-primary,
+.card-header[class*="bg-primary"] {
+    background: var(--bg-surface) !important;
+    border-top: 2px solid var(--product) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-header.bg-success,
+.card-header.bg-gradient-success,
+.card-header[class*="bg-success"] {
+    background: var(--bg-surface) !important;
+    border-top: 2px solid var(--success) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-header.bg-warning,
+.card-header.bg-gradient-warning,
+.card-header[class*="bg-warning"] {
+    background: var(--bg-surface) !important;
+    border-top: 2px solid var(--warning) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-header.bg-danger,
+.card-header.bg-gradient-danger,
+.card-header[class*="bg-danger"] {
+    background: var(--bg-surface) !important;
+    border-top: 2px solid var(--danger) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-header.bg-info,
+.card-header.bg-gradient-info,
+.card-header[class*="bg-info"] {
+    background: var(--bg-surface) !important;
+    border-top: 2px solid var(--info) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-header.bg-dark,
+.card-header.bg-gradient-dark,
+.card-header[class*="bg-dark"] {
+    background: var(--bg-surface) !important;
+    border-top: 2px solid var(--border-strong) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Card hover */
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md) !important;
+    border-color: var(--border-strong) !important;
+}
+
+/* ── 5. METRIC MINI CARDS ── */
+.metric-highlight {
+    background: var(--bg-elevated) !important;
+    border: 2px solid var(--product) !important;
+    box-shadow: 0 0 20px rgba(0,212,200,0.08) !important;
+    color: var(--text-primary) !important;
+}
+
+.metric-mini-card {
+    border-radius: var(--r-md) !important;
+    transition: transform 0.15s !important;
+    color: var(--text-primary) !important;
+}
+
+.metric-mini-card:hover { transform: scale(1.02); }
+
+.metric-mini-card.bg-primary { background: var(--product)  !important; color: #00211f !important; }
+.metric-mini-card.bg-success { background: var(--success)  !important; color: #00150d !important; }
+.metric-mini-card.bg-info    { background: var(--info)     !important; color: #001520 !important; }
+.metric-mini-card.bg-warning { background: var(--warning)  !important; color: #1a0e00 !important; }
+.metric-mini-card.bg-danger  { background: var(--danger)   !important; color: #1a0004 !important; }
+
+/* ── 6. TABLES ── */
+.table {
+    color: var(--text-primary) !important;
+    border-color: var(--border) !important;
+}
+
+.table thead th {
+    background: var(--bg-surface) !important;
+    color: var(--text-muted) !important;
+    border-color: var(--border) !important;
+    font: 600 12px/1 var(--font-ui) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    padding: 0.75rem 1rem !important;
+}
+
+.table tbody tr {
+    border-color: var(--border) !important;
+}
+
+.table tbody tr:hover {
+    background: var(--bg-hover) !important;
+}
+
+.table tbody td {
+    color: var(--text-secondary) !important;
+    border-color: var(--border) !important;
+    padding: 0.75rem 1rem !important;
+    vertical-align: middle;
+}
+
+.table tbody tr strong {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+}
+
+.table tbody tr small {
+    color: var(--text-muted) !important;
+    font-size: 0.75rem;
+    line-height: 1.2;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background: rgba(255,255,255,0.015) !important;
+}
+
+.table-bordered { border-color: var(--border) !important; }
+.table-bordered td,
+.table-bordered th { border-color: var(--border) !important; }
+
+.data-table-container {
+    background: var(--bg-elevated) !important;
+    border-radius: var(--r-lg) !important;
+    border: 1px solid var(--border) !important;
+    overflow: hidden;
+}
+
+/* ── 7. BADGES ── */
+.badge.bg-primary   { background: var(--product-bg)  !important; color: var(--product)  !important; border: 1px solid var(--product-border)  !important; }
+.badge.bg-success   { background: rgba(0,200,150,0.12) !important; color: var(--success) !important; border: 1px solid rgba(0,200,150,0.25) !important; }
+.badge.bg-warning   { background: rgba(255,182,39,0.12) !important; color: var(--warning) !important; border: 1px solid rgba(255,182,39,0.25) !important; }
+.badge.bg-danger    { background: rgba(255,59,80,0.12) !important; color: var(--danger)  !important; border: 1px solid rgba(255,59,80,0.25) !important; }
+.badge.bg-info      { background: rgba(0,150,255,0.12) !important; color: var(--info)    !important; border: 1px solid rgba(0,150,255,0.25) !important; }
+.badge.bg-secondary { background: rgba(155,168,184,0.12) !important; color: var(--text-secondary) !important; border: 1px solid rgba(155,168,184,0.25) !important; }
+.badge.bg-light     { background: var(--bg-surface) !important; color: var(--text-secondary) !important; border: 1px solid var(--border) !important; }
+.badge.bg-dark      { background: var(--bg-base) !important; color: var(--text-secondary) !important; border: 1px solid var(--border) !important; }
+
+/* ── 8. ALERTS ── */
+.alert {
+    border-radius: var(--r-md) !important;
+    border: 1px solid !important;
+}
+
+.alert-primary   { background: var(--product-bg) !important;         color: var(--product)  !important; border-color: var(--product-border)      !important; }
+.alert-success   { background: rgba(0,200,150,0.08)   !important;    color: var(--success)  !important; border-color: rgba(0,200,150,0.2)         !important; }
+.alert-warning   { background: rgba(255,182,39,0.08)  !important;    color: var(--warning)  !important; border-color: rgba(255,182,39,0.2)         !important; }
+.alert-danger    { background: rgba(255,59,80,0.08)   !important;    color: var(--danger)   !important; border-color: rgba(255,59,80,0.2)          !important; }
+.alert-info      { background: rgba(0,150,255,0.08)   !important;    color: var(--info)     !important; border-color: rgba(0,150,255,0.2)          !important; }
+.alert-secondary { background: rgba(155,168,184,0.08) !important;    color: var(--text-secondary) !important; border-color: rgba(155,168,184,0.2)  !important; }
+
+/* ── 9. FORMS ── */
+.form-control,
+.form-select {
+    background: var(--bg-surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
+    border-radius: var(--r-md) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background: var(--bg-elevated) !important;
+    border-color: var(--product) !important;
+    box-shadow: 0 0 0 3px rgba(0,212,200,0.12) !important;
+    color: var(--text-primary) !important;
+}
+
+.form-control::placeholder { color: var(--text-muted) !important; }
+.form-label { color: var(--text-secondary) !important; font-weight: 500; }
+.form-text  { color: var(--text-muted) !important; font-size: 0.8125rem; }
+
+/* ── 10. MODALS ── */
+.modal-content {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r-lg) !important;
+    box-shadow: var(--shadow-lg) !important;
+    color: var(--text-primary) !important;
+}
+
+.modal-header {
+    background: var(--bg-surface) !important;
+    border-bottom: 1px solid var(--border) !important;
+    color: var(--text-primary) !important;
+}
+
+.modal-footer {
+    background: var(--bg-surface) !important;
+    border-top: 1px solid var(--border) !important;
+}
+
+.modal-title { color: var(--text-primary) !important; font-weight: 600; }
+.modal-backdrop { background: rgba(0,0,0,0.75) !important; }
+.btn-close { filter: invert(1) !important; opacity: 0.6; }
+.btn-close:hover { opacity: 1; }
+
+/* ── 11. DROPDOWNS ── */
+.dropdown-menu {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r-md) !important;
+    box-shadow: var(--shadow-lg) !important;
+}
+
+.dropdown-item {
+    color: var(--text-secondary) !important;
+    padding: 0.5rem 1rem;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+.dropdown-divider { border-color: var(--border) !important; }
+
+/* ── 12. ACCORDIONS ── */
+.accordion-item {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+}
+
+.accordion-button {
+    background: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
+    box-shadow: none !important;
+    font-weight: 500;
+}
+
+.accordion-button:not(.collapsed) {
+    background: var(--bg-elevated) !important;
+    color: var(--product) !important;
+}
+
+.accordion-button::after {
+    filter: invert(1) brightness(0.7) !important;
+}
+
+.accordion-body {
+    background: var(--bg-elevated) !important;
+    color: var(--text-secondary) !important;
+}
+
+/* ── 13. PROGRESS BARS ── */
+.progress {
+    background: var(--bg-surface) !important;
+    border-radius: var(--r-pill) !important;
+    height: 6px;
+}
+
+.progress-bar {
+    background: var(--product) !important;
+    border-radius: var(--r-pill) !important;
+}
+
+.progress-bar.bg-success { background: var(--success) !important; }
+.progress-bar.bg-warning { background: var(--warning) !important; }
+.progress-bar.bg-danger  { background: var(--danger)  !important; }
+.progress-bar.bg-info    { background: var(--info)    !important; }
+
+/* ── 14. LIST GROUPS ── */
+.list-group-item {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border) !important;
+    color: var(--text-secondary) !important;
+}
+
+.list-group-item:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+.list-group-item.active {
+    background: var(--product-bg) !important;
+    border-color: var(--product-border) !important;
+    color: var(--product) !important;
+}
+
+/* ── 15. BUTTONS ── */
+.btn {
+    border-radius: var(--r-md) !important;
+    font: 500 13px/1 var(--font-ui) !important;
+    transition: transform 0.15s, box-shadow 0.15s !important;
+}
+
+.btn:hover { transform: translateY(-1px); }
+
+.btn-primary {
+    background: var(--product) !important;
+    border-color: var(--product) !important;
+    color: #00211f !important;
+}
+
+.btn-outline-primary {
+    border-color: var(--product) !important;
+    color: var(--product) !important;
+}
+
+.btn-outline-primary:hover {
+    background: var(--product) !important;
+    color: #00211f !important;
+}
+
+.btn-outline-secondary {
+    border-color: var(--border-strong) !important;
+    color: var(--text-secondary) !important;
+}
+
+.btn-outline-secondary:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ── 16. SCORE CIRCLES / GAUGE ── */
+.score-circle,
+.gauge-container,
+.chart-score {
+    background: var(--bg-surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
+}
+
+.score-value,
+.gauge-value,
+.kpi-value {
+    color: var(--product) !important;
+    font: 700 2rem/1 var(--font-brand) !important;
+}
+
+.score-label,
+.kpi-label {
+    color: var(--text-muted) !important;
+    font-size: 0.8125rem !important;
+}
+
+/* ── 17. VALIDATION & KS TEST ── */
+.validation-item,
+.ks-result-card {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r-md) !important;
+    color: var(--text-secondary) !important;
+}
+
+.validation-passed,
+.ks-pass { color: var(--success) !important; }
+.validation-failed,
+.ks-fail { color: var(--danger) !important; }
+.validation-warning  { color: var(--warning) !important; }
+
+/* ── 18. TIMELINE ── */
+.timeline-item {
+    border-left: 2px solid var(--border) !important;
+    padding-left: 1.25rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+}
+
+.timeline-item::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background: var(--product) !important;
+    border-radius: 50%;
+    position: absolute;
+    left: -6px;
+    top: 4px;
+}
+
+.timeline-item .timeline-date {
+    color: var(--text-muted) !important;
+    font-size: 0.75rem;
+}
+
+.timeline-item .timeline-content {
+    color: var(--text-secondary) !important;
+}
+
+/* ── 19. DAY HEADER / SCHEDULE ── */
+.day-header {
+    background: rgba(0,212,200,0.06) !important;
+    border-left: 3px solid var(--product) !important;
+    border-radius: var(--r-sm) !important;
+    padding: 0.5rem 1rem;
+    color: var(--product) !important;
+    font: 600 13px/1 var(--font-ui) !important;
+}
+
+/* ── 20. RECOMMENDATION ITEMS ── */
+.recommendation-item {
+    background: rgba(255,182,39,0.05) !important;
+    border: 1px solid rgba(255,182,39,0.15) !important;
+    border-radius: var(--r-md) !important;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary) !important;
+}
+
+.recommendation-item .recommendation-title {
+    color: var(--warning) !important;
+    font-weight: 600;
+}
+
+/* ── 21. INSIGHT ITEMS ── */
+.insight-item {
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r-md) !important;
+}
+
+.insight-icon.positive { background: rgba(0,200,150,0.12) !important; color: var(--success) !important; border: 1px solid rgba(0,200,150,0.25) !important; }
+.insight-icon.negative { background: rgba(255,59,80,0.12)  !important; color: var(--danger)  !important; border: 1px solid rgba(255,59,80,0.25)  !important; }
+.insight-icon.warning  { background: rgba(255,182,39,0.12) !important; color: var(--warning) !important; border: 1px solid rgba(255,182,39,0.25) !important; }
+
+/* ── 22. LOADING STATES ── */
+.loading-skeleton,
+.skeleton {
+    background: linear-gradient(90deg, var(--bg-surface) 25%, var(--bg-hover) 50%, var(--bg-surface) 75%) !important;
+    background-size: 200% 100% !important;
+    animation: skeleton-shimmer 1.5s infinite !important;
+    border-radius: var(--r-sm) !important;
+}
+
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.loading::after {
+    border-color: var(--border) !important;
+    border-top-color: var(--product) !important;
+}
+
+/* ── 23. PAGINATION ── */
+.page-item .page-link {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border) !important;
+    color: var(--text-secondary) !important;
+}
+
+.page-item.active .page-link {
+    background: var(--product) !important;
+    border-color: var(--product) !important;
+    color: #00211f !important;
+}
+
+.page-item:not(.active) .page-link:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ── 24. CHARTS ── */
+.chart-container,
+.chart-wrapper {
+    background: transparent !important;
+    position: relative;
+}
+
+.apexcharts-canvas,
+.apexcharts-inner {
+    background: transparent !important;
+}
+
+.apexcharts-tooltip {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow-lg) !important;
+    color: var(--text-primary) !important;
+    border-radius: var(--r-md) !important;
+}
+
+.apexcharts-tooltip-title {
+    background: var(--bg-surface) !important;
+    border-bottom: 1px solid var(--border) !important;
+    color: var(--text-secondary) !important;
+    font-size: 0.75rem;
+}
+
+.apexcharts-xaxistooltip,
+.apexcharts-yaxistooltip {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
+}
+
+.apexcharts-legend-text {
+    color: var(--text-secondary) !important;
+}
+
+/* ── 25. TEXT UTILITIES ── */
+.text-primary   { color: var(--text-primary)   !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-muted     { color: var(--text-muted)     !important; }
+.text-success   { color: var(--success)        !important; }
+.text-warning   { color: var(--warning)        !important; }
+.text-danger    { color: var(--danger)         !important; }
+.text-info      { color: var(--info)           !important; }
+.text-white     { color: var(--text-primary)   !important; }
+.text-dark      { color: var(--text-primary)   !important; }
+
+/* ── 26. BACKGROUND UTILITIES ── */
+.bg-white       { background: var(--bg-elevated) !important; }
+.bg-light       { background: var(--bg-surface)  !important; }
+.bg-dark        { background: var(--bg-base)     !important; }
+.bg-body        { background: var(--bg-base)     !important; }
+
+/* ── 27. BORDER UTILITIES ── */
+.border         { border-color: var(--border) !important; }
+.border-primary { border-color: var(--product) !important; }
+.border-success { border-color: var(--success) !important; }
+.border-warning { border-color: var(--warning) !important; }
+.border-danger  { border-color: var(--danger)  !important; }
+
+/* ── 28. HEADINGS & TEXT ── */
+h1, h2, h3, h4, h5, h6 { color: var(--text-primary) !important; }
+p  { color: var(--text-secondary) !important; }
+small, .small { color: var(--text-muted) !important; }
+strong, b { color: var(--text-primary) !important; }
+a  { color: var(--product) !important; }
+a:hover { color: var(--product-hover) !important; }
+label { color: var(--text-secondary) !important; }
+hr { border-color: var(--border) !important; opacity: 1; }
+
+/* ── 29. TABS CONTENT SPECIFIC OVERRIDES ── */
+/* overview-tab, demand-tab, etc. use .section-title */
+.section-title {
+    color: var(--text-primary) !important;
+    font: 600 1.125rem/1.3 var(--font-brand) !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Metric rows inside tabs */
+.metric-row { color: var(--text-secondary) !important; }
+.metric-label { color: var(--text-muted) !important; font-size: 0.8125rem; }
+.metric-value { color: var(--text-primary) !important; font-weight: 600; }
+
+/* Distribution boxes */
+.distribution-item,
+.dist-box {
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r-md) !important;
+    color: var(--text-secondary) !important;
+}
+
+/* Sensitivity / OAT tables */
+.sensitivity-table td,
+.oat-table td {
+    color: var(--text-secondary) !important;
+    border-color: var(--border) !important;
+}
+
+.sensitivity-highlight {
+    background: var(--product-bg) !important;
+    color: var(--product) !important;
+}
+
+/* Financial summary rows */
+.financial-row {
+    border-bottom: 1px solid var(--border) !important;
+    color: var(--text-secondary) !important;
+}
+
+.financial-row:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Operations specific */
+.operation-step {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--r-md) !important;
+    color: var(--text-secondary) !important;
+}
+
+.operation-icon { color: var(--product) !important; }
+
+/* ── 30. SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── 31. ANIMATIONS ── */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.tab-pane.active { animation: fadeInUp 0.3s ease-out; }
+
+/* ── 32. RESPONSIVE ── */
+@media (max-width: 768px) {
+    .chart-tabs .nav-tabs { overflow-x: auto; flex-wrap: nowrap; padding: 0 0.5rem; }
+    .chart-tabs .nav-tabs .nav-link { padding: 0.75rem 0.875rem !important; white-space: nowrap; }
+    .chart-tabs .tab-content { padding: 1rem; }
+    .metric-mini-card { margin-bottom: 0.5rem; }
+    .data-table-container { overflow-x: auto; }
+}

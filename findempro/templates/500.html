@@ -1,0 +1,23 @@
+{% extends "partials/base.html" %}
+{% block title %}Error del servidor{% endblock title %}
+{% block content %}
+<div style="min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;">
+  <div style="font-size:64px;margin-bottom:16px;">&#x1F6A7;</div>
+  <h1 style="font-size:24px;font-weight:700;margin-bottom:8px;">Error interno del servidor</h1>
+  <p style="color:var(--text-muted,#94a3b8);margin-bottom:24px;max-width:400px;line-height:1.6;">
+    Algo salió mal de nuestro lado. El equipo técnico ya fue notificado.
+    Por favor, intenta de nuevo en unos minutos.
+  </p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+    <a href="/" style="background:var(--product-color,#00C896);color:#fff;padding:10px 24px;border-radius:8px;font-weight:600;text-decoration:none;font-size:14px;">
+      &#x2190; Ir al inicio
+    </a>
+    <button onclick="location.reload()" style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--text-muted,#94a3b8);padding:10px 24px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;">
+      Reintentar
+    </button>
+  </div>
+  <p style="margin-top:32px;font-size:12px;color:var(--text-muted,#94a3b8);">
+    Error 500 — Si el problema persiste, contacta al administrador del sistema.
+  </p>
+</div>
+{% endblock content %}

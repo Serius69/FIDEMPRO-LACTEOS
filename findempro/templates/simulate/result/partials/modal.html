@@ -1,0 +1,1040 @@
+
+<style>
+/* ====================================== */
+/* MODAL CHARTS COMPONENT STYLES */
+/* ====================================== */
+
+/* Base modal styles */
+.modal-content {
+ border: none;
+ border-radius: 12px;
+ box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+ background-color: #fafafa;
+}
+
+.modal-header {
+ background-color: #f8f9fa;
+ border-bottom: 1px solid #e9ecef;
+ border-radius: 12px 12px 0 0;
+ padding: 1.25rem 1.5rem;
+}
+
+.modal-title {
+ color: #1a1a1a;
+ font-weight: 600;
+ font-size: 1.1rem;
+}
+
+.modal-body {
+ background-color: #ffffff;
+ padding: 2rem 1.5rem;
+ color: #1a1a1a;
+}
+
+.modal-footer {
+ background-color: #f8f9fa;
+ border-top: 1px solid #e9ecef;
+ border-radius: 0 0 12px 12px;
+ padding: 1rem 1.5rem;
+}
+
+/* Fullscreen modal specific styles */
+#mainFullscreenModal .modal-dialog {
+ margin: 0.5rem;
+}
+
+#mainFullscreenModal .modal-body {
+ position: relative;
+ min-height: 400px;
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+}
+
+#mainFullscreenModalImage {
+ max-width: 100%;
+ max-height: 70vh;
+ object-fit: contain;
+ border-radius: 8px;
+ box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+ transition: transform 0.2s ease;
+}
+
+/* Zoom controls */
+.zoom-controls {
+ z-index: 1050;
+ background-color: rgba(248, 249, 250, 0.95);
+ border-radius: 8px;
+ padding: 0.5rem;
+ box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.zoom-controls .btn {
+ background-color: #ffffff;
+ border: 1px solid #dee2e6;
+ color: #495057;
+ padding: 0.5rem 0.75rem;
+ margin: 0 2px;
+}
+
+.zoom-controls .btn:hover {
+ background-color: #e9ecef;
+ border-color: #adb5bd;
+ color: #1a1a1a;
+}
+
+.zoom-controls .btn:focus {
+ box-shadow: 0 0 0 2px rgba(108, 117, 125, 0.25);
+}
+
+/* Chart metadata */
+.chart-metadata {
+ background-color: #f8f9fa;
+ border: 1px solid #e9ecef;
+ border-radius: 8px;
+ color: #1a1a1a;
+ max-width: 600px;
+ margin: 0 auto;
+}
+
+.chart-metadata strong {
+ color: #000000;
+}
+
+/* Details modal styles */
+#mainDetailsModal .modal-body {
+ max-height: 70vh;
+ overflow-y: auto;
+}
+
+/* Detail tabs */
+.detail-tabs .nav-tabs {
+ border-bottom: 2px solid #e9ecef;
+ background-color: #f8f9fa;
+ border-radius: 8px 8px 0 0;
+ padding: 0.5rem 0.5rem 0;
+}
+
+.detail-tabs .nav-link {
+ background-color: transparent;
+ border: none;
+ color: #6c757d;
+ font-weight: 500;
+ padding: 0.75rem 1rem;
+ border-radius: 8px 8px 0 0;
+ margin-right: 0.25rem;
+}
+
+.detail-tabs .nav-link:hover {
+ background-color: #e9ecef;
+ color: #495057;
+}
+
+.detail-tabs .nav-link.active {
+ background-color: #ffffff;
+ color: #1a1a1a;
+ border-bottom: 2px solid #0d6efd;
+}
+
+.detail-tabs .tab-content {
+ background-color: #ffffff;
+ border-radius: 0 0 8px 8px;
+ min-height: 200px;
+}
+
+.detail-tabs .tab-pane {
+ padding: 1.5rem;
+}
+
+/* Export modal styles */
+.export-options h6 {
+ color: #1a1a1a;
+ font-weight: 600;
+ margin-bottom: 1rem;
+}
+
+.export-format-card {
+ cursor: pointer;
+ transition: all 0.2s ease;
+ border: 2px solid #e9ecef;
+ background-color: #ffffff;
+ border-radius: 8px;
+}
+
+.export-format-card:hover {
+ border-color: #adb5bd;
+ box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+ transform: translateY(-2px);
+}
+
+.export-format-card.border-primary {
+ border-color: #0d6efd !important;
+ background-color: #f8f9ff !important;
+}
+
+.export-format-card .card-body {
+ padding: 1.5rem 1rem;
+}
+
+.export-format-card h6 {
+ color: #1a1a1a;
+ font-weight: 600;
+ margin-bottom: 0.5rem;
+}
+
+.export-format-card small {
+ color: #6c757d;
+ font-size: 0.875rem;
+}
+
+.export-format-card i {
+ color: #0d6efd;
+}
+
+/* Confirmation modal styles */
+.modal-dialog-centered .modal-content {
+ background-color: #ffffff;
+}
+
+.modal-dialog-centered .modal-body {
+ padding: 2rem;
+}
+
+.modal-dialog-centered .modal-body p {
+ color: #1a1a1a;
+ font-size: 1rem;
+ margin-bottom: 0.5rem;
+}
+
+.modal-dialog-centered .modal-body small {
+ color: #6c757d;
+}
+
+.modal-dialog-centered .modal-body i.display-6 {
+ font-size: 3rem;
+}
+
+/* Button styles */
+.modal .btn-outline-primary {
+ color: #0d6efd;
+ border-color: #0d6efd;
+ background-color: transparent;
+}
+
+.modal .btn-outline-primary:hover {
+ background-color: #0d6efd;
+ border-color: #0d6efd;
+ color: #ffffff;
+}
+
+.modal .btn-secondary {
+ background-color: #6c757d;
+ border-color: #6c757d;
+ color: #ffffff;
+}
+
+.modal .btn-secondary:hover {
+ background-color: #5a6268;
+ border-color: #545b62;
+}
+
+.modal .btn-success {
+ background-color: #198754;
+ border-color: #198754;
+ color: #ffffff;
+}
+
+.modal .btn-success:hover {
+ background-color: #157347;
+ border-color: #146c43;
+}
+
+.modal .btn-danger {
+ background-color: #dc3545;
+ border-color: #dc3545;
+ color: #ffffff;
+}
+
+.modal .btn-danger:hover {
+ background-color: #bb2d3b;
+ border-color: #b02a37;
+}
+
+/* Dropdown styles */
+.modal .dropdown-menu {
+ background-color: #ffffff;
+ border: 1px solid #dee2e6;
+ border-radius: 8px;
+ box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal .dropdown-item {
+ color: #1a1a1a;
+ padding: 0.75rem 1rem;
+ transition: background-color 0.15s ease;
+}
+
+.modal .dropdown-item:hover {
+ background-color: #f8f9fa;
+ color: #1a1a1a;
+}
+
+.modal .dropdown-item i {
+ color: #6c757d;
+}
+
+/* Close button styles */
+.modal .btn-close {
+ background-color: transparent;
+ border: none;
+ opacity: 0.7;
+ padding: 0.5rem;
+}
+
+.modal .btn-close:hover {
+ opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+ .modal-dialog {
+   margin: 0.5rem;
+ }
+ 
+ .modal-body {
+   padding: 1.5rem 1rem;
+ }
+ 
+ .zoom-controls {
+   position: static !important;
+   margin: 1rem 0 0 0 !important;
+   text-align: center;
+ }
+ 
+ #mainFullscreenModalImage {
+   max-height: 60vh;
+ }
+ 
+ .export-format-card .card-body {
+   padding: 1rem 0.75rem;
+ }
+}
+
+@media (max-width: 576px) {
+ .modal-title {
+   font-size: 1rem;
+ }
+ 
+ .chart-metadata {
+   font-size: 0.875rem;
+ }
+ 
+ .detail-tabs .nav-link {
+   padding: 0.5rem 0.75rem;
+   font-size: 0.875rem;
+ }
+ 
+ .modal .btn {
+   font-size: 0.875rem;
+   padding: 0.5rem 0.75rem;
+ }
+}
+
+/* Accessibility improvements */
+.modal:focus {
+ outline: none;
+}
+
+.modal .btn:focus {
+ box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+.export-format-card:focus-within {
+ outline: 2px solid #0d6efd;
+ outline-offset: 2px;
+}
+
+/* Animation enhancements */
+.modal.fade .modal-dialog {
+ transition: transform 0.3s ease-out;
+ transform: translate(0, -50px);
+}
+
+.modal.show .modal-dialog {
+ transform: none;
+}
+
+/* Loading states */
+.modal-body.loading {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ min-height: 200px;
+}
+
+.modal-body.loading::after {
+ content: '';
+ width: 40px;
+ height: 40px;
+ border: 3px solid #e9ecef;
+ border-top: 3px solid #0d6efd;
+ border-radius: 50%;
+ animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+ 0% { transform: rotate(0deg); }
+ 100% { transform: rotate(360deg); }
+}
+</style>
+
+
+
+<!-- Modal para expandir gráficos -->
+<div class="modal fade" id="chartModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="chartModalTitle">Gráfico de Variable</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="chartModalImage" src="" class="img-fluid" alt="Gráfico expandido">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" onclick="downloadChart()">
+                    <i class="bx bx-download me-1"></i>Descargar
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal para detalles de variable -->
+<div class="modal fade" id="variableDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="variableDetailsTitle">Detalles de Variable</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="variableDetailsBody">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal para Detalles de Variable -->
+<div class="modal fade" id="variableDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles de Validación por Día</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="variableDetailsContent">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- SOLO ESTOS DOS MODALES AL FINAL DEL TEMPLATE -->
+<div class="modal fade" id="mainFullscreenModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mainFullscreenModalTitle">Gráfico</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="mainFullscreenModalImage" src="" class="img-fluid" alt="Gráfico expandido">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" onclick="downloadCurrentChart()">
+                    <i class="bx bx-download me-1"></i>Descargar
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="mainDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mainDetailsModalTitle">Detalles</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="mainDetailsModalBody">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// ==========================================
+// FUNCIONES DE MODALES UNIFICADOS
+// ==========================================
+
+function initializeModals() {
+    // Cerrar con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAllModals();
+        }
+    });
+    
+    // Cerrar al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            closeAllModals();
+        }
+    });
+    
+    // Inicializar modales específicos
+    initializeFullscreenModal();
+    initializeDetailsModal();
+    initializeExportModal();
+    initializeConfirmationModal();
+}
+
+function closeAllModals() {
+    const modals = document.querySelectorAll('.modal.show');
+    modals.forEach(modal => {
+        const bsModal = bootstrap.Modal.getInstance(modal);
+        if (bsModal) bsModal.hide();
+    });
+}
+
+// ==========================================
+// MODAL DE PANTALLA COMPLETA
+// ==========================================
+
+function initializeFullscreenModal() {
+    const modal = document.getElementById('mainFullscreenModal');
+    if (!modal) return;
+    
+    // Agregar controles de zoom
+    const modalBody = modal.querySelector('.modal-body');
+    if (modalBody && !modalBody.querySelector('.zoom-controls')) {
+        const zoomControls = document.createElement('div');
+        zoomControls.className = 'zoom-controls position-absolute top-0 end-0 m-3';
+        zoomControls.innerHTML = `
+            <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-outline-light" onclick="zoomImage('in')">
+                    <i class="bx bx-zoom-in"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-light" onclick="zoomImage('out')">
+                    <i class="bx bx-zoom-out"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-light" onclick="resetZoom()">
+                    <i class="bx bx-reset"></i>
+                </button>
+            </div>
+        `;
+        modalBody.style.position = 'relative';
+        modalBody.appendChild(zoomControls);
+    }
+    
+    // Agregar controles de descarga mejorados
+    const downloadBtn = modal.querySelector('.btn-download-chart');
+    if (downloadBtn) {
+        downloadBtn.innerHTML = `
+            <div class="dropdown">
+                <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bx bx-download me-2"></i>Descargar
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="downloadCurrentChart('png')">
+                        <i class="bx bx-image me-2"></i>PNG
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="downloadCurrentChart('jpg')">
+                        <i class="bx bx-image me-2"></i>JPG
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="downloadCurrentChart('svg')">
+                        <i class="bx bx-vector me-2"></i>SVG
+                    </a></li>
+                </ul>
+            </div>
+        `;
+    }
+}
+
+function openFullscreen(chartData, title, options = {}) {
+    try {
+        if (!chartData) {
+            console.warn('No chart data provided for fullscreen');
+            return;
+        }
+        
+        const modal = document.getElementById('mainFullscreenModal');
+        const modalTitle = document.getElementById('mainFullscreenModalTitle');
+        const modalImage = document.getElementById('mainFullscreenModalImage');
+        
+        if (modal && modalTitle && modalImage) {
+            modalTitle.textContent = title || 'Gráfico';
+            modalImage.src = 'data:image/png;base64,' + chartData;
+            modalImage.setAttribute('data-chart-data', chartData);
+            modalImage.setAttribute('data-chart-title', title || 'grafico');
+            
+            // Agregar metadatos opcionales
+            if (options.type) modalImage.setAttribute('data-chart-type', options.type);
+            if (options.variable) modalImage.setAttribute('data-variable', options.variable);
+            if (options.description) modalImage.setAttribute('data-description', options.description);
+            
+            // Resetear zoom
+            resetZoom();
+            
+            // Mostrar modal
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+            
+            // Agregar información adicional si está disponible
+            updateModalMetadata(options);
+        }
+    } catch (error) {
+        console.error('Error opening fullscreen:', error);
+        showNotification('Error al abrir el gráfico', 'error');
+    }
+}
+
+function updateModalMetadata(options) {
+    const modal = document.getElementById('mainFullscreenModal');
+    const modalBody = modal.querySelector('.modal-body');
+    
+    // Remover metadata anterior
+    const existingMetadata = modalBody.querySelector('.chart-metadata');
+    if (existingMetadata) {
+        existingMetadata.remove();
+    }
+    
+    // Agregar nueva metadata si está disponible
+    if (options.showMetadata && (options.variable || options.description || options.stats)) {
+        const metadata = document.createElement('div');
+        metadata.className = 'chart-metadata mt-3 p-3 bg-light rounded';
+        
+        let metadataContent = '';
+        if (options.variable) {
+            metadataContent += `<div><strong>Variable:</strong> ${options.variable}</div>`;
+        }
+        if (options.description) {
+            metadataContent += `<div><strong>Descripción:</strong> ${options.description}</div>`;
+        }
+        if (options.stats) {
+            metadataContent += `<div class="mt-2"><strong>Estadísticas:</strong></div>`;
+            Object.entries(options.stats).forEach(([key, value]) => {
+                metadataContent += `<div class="ms-3">${key}: ${value}</div>`;
+            });
+        }
+        
+        metadata.innerHTML = metadataContent;
+        modalBody.appendChild(metadata);
+    }
+}
+
+// Funciones de zoom
+let currentZoom = 1;
+
+function zoomImage(direction) {
+    const modalImage = document.getElementById('mainFullscreenModalImage');
+    if (!modalImage) return;
+    
+    const step = 0.25;
+    const maxZoom = 3;
+    const minZoom = 0.5;
+    
+    if (direction === 'in' && currentZoom < maxZoom) {
+        currentZoom += step;
+    } else if (direction === 'out' && currentZoom > minZoom) {
+        currentZoom -= step;
+    }
+    
+    modalImage.style.transform = `scale(${currentZoom})`;
+    modalImage.style.transformOrigin = 'center center';
+    modalImage.style.transition = 'transform 0.2s ease';
+    
+    // Actualizar cursor
+    modalImage.style.cursor = currentZoom > 1 ? 'grab' : 'default';
+}
+
+function resetZoom() {
+    currentZoom = 1;
+    const modalImage = document.getElementById('mainFullscreenModalImage');
+    if (modalImage) {
+        modalImage.style.transform = 'scale(1)';
+        modalImage.style.cursor = 'default';
+    }
+}
+
+function downloadCurrentChart(format = 'png') {
+    try {
+        const modalImage = document.getElementById('mainFullscreenModalImage');
+        const chartData = modalImage?.getAttribute('data-chart-data');
+        const title = modalImage?.getAttribute('data-chart-title') || 'grafico';
+        
+        if (chartData) {
+            const filename = title.toLowerCase().replace(/\s+/g, '-') + '.' + format;
+            
+            if (format === 'svg') {
+                // Para SVG, necesitaríamos datos diferentes
+                showNotification('Formato SVG no disponible para esta imagen', 'warning');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.href = 'data:image/' + format + ';base64,' + chartData;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification(`Gráfico descargado como ${format.toUpperCase()}`, 'success');
+        }
+    } catch (error) {
+        console.error('Error downloading current chart:', error);
+        showNotification('Error al descargar el gráfico', 'error');
+    }
+}
+
+// ==========================================
+// MODAL DE DETALLES
+// ==========================================
+
+function initializeDetailsModal() {
+    const modal = document.getElementById('mainDetailsModal');
+    if (!modal) return;
+    
+    // Agregar funcionalidad de tabs si no existe
+    const modalBody = modal.querySelector('.modal-body');
+    if (modalBody && !modalBody.querySelector('.detail-tabs')) {
+        // Se agregará dinámicamente cuando sea necesario
+    }
+}
+
+function showDetailsModal(title, content, options = {}) {
+    const modal = document.getElementById('mainDetailsModal');
+    const modalTitle = document.getElementById('mainDetailsModalTitle');
+    const modalBody = document.getElementById('mainDetailsModalBody');
+    
+    if (modal && modalTitle && modalBody) {
+        modalTitle.textContent = title;
+        
+        if (options.useTabs && options.tabs) {
+            modalBody.innerHTML = createTabbedContent(options.tabs);
+        } else {
+            modalBody.innerHTML = content;
+        }
+        
+        // Agregar botones personalizados si existen
+        if (options.customButtons) {
+            addCustomModalButtons(modal, options.customButtons);
+        }
+        
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+}
+
+function createTabbedContent(tabs) {
+    const tabsHtml = `
+        <ul class="nav nav-tabs" id="detailTabs" role="tablist">
+            ${tabs.map((tab, index) => `
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link ${index === 0 ? 'active' : ''}" 
+                            id="${tab.id}-tab" data-bs-toggle="tab" 
+                            data-bs-target="#${tab.id}" type="button" role="tab">
+                        ${tab.icon ? `<i class="${tab.icon} me-2"></i>` : ''}
+                        ${tab.title}
+                    </button>
+                </li>
+            `).join('')}
+        </ul>
+        <div class="tab-content mt-3" id="detailTabsContent">
+            ${tabs.map((tab, index) => `
+                <div class="tab-pane fade ${index === 0 ? 'show active' : ''}" 
+                     id="${tab.id}" role="tabpanel">
+                    ${tab.content}
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    return tabsHtml;
+}
+
+function addCustomModalButtons(modal, buttons) {
+    const footer = modal.querySelector('.modal-footer');
+    if (!footer) return;
+    
+    // Limpiar botones existentes excepto el de cerrar
+    const closeBtn = footer.querySelector('[data-bs-dismiss="modal"]');
+    footer.innerHTML = '';
+    
+    // Agregar botones personalizados
+    buttons.forEach(button => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `btn btn-${button.variant || 'primary'}`;
+        btn.innerHTML = `${button.icon ? `<i class="${button.icon} me-2"></i>` : ''}${button.text}`;
+        
+        if (button.onclick) {
+            btn.addEventListener('click', button.onclick);
+        }
+        
+        footer.appendChild(btn);
+    });
+    
+    // Volver a agregar botón de cerrar
+    if (closeBtn) {
+        footer.appendChild(closeBtn);
+    }
+}
+
+// ==========================================
+// MODAL DE EXPORTACIÓN
+// ==========================================
+
+function initializeExportModal() {
+    // Se inicializará dinámicamente cuando sea necesario
+}
+
+function showExportModal(exportOptions) {
+    const modalId = 'exportModal';
+    let modal = document.getElementById(modalId);
+    
+    // Crear modal si no existe
+    if (!modal) {
+        modal = createExportModal(modalId, exportOptions);
+        document.body.appendChild(modal);
+    }
+    
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+function createExportModal(modalId, options) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = modalId;
+    modal.setAttribute('tabindex', '-1');
+    
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bx bx-export me-2"></i>
+                        Exportar Datos
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="export-options">
+                        <h6>Seleccionar formato:</h6>
+                        <div class="row g-3">
+                            ${options.formats.map(format => `
+                                <div class="col-6">
+                                    <div class="card export-format-card" data-format="${format.type}">
+                                        <div class="card-body text-center">
+                                            <i class="${format.icon} display-6 text-primary"></i>
+                                            <h6 class="mt-2">${format.name}</h6>
+                                            <small class="text-muted">${format.description}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        ${options.customOptions ? `
+                            <div class="mt-4">
+                                <h6>Opciones adicionales:</h6>
+                                ${options.customOptions}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="executeExport()">
+                        <i class="bx bx-download me-2"></i>
+                        Exportar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Agregar eventos de selección
+    modal.addEventListener('click', function(e) {
+        const formatCard = e.target.closest('.export-format-card');
+        if (formatCard) {
+            // Remover selección anterior
+            modal.querySelectorAll('.export-format-card').forEach(card => {
+                card.classList.remove('border-primary', 'bg-light');
+            });
+            
+            // Agregar selección actual
+            formatCard.classList.add('border-primary', 'bg-light');
+            formatCard.setAttribute('data-selected', 'true');
+        }
+    });
+    
+    return modal;
+}
+
+function executeExport() {
+    const selectedCard = document.querySelector('.export-format-card[data-selected="true"]');
+    if (!selectedCard) {
+        showNotification('Por favor selecciona un formato de exportación', 'warning');
+        return;
+    }
+    
+    const format = selectedCard.dataset.format;
+    
+    // Cerrar modal
+    const modal = selectedCard.closest('.modal');
+    const bsModal = bootstrap.Modal.getInstance(modal);
+    if (bsModal) bsModal.hide();
+    
+    // Ejecutar exportación según el formato
+    switch(format) {
+        case 'pdf':
+            if (typeof exportToPDF === 'function') exportToPDF();
+            break;
+        case 'excel':
+            if (typeof exportToExcel === 'function') exportToExcel();
+            break;
+        case 'csv':
+            if (typeof exportValidationResults === 'function') exportValidationResults();
+            break;
+        default:
+            showNotification('Formato de exportación no soportado', 'error');
+    }
+}
+
+// ==========================================
+// MODAL DE CONFIRMACIÓN
+// ==========================================
+
+function initializeConfirmationModal() {
+    // Se creará dinámicamente cuando sea necesario
+}
+
+function showConfirmationModal(message, onConfirm, options = {}) {
+    const modalId = 'confirmationModal_' + Date.now();
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = modalId;
+    modal.setAttribute('tabindex', '-1');
+    
+    const variant = options.variant || 'danger';
+    const confirmText = options.confirmText || 'Confirmar';
+    const cancelText = options.cancelText || 'Cancelar';
+    
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bx bx-question-mark me-2"></i>
+                        Confirmación
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bx bx-error-circle display-6 text-${variant} me-3"></i>
+                        <div>
+                            <p class="mb-0">${message}</p>
+                            ${options.details ? `<small class="text-muted">${options.details}</small>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        ${cancelText}
+                    </button>
+                    <button type="button" class="btn btn-${variant}" id="confirmBtn">
+                        ${confirmText}
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Agregar eventos
+    const confirmBtn = modal.querySelector('#confirmBtn');
+    confirmBtn.addEventListener('click', function() {
+        if (onConfirm) onConfirm();
+        const bsModal = bootstrap.Modal.getInstance(modal);
+        if (bsModal) bsModal.hide();
+    });
+    
+    // Limpiar modal después de cerrar
+    modal.addEventListener('hidden.bs.modal', function() {
+        document.body.removeChild(modal);
+    });
+    
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+// ==========================================
+// UTILIDADES DE MODAL
+// ==========================================
+
+function getModalInstance(modalId) {
+    const modal = document.getElementById(modalId);
+    return modal ? bootstrap.Modal.getInstance(modal) : null;
+}
+
+function isModalOpen(modalId) {
+    const modal = document.getElementById(modalId);
+    return modal ? modal.classList.contains('show') : false;
+}
+
+function closeModal(modalId) {
+    const bsModal = getModalInstance(modalId);
+    if (bsModal) bsModal.hide();
+}
+
+function toggleModal(modalId) {
+    const bsModal = getModalInstance(modalId);
+    if (bsModal) {
+        bsModal.toggle();
+    }
+}
+
+// Exportar funciones globales
+window.initializeModals = initializeModals;
+window.closeAllModals = closeAllModals;
+window.openFullscreen = openFullscreen;
+window.downloadCurrentChart = downloadCurrentChart;
+window.zoomImage = zoomImage;
+window.resetZoom = resetZoom;
+window.showDetailsModal = showDetailsModal;
+window.showExportModal = showExportModal;
+window.showConfirmationModal = showConfirmationModal;
+window.executeExport = executeExport;
+window.getModalInstance = getModalInstance;
+window.isModalOpen = isModalOpen;
+window.closeModal = closeModal;
+window.toggleModal = toggleModal;
+
+// Auto-inicializar
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(initializeModals, 100);
+});
+</script>

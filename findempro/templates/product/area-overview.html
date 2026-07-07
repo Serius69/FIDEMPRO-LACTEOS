@@ -1,0 +1,383 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Área: {% if area.name %}{{ area.name }}{% else %}Sin nombre{% endif %} - {% if area.fk_product.name %}{{ area.fk_product.name }}{% else %}Sin producto{% endif %}{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.css" integrity="sha384-HE6mLTh5BORvU8h5XUAu/rs2s1+04dQTYoMsAAQd7wK5DtzQVFjtQdEtaPXtoeh3" crossorigin="anonymous">
+<link rel="stylesheet" href="{% static 'css/area-overview.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<!-- Tutorial Overlay -->
+<div class="tutorial-overlay" id="tutorialOverlay"></div>
+
+<!-- Tutorial Popup -->
+<div class="tutorial-popup" id="tutorialPopup">
+    <h5 id="tutorialTitle">Título del Tutorial</h5>
+    <p id="tutorialContent">Contenido del tutorial</p>
+    <div class="tutorial-actions">
+        <button class="btn btn-secondary btn-sm" onclick="skipTutorial()">Saltar</button>
+        <div class="tutorial-navigation">
+            <button class="btn btn-primary btn-sm" id="prevBtn" onclick="previousStep()" style="display:none;">Anterior</button>
+            <button class="btn btn-primary btn-sm" id="nextBtn" onclick="nextStep()">Siguiente</button>
+        </div>
+    </div>
+</div>
+
+<!-- Help FAB -->
+<div class="help-fab" onclick="startTutorial()" title="Ayuda">
+    <i class="ri-question-line"></i>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <div class="quick-action-btn" onclick="window.location.href='{% url 'product:product.overview' area.fk_product.id %}'" title="Volver al producto">
+        <i class="ri-arrow-left-line"></i>
+    </div>
+    <div class="quick-action-btn" onclick="printArea()" title="Imprimir">
+        <i class="ri-printer-line"></i>
+    </div>
+    <div class="quick-action-btn" onclick="exportData()" title="Exportar datos">
+        <i class="ri-download-line"></i>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title Section -->
+            {% block pagetitle %}
+            {% include "partials/page-title.html" with pagetitle="Área" title=area.name|default:"Sin nombre" subtitle=area.fk_product.name|default:"Sin producto" %}
+            {% endblock pagetitle %}
+            
+            <!-- Onboarding Tip Section -->
+            {% if equations_area.paginator.count == 0 %}
+            <div class="onboarding-tip">
+                <h6><i class="ri-lightbulb-line me-2"></i>Consejo para empezar</h6>
+                <p>Esta área aún no tiene ecuaciones. Las ecuaciones definen las relaciones entre las variables de su producto. Haga clic en "Crear Nueva Ecuación" para comenzar.</p>
+            </div>
+            {% endif %}
+            
+            <!-- Area Header Section -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="area-header-card">
+                        <div class="area-header-content">
+                            <div class="row mb-1">
+                                <!-- Area Image -->
+                                <div class="col-lg-4 col-md-4 col-sm-12">
+                                    <div class="area-image-container" style="background-image: url('{% if area.get_photo_url %}{{ area.get_photo_url }}{% else %}{% static 'images/default-area.png' %}{% endif %}');">
+                                        <div class="area-image-overlay">
+                                            <h3 class="area-title">{% if area.name %}{{ area.name }}{% else %}Sin nombre{% endif %}</h3>
+                                            <p class="area-product">{% if area.fk_product.name %}{{ area.fk_product.name }}{% else %}Sin producto{% endif %}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Area Statistics -->
+                                <div class="col-lg-8 col-md-8 col-sm-12">
+                                    <div class="stats-grid">
+                                        <div class="stat-card stat-card-equations">
+                                            <i class="ri-function-line stat-icon"></i>
+                                            <h3>{% if total_equations %}{{ total_equations }}{% else %}0{% endif %}</h3>
+                                            <p>Ecuaciones</p>
+                                        </div>
+                                        <div class="stat-card stat-card-variables">
+                                            <i class="ri-bubble-chart-line stat-icon"></i>
+                                            <h3>{% if total_variables %}{{ total_variables }}{% else %}0{% endif %}</h3>
+                                            <p>Variables</p>
+                                        </div>
+                                        <div class="stat-card stat-card-relations">
+                                            <i class="ri-links-line stat-icon"></i>
+                                            <h3>{% if total_relations %}{{ total_relations }}{% else %}0{% endif %}</h3>
+                                            <p>Relaciones</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Area Details Card -->
+                                    <div class="area-details-card">
+                                        <div class="card-body">
+                                            <h6 class="area-details-title">Descripción del Área</h6>
+                                            <p class="area-description">{% if area.description %}{{ area.description }}{% else %}Sin descripción disponible{% endif %}</p>
+                                            
+                                            <div class="area-metadata">
+                                                <div class="row">
+                                                    <div class="col-lg-6 col-sm-6">
+                                                        <div class="metadata-item">
+                                                            <p class="metadata-label">Fecha de Creación:</p>
+                                                            <h5 class="metadata-value">{% if area.date_created %}{{ area.date_created|date:"d F Y, H:i" }}{% else %}No disponible{% endif %}</h5>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-6 col-sm-6">
+                                                        <div class="metadata-item">
+                                                            <p class="metadata-label">Última actualización:</p>
+                                                            <h5 class="metadata-value">{% if area.last_updated %}{{ area.last_updated|date:"d F Y, H:i" }}{% else %}No disponible{% endif %}</h5>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            {% if area.is_checked_for_simulation %}
+                                            <div class="simulation-status-alert">
+                                                <i class="ri-checkbox-circle-line me-2"></i>
+                                                Esta área está habilitada para simulaciones
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Navigation Tabs -->
+                            <div class="area-tabs">
+                                <ul class="nav nav-tabs-custom border-bottom-0" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#area-equations" role="tab">
+                                            <i class="ri-function-line me-2"></i>Ecuaciones
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#area-variables" role="tab">
+                                            <i class="ri-bubble-chart-line me-2"></i>Gráfico de Variables
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Tabs Section -->
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="tab-content text-muted">
+                        <!-- Equations Tab -->
+                        <div class="tab-pane fade show active" id="area-equations" role="tabpanel">
+                            <div class="equations-section">
+                                <div class="equations-header">
+                                    <h4 class="equations-title">
+                                        <i class="ri-function-line me-2"></i>Ecuaciones del Área
+                                    </h4>
+                                    <div class="equations-actions">
+                                        <button type="button" class="btn btn-primary" onclick="createNewEquation()">
+                                            <i class="ri-add-line me-1"></i>Crear Nueva Ecuación
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="equations-grid" id="equationsContainer">
+                                    {% for equation in equations_area %}
+                                    <div class="equation-card-wrapper">
+                                        <div class="equation-card">
+                                            <div class="equation-card-body">
+                                                <h5 class="equation-name">{% if equation.name %}{{ equation.name }}{% else %}Sin nombre{% endif %}</h5>
+                                                <div class="equation-expression">
+                                                    {% if equation.expression %}{{ equation.expression }}{% else %}Sin expresión{% endif %}
+                                                </div>
+                                                
+                                                <div class="equation-variables">
+                                                    <h6 class="variables-label">Variables utilizadas:</h6>
+                                                    <div class="variables-tags">
+                                                        {% if equation.fk_variable1 %}
+                                                            <span class="variable-tag" data-variable-id="{{ equation.fk_variable1.id }}">
+                                                                <i class="ri-circle-fill"></i>{{ equation.fk_variable1.name }}
+                                                            </span>
+                                                        {% endif %}
+                                                        {% if equation.fk_variable2 %}
+                                                            <span class="variable-tag" data-variable-id="{{ equation.fk_variable2.id }}">
+                                                                <i class="ri-circle-fill"></i>{{ equation.fk_variable2.name }}
+                                                            </span>
+                                                        {% endif %}
+                                                        {% if equation.fk_variable3 %}
+                                                            <span class="variable-tag" data-variable-id="{{ equation.fk_variable3.id }}">
+                                                                <i class="ri-circle-fill"></i>{{ equation.fk_variable3.name }}
+                                                            </span>
+                                                        {% endif %}
+                                                        {% if equation.fk_variable4 %}
+                                                            <span class="variable-tag" data-variable-id="{{ equation.fk_variable4.id }}">
+                                                                <i class="ri-circle-fill"></i>{{ equation.fk_variable4.name }}
+                                                            </span>
+                                                        {% endif %}
+                                                        {% if equation.fk_variable5 %}
+                                                            <span class="variable-tag" data-variable-id="{{ equation.fk_variable5.id }}">
+                                                                <i class="ri-circle-fill"></i>{{ equation.fk_variable5.name }}
+                                                            </span>
+                                                        {% endif %}
+                                                        {% if not equation.fk_variable1 and not equation.fk_variable2 and not equation.fk_variable3 and not equation.fk_variable4 and not equation.fk_variable5 %}
+                                                            <span class="no-variables">Sin variables asociadas</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="equation-card-footer">
+                                                <div class="equation-metadata">
+                                                    <small class="equation-date">
+                                                        <i class="ri-time-line me-1"></i>{% if equation.date_created %}{{ equation.date_created|date:"d/m/Y" }}{% else %}Sin fecha{% endif %}
+                                                    </small>
+                                                    <div class="equation-actions">
+                                                        <button class="btn btn-link equation-menu-btn" 
+                                                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                            <i data-feather="more-horizontal" class="icon-sm"></i>
+                                                        </button>
+                                                        <div class="dropdown-menu dropdown-menu-end">
+                                                            <a href="#" class="dropdown-item edit-equation" data-bs-toggle="modal"
+                                                                data-bs-target="#addOrUpdateEquation" data-equation-id="{{ equation.id }}"
+                                                                onclick="loadEquationDetails('{{ equation.id }}'); return false;">
+                                                                <i class="ri-pencil-fill align-bottom me-2 text-muted"></i>
+                                                                Editar
+                                                            </a>
+                                                            <div class="dropdown-divider"></div>
+                                                            <a class="dropdown-item delete-equation text-danger" 
+                                                                data-bs-toggle="modal" data-bs-target="#removeEquationModal" 
+                                                                data-equation-id="{{ equation.id }}">
+                                                                <i class="ri-delete-bin-fill align-bottom me-2"></i>
+                                                                Eliminar
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% empty %}
+                                    <div class="empty-state">
+                                        <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" 
+                                            colors="primary:#405189,secondary:#0ab39c" style="width:100px;height:100px">
+                                        </lord-icon>
+                                        <h5 class="empty-title">No hay ecuaciones en esta área</h5>
+                                        <p class="empty-description">Las ecuaciones definen las relaciones matemáticas entre las variables del producto.</p>
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addOrUpdateEquation">
+                                            <i class="ri-add-fill me-1"></i>Crear Primera Ecuación
+                                        </button>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <!-- Pagination -->
+                                {% if equations_area.has_other_pages %}
+                                <div class="pagination-section">
+                                    <nav aria-label="Paginación de ecuaciones">
+                                        <ul class="pagination justify-content-center">
+                                            {% if equations_area.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ equations_area.previous_page_number }}">
+                                                        <i class="ri-arrow-left-s-line"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            
+                                            {% for num in equations_area.paginator.page_range %}
+                                                <li class="page-item {% if equations_area.number == num %}active{% endif %}">
+                                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                                </li>
+                                            {% endfor %}
+                                            
+                                            {% if equations_area.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ equations_area.next_page_number }}">
+                                                        <i class="ri-arrow-right-s-line"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Variables Graph Tab -->
+                        <div class="tab-pane fade" id="area-variables" role="tabpanel">
+                            <div class="variables-graph-section">
+                                <div class="graph-header">
+                                    <h4 class="graph-title">
+                                        <i class="ri-bubble-chart-line me-2"></i>Gráfico de Variables e Interrelaciones
+                                    </h4>
+                                </div>
+                                
+                                <div class="graph-content">
+                                    <p class="graph-description">Este gráfico muestra todas las variables utilizadas en las ecuaciones de esta área y cómo se relacionan entre sí.</p>
+                                    
+                                    <!-- Graph Container -->
+                                    <div class="graph-container" id="variablesGraph"></div>
+                                    
+                                    <!-- Graph Legend -->
+                                    <div class="graph-legend">
+                                        <h6 class="legend-title">Leyenda:</h6>
+                                        <div class="legend-items">
+                                            <div class="legend-item">
+                                                <div class="legend-color legend-variable"></div>
+                                                <span>Variable</span>
+                                            </div>
+                                            <div class="legend-item">
+                                                <div class="legend-color legend-main-variable"></div>
+                                                <span>Variable Principal</span>
+                                            </div>
+                                            <div class="legend-item">
+                                                <div class="legend-color legend-equation"></div>
+                                                <span>Ecuación</span>
+                                            </div>
+                                            <div class="legend-item">
+                                                <div class="legend-color legend-relation"></div>
+                                                <span>Relación</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Graph Controls -->
+                                    <div class="graph-controls">
+                                        <button class="btn btn-sm btn-secondary" onclick="resetGraph()">
+                                            <i class="ri-refresh-line me-1"></i>Reiniciar Vista
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="downloadGraph()">
+                                            <i class="ri-download-line me-1"></i>Descargar Imagen
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+{% endblock content %}
+
+{% block extra_content %}
+{% block modals %} 
+{% include "variable/variable-modal.html" %}
+{% include "partials/modals.html" %}
+{% endblock modals %}
+{% endblock extra_content %}
+    
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathquill/0.10.1/mathquill.min.js" integrity="sha384-RBk1jltzHKz5l1cUO7JrI/xiKAtaZjvvBvu1/wSkohgWoJ2toB+6IRzMvemWy+f" crossorigin="anonymous"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="{% static 'js/edit-add.js' %}"></script>
+<script src="{% static 'js/delete.js' %}"></script>
+<script src="{% static 'js/area-overview.js' %}"></script>
+<!-- SEGURIDAD: graph_data (nombres/ecuaciones del usuario) serializado con json_script
+     en vez de |safe, para evitar XSS almacenado al alimentar el canvas. -->
+{{ graph_data|json_script:"area-graph-data" }}
+<script>
+// Initialize area overview with context data
+window.areaOverviewData = {
+    graphData: (function () {
+        var el = document.getElementById('area-graph-data');
+        var fallback = { variables: [], equations: [] };
+        if (!el) return fallback;
+        try { return JSON.parse(el.textContent) || fallback; } catch (e) { return fallback; }
+    })(),
+    totalVariables: {% if total_variables %}{{ total_variables }}{% else %}0{% endif %},
+    totalRelations: {% if total_relations %}{{ total_relations }}{% else %}0{% endif %}
+};
+</script>
+{% endblock extra_js %}

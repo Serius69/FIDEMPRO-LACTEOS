@@ -1,0 +1,1707 @@
+<style>
+/* ── Result sidebar — Kapitalya dark ── */
+
+/* Metric Cards */
+.metric-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.metric-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.metric-card .card-header {
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    padding: 0.75rem 1rem;
+    color: var(--text-primary);
+}
+
+.metric-card .card-header.bg-gradient-primary,
+.metric-card .card-header.bg-gradient-info,
+.metric-card .card-header.bg-gradient-warning,
+.metric-card .card-header.bg-gradient-success,
+.metric-card .card-header.bg-gradient-dark {
+    background: var(--bg-surface) !important;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--product-border);
+    border-top: 2px solid var(--product);
+}
+
+.metric-card .card-title {
+    font: 600 13px/1 var(--font-ui);
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.metric-card .card-body {
+    padding: 1rem;
+    background: var(--bg-elevated);
+}
+
+/* Status indicator boxes */
+.metric-card .bg-light {
+    background-color: var(--bg-surface) !important;
+    border: 1px solid var(--border);
+}
+
+.metric-card .bg-light strong { color: var(--text-primary); font-weight: 600; }
+.metric-card .bg-light small  { color: var(--text-muted); font-size: 0.75rem; }
+
+/* Action Buttons Grid — let kapitalya.css handle btn-primary; just size */
+.action-buttons-grid .btn {
+    font: 500 13px/1 var(--font-ui);
+    border-radius: var(--r-md);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+/* Data Table Container */
+.data-table-container {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.data-table-container .card-header {
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    color: var(--text-primary);
+}
+
+.data-table-container .card-header.bg-gradient-info {
+    background: var(--bg-surface) !important;
+    border-top: 2px solid var(--info);
+    color: var(--text-primary);
+}
+
+.data-table-container .card-body { padding: 0; }
+
+.data-table-container .table { margin: 0; font-size: 0.85rem; }
+
+.data-table-container .table th {
+    background-color: var(--bg-surface);
+    color: var(--text-muted);
+    font: 600 0.75rem/1 var(--font-data);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border-strong);
+    padding: 0.6rem 0.8rem;
+}
+
+.data-table-container .table td {
+    padding: 0.6rem 0.8rem;
+    color: var(--text-secondary);
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elevated);
+}
+
+.data-table-container .table tr:hover td { background-color: var(--bg-surface); }
+.data-table-container .table .badge { font-size: 0.7rem; padding: 0.25rem 0.5rem; }
+
+/* Recommendation Card */
+.recommendation-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.recommendation-card .card-header.bg-gradient-warning {
+    background: var(--bg-surface) !important;
+    border-top: 2px solid var(--warning);
+    color: var(--text-primary);
+}
+
+.recommendation-item {
+    background-color: rgba(255,182,39,0.06) !important;
+    border-left: 4px solid var(--warning) !important;
+    border-radius: var(--r-md);
+}
+
+.recommendation-item h6 { color: var(--warning); font-weight: 600; }
+.recommendation-item .badge.bg-warning { background-color: rgba(255,182,39,0.15) !important; color: var(--warning) !important; }
+
+.recommendation-item .btn-outline-warning {
+    color: var(--warning);
+    border-color: rgba(255,182,39,0.4);
+    font-size: 0.75rem;
+}
+.recommendation-item .btn-outline-warning:hover { background-color: rgba(255,182,39,0.12); }
+
+/* Quick stats bg overrides */
+.metric-card .bg-success { background-color: rgba(0,200,150,0.10) !important; }
+.metric-card .bg-danger  { background-color: rgba(255,59,80,0.10) !important; }
+.metric-card .text-success { color: var(--success) !important; }
+.metric-card .text-danger  { color: var(--danger) !important; }
+
+/* Daily Results */
+.daily-result-item { animation: fadeIn 0.25s ease-out; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.day-header {
+    background-color: rgba(0,212,200,0.08) !important;
+    border-radius: var(--r-md);
+}
+
+.day-header h6 { color: var(--product) !important; font: 600 13px/1 var(--font-ui); }
+
+/* Metric Mini Cards */
+.metric-mini-card { border-radius: var(--r-md); transition: transform 0.15s; }
+.metric-mini-card:hover { transform: scale(1.02); }
+
+.metric-mini-card.bg-primary { background-color: var(--product)  !important; color: #00211f !important; }
+.metric-mini-card.bg-success { background-color: var(--success)  !important; color: #00150d !important; }
+.metric-mini-card.bg-info    { background-color: var(--info)     !important; color: #001520 !important; }
+.metric-mini-card.bg-warning { background-color: var(--warning)  !important; color: #1a0e00 !important; }
+.metric-mini-card.bg-danger  { background-color: var(--danger)   !important; color: #1a0004 !important; }
+.metric-mini-card small { opacity: 0.8; }
+.metric-mini-card h6 { font: 600 13px/1 var(--font-data); margin: 0; }
+
+/* Variable info */
+.variable-info strong { color: var(--text-primary); font: 600 13px/1 var(--font-ui); }
+.variable-description { color: var(--text-muted) !important; font-size: 0.75rem; }
+.value-display { color: var(--text-primary); font: 600 13px/1 var(--font-data); }
+.variable-unit { color: var(--text-muted) !important; font-size: 0.75rem; }
+
+.variable-row { transition: background-color 0.15s; }
+.variable-row:hover { background-color: var(--bg-surface) !important; }
+
+/* Day Summary */
+.day-summary {
+    background-color: var(--bg-surface) !important;
+    border-radius: var(--r-md);
+}
+.day-summary h6 { color: var(--text-primary); font-weight: 600; }
+
+/* Pagination Controls */
+.pagination-controls {
+    background-color: var(--bg-surface) !important;
+    border-top: 1px solid var(--border);
+}
+.pagination-controls .dropdown-menu {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+}
+.pagination-controls .dropdown-item { color: var(--text-secondary); }
+.pagination-controls .dropdown-item:hover { background-color: var(--bg-surface); color: var(--text-primary); }
+
+/* Progress */
+.progress { background-color: var(--bg-surface); border-radius: 4px; }
+.progress-bar { background-color: var(--product); transition: width 0.3s ease; }
+
+/* Focus */
+.btn:focus, .dropdown-toggle:focus {
+    box-shadow: 0 0 0 3px rgba(0,212,200,0.15);
+    outline: none;
+}
+
+/* Loading spinner */
+.loading { opacity: 0.6; pointer-events: none; }
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 20px; height: 20px;
+    border: 2px solid var(--border-strong);
+    border-top-color: var(--product);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    transform: translate(-50%, -50%);
+}
+@keyframes spin {
+    0%   { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+    .metric-card .card-body { padding: 0.75rem; }
+    .data-table-container .table { font-size: 0.8rem; }
+    .metric-mini-card { margin-bottom: 0.5rem; }
+    .action-buttons-grid .btn { font-size: 0.8rem; padding: 0.4rem 0.6rem; }
+}
+
+@media print {
+    .metric-card, .data-table-container, .recommendation-card { box-shadow: none; }
+    .action-buttons-grid, .pagination-controls { display: none; }
+}
+</style>
+
+
+<!-- Sidebar with Parameters and Controls - IMPROVED VERSION -->
+<div class="col-lg-4">
+    <!-- Simulation Parameters with Enhanced Design -->
+    <div class="metric-card mb-4">
+        <div class="card-header bg-gradient-primary">
+            <h5 class="card-title mb-0">
+                <i class="bx bx-cog me-2"></i>
+                Parámetros de Simulación
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-4">
+                    <img src="{{ product_instance.get_photo_url }}" 
+                            class="img-fluid rounded shadow-sm" 
+                            alt="{{ product_instance.name }}"
+                            loading="lazy">
+                </div>
+                <div class="col-8">
+                    <h6 class="mb-1 text-primary">{{ business_instance.name }}</h6>
+                    <p class="text-muted mb-0 small">{{ product_instance.name }}</p>
+                </div>
+            </div>
+            
+            <!-- Enhanced Status Cards -->
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <div class="bg-light p-3 rounded text-center">
+                        <i class="bx bx-time-five text-primary mb-1"></i>
+                        <small class="d-block text-muted">Horizonte</small>
+                        <strong>{{ simulation_instance.quantity_time }} {{ simulation_instance.unit_time }}</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-light p-3 rounded text-center">
+                        <i class="bx bx-calendar text-success mb-1"></i>
+                        <small class="d-block text-muted">Inicio</small>
+                        <strong>{{ simulation_instance.date_created|date:"d/m/Y" }}</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mb-3">
+                <span class="badge bg-success px-3 py-2">
+                    <i class="bx bx-check-circle me-1"></i>Simulación Completada
+                </span>
+            </div>
+
+            <!-- Enhanced Action Buttons -->
+            <div class="action-buttons-grid">
+                <button class="btn btn-primary btn-sm w-100 mb-2" onclick="redirectToQuestionnaire()">
+                    <i class="bx bx-edit me-1"></i>Modificar Parámetros
+                </button>
+                <button class="btn btn-outline-success btn-sm w-100 mb-2" onclick="exportResults()">
+                    <i class="bx bx-download me-1"></i>Exportar Datos
+                </button>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button class="btn btn-outline-primary btn-sm w-100" onclick="window.print()">
+                            <i class="bx bx-printer me-1"></i>Imprimir
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-outline-secondary btn-sm w-100" onclick="shareResults()">
+                            <i class="bx bx-share-alt me-1"></i>Compartir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Historical Data Comparison Table -->
+<div class="data-table-container mb-4">
+   <div class="card border-0 shadow-sm">
+       <div class="card-header bg-gradient-info">
+           <h5 class="card-title mb-0">
+               <i class="bx bx-bar-chart-alt-2 me-2"></i>
+               Datos Históricos vs Simulación
+           </h5>
+           <small class="text-muted">Comparación de variables principales del modelo</small>
+       </div>
+       <div class="card-body p-0">
+           <!-- Controles de búsqueda y filtro -->
+           <div class="p-3 bg-light border-bottom">
+               <div class="row align-items-center">
+                   <div class="col-md-6">
+                       <input type="text" class="form-control form-control-sm" 
+                              placeholder="Buscar variable..." id="variableSearch">
+                   </div>
+                   <div class="col-md-6 text-end">
+                       <small class="text-muted">
+                           <i class="bx bx-info-circle me-1"></i>
+                           Mostrando variables disponibles
+                       </small>
+                   </div>
+               </div>
+           </div>
+           
+           <!-- Tabla con scroll -->
+           <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+               <table class="table table-hover mb-0" id="comparisonTable">
+                   <thead class="table-light sticky-top">
+                       <tr>
+                           <th style="width: 40%">Métrica</th>
+                           <th style="width: 30%">Promedio Simulado</th>
+                           <th style="width: 30%">Tendencia</th>
+                       </tr>
+                   </thead>
+                   <tbody id="comparisonTableBody">
+                       {% if totales_acumulativos %}
+                           {% for variable_name, variable_data in totales_acumulativos.items %}
+                           <tr class="variable-row" data-category="simulacion">
+                               <td>
+                                   <strong>{{ variable_name }}</strong>
+                                   <br><small class="text-muted">{{ variable_data.unit }}</small>
+                               </td>
+                               <td>
+                                   <span class="badge 
+                                       {% if variable_data.mean > 0 %}bg-primary{% else %}bg-secondary{% endif %}">
+                                       {{ variable_data.mean|floatformat:2 }} {{ variable_data.unit }}
+                                   </span>
+                               </td>
+                               <td>
+                                   {% if variable_data.trend == 'increasing' %}
+                                       <span class="badge bg-success bg-opacity-20 text-success">
+                                           <i class="bx bx-trending-up me-1"></i>Creciente
+                                       </span>
+                                   {% elif variable_data.trend == 'decreasing' %}
+                                       <span class="badge bg-danger bg-opacity-20 text-danger">
+                                           <i class="bx bx-trending-down me-1"></i>Decreciente
+                                       </span>
+                                   {% else %}
+                                       <span class="badge bg-info bg-opacity-20 text-info">
+                                           <i class="bx bx-minus me-1"></i>Estable
+                                       </span>
+                                   {% endif %}
+                               </td>
+                           </tr>
+                           {% endfor %}
+                       {% else %}
+                           <tr>
+                               <td colspan="3" class="text-center text-muted py-4">
+                                   <i class="bx bx-info-circle mb-2"></i>
+                                   <div>No hay datos de variables calculadas disponibles</div>
+                                   <small>Ejecute una simulación completa para ver las comparaciones</small>
+                               </td>
+                           </tr>
+                       {% endif %}
+                   </tbody>
+               </table>
+           </div>
+           
+           <!-- Información adicional -->
+           <div class="p-3 bg-light border-top">
+               <div class="row">
+                   <div class="col-md-6">
+                       <small class="text-muted">
+                           <i class="bx bx-info-circle me-1"></i>
+                           Variables calculadas: {{ totales_acumulativos|length }}
+                       </small>
+                   </div>
+                   <div class="col-md-6 text-end">
+                       {% if results %}
+                       <small class="text-muted">
+                           Basado en {{ results|length }} días de simulación
+                       </small>
+                       {% endif %}
+                   </div>
+               </div>
+           </div>
+       </div>
+   </div>
+</div>
+
+<!-- Financial Recommendations Enhanced -->
+{% if financial_recommendations %}
+<div class="recommendation-card mb-4">
+   <div class="card border-0 shadow-sm">
+       <div class="card-header bg-gradient-warning">
+           <h5 class="card-title mb-0">
+               <i class="bx bx-lightbulb me-2"></i>
+               Recomendaciones Inteligentes
+           </h5>
+       </div>
+       <div class="card-body">
+           {% for recommendation in financial_recommendations %}
+           <div class="recommendation-item mb-3 p-3 bg-light rounded border-start border-warning border-4">
+               <div class="d-flex justify-content-between align-items-start mb-2">
+                   <h6 class="fw-bold text-warning mb-0">
+                       {% if recommendation.name %}
+                           {{ recommendation.name }}
+                       {% else %}
+                           Recomendación {{ forloop.counter }}
+                       {% endif %}
+                   </h6>
+                   {% if recommendation.priority %}
+                   <span class="badge bg-warning bg-opacity-25 text-warning">
+                       {% if recommendation.priority == 'high' %}Alta
+                       {% elif recommendation.priority == 'medium' %}Media
+                       {% else %}Baja
+                       {% endif %}
+                   </span>
+                   {% endif %}
+               </div>
+               {% if recommendation.recommendation %}
+               <p class="mb-2 small">{{ recommendation.recommendation }}</p>
+               {% endif %}
+               <div class="d-flex justify-content-between align-items-center">
+                   {% if recommendation.variable_name %}
+                   <small class="text-muted">
+                       <i class="bx bx-target me-1"></i>
+                       Variable: <strong>{{ recommendation.variable_name }}</strong>
+                   </small>
+                   {% else %}
+                   <small class="text-muted">
+                       <i class="bx bx-lightbulb me-1"></i>
+                       Recomendación general
+                   </small>
+                   {% endif %}
+                   {% if recommendation.id %}
+                   <button class="btn btn-outline-warning btn-sm" onclick="applyRecommendation('{{ recommendation.id }}')">
+                       <i class="bx bx-check me-1"></i>Aplicar
+                   </button>
+                   {% endif %}
+               </div>
+           </div>
+           {% endfor %}
+       </div>
+   </div>
+</div>
+{% elif financial_recommendations_to_show %}
+<div class="recommendation-card mb-4">
+   <div class="card border-0 shadow-sm">
+       <div class="card-header bg-gradient-warning">
+           <h5 class="card-title mb-0">
+               <i class="bx bx-lightbulb me-2"></i>
+               Recomendaciones Inteligentes
+           </h5>
+       </div>
+       <div class="card-body">
+           {% for recommendation in financial_recommendations_to_show %}
+           <div class="recommendation-item mb-3 p-3 bg-light rounded border-start border-warning border-4">
+               <div class="d-flex justify-content-between align-items-start mb-2">
+                   <h6 class="fw-bold text-warning mb-0">
+                       {% if recommendation.name %}
+                           {{ recommendation.name }}
+                       {% else %}
+                           Recomendación {{ forloop.counter }}
+                       {% endif %}
+                   </h6>
+                   {% if recommendation.priority %}
+                   <span class="badge bg-warning bg-opacity-25 text-warning">
+                       {% if recommendation.priority == 'high' %}Alta
+                       {% elif recommendation.priority == 'medium' %}Media
+                       {% else %}Baja
+                       {% endif %}
+                   </span>
+                   {% endif %}
+               </div>
+               {% if recommendation.recommendation %}
+               <p class="mb-2 small">{{ recommendation.recommendation }}</p>
+               {% endif %}
+               <div class="d-flex justify-content-between align-items-center">
+                   {% if recommendation.variable_name %}
+                   <small class="text-muted">
+                       <i class="bx bx-target me-1"></i>
+                       Variable: <strong>{{ recommendation.variable_name }}</strong>
+                   </small>
+                   {% else %}
+                   <small class="text-muted">
+                       <i class="bx bx-lightbulb me-1"></i>
+                       Recomendación general
+                   </small>
+                   {% endif %}
+                   {% if recommendation.id %}
+                   <button class="btn btn-outline-warning btn-sm" onclick="applyRecommendation('{{ recommendation.id }}')">
+                       <i class="bx bx-check me-1"></i>Aplicar
+                   </button>
+                   {% endif %}
+               </div>
+           </div>
+           {% endfor %}
+       </div>
+   </div>
+</div>
+{% else %}
+<!-- Solo mostrar si hay datos de simulación pero no recomendaciones -->
+{% if results %}
+<div class="alert alert-info border-0">
+   <div class="d-flex align-items-center">
+       <i class="bx bx-info-circle me-2"></i>
+       <div>
+           <strong>Recomendaciones en proceso</strong>
+           <div class="small">Las recomendaciones se generarán automáticamente al completar el análisis financiero.</div>
+       </div>
+   </div>
+</div>
+{% endif %}
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+   const searchInput = document.getElementById('variableSearch');
+   
+   // Búsqueda de variables
+   if (searchInput) {
+       searchInput.addEventListener('input', function() {
+           const searchTerm = this.value.toLowerCase();
+           const allRows = document.querySelectorAll('.variable-row');
+           let visibleCount = 0;
+           
+           allRows.forEach(row => {
+               const text = row.textContent.toLowerCase();
+               if (text.includes(searchTerm) || searchTerm === '') {
+                   row.style.display = '';
+                   visibleCount++;
+               } else {
+                   row.style.display = 'none';
+               }
+           });
+           
+           // Actualizar contador
+           const info = document.querySelector('.col-md-6.text-end small');
+           if (info) {
+               info.innerHTML = '<i class="bx bx-info-circle me-1"></i>Mostrando ' + visibleCount + ' variables';
+           }
+       });
+   }
+});
+
+// Función para aplicar recomendaciones
+function applyRecommendation(id) {
+   if (id) {
+       console.log('Aplicando recomendación:', id);
+       // Aquí puedes agregar la lógica para aplicar la recomendación
+       // Por ejemplo, hacer una llamada AJAX al backend
+   }
+}
+</script>
+
+    <!-- Quick Stats Dashboard -->
+    <div class="metric-card mb-4">
+        <div class="card-header bg-gradient-success">
+            <h5 class="card-title mb-0">
+                <i class="bx bx-tachometer me-2"></i>
+                Panel de Control Rápido
+            </h5>
+        </div>
+        <div class="card-body">
+            <!-- Performance Indicators -->
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <div class="text-center p-2 bg-success bg-opacity-10 rounded">
+                        <i class="bx bx-trending-up text-success fs-4"></i>
+                        <div class="fw-bold text-success" id="profitableDaysCount">0</div>
+                        <small class="text-muted">Días Rentables</small>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="text-center p-2 bg-danger bg-opacity-10 rounded">
+                        <i class="bx bx-trending-down text-danger fs-4"></i>
+                        <div class="fw-bold text-danger" id="lossyDaysCount">0</div>
+                        <small class="text-muted">Días con Pérdidas</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="d-grid gap-2">
+                <button class="btn btn-sm btn-outline-primary" onclick="showBestDays()">
+                    <i class="bx bx-star me-1"></i>Ver Mejores Días
+                </button>
+                <button class="btn btn-sm btn-outline-warning" onclick="showWorstDays()">
+                    <i class="bx bx-error-circle me-1"></i>Analizar Días Críticos
+                </button>
+                <button class="btn btn-sm btn-outline-info" onclick="generateReport()">
+                    <i class="bx bx-file-blank me-1"></i>Generar Reporte
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Daily Results Navigation -->
+    <div class="data-table-container">
+        <div class="card-header bg-gradient-dark">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-calendar me-2"></i>
+                    Resultados Diarios
+                </h5>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-light text-dark" id="currentDayIndicator">Día 1</span>
+                    <div class="dropdown ms-2">
+                        <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bx bx-filter"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><button class="dropdown-item" onclick="filterDays('profitable')">Días Rentables</button></li>
+                            <li><button class="dropdown-item" onclick="filterDays('losses')">Días con Pérdidas</button></li>
+                            <li><button class="dropdown-item" onclick="filterDays('high-demand')">Alta Demanda</button></li>
+                            <li><button class="dropdown-item" onclick="filterDays('all')">Todos los Días</button></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+            <!-- Day Progress Bar -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <small class="text-muted">Progreso de Simulación</small>
+                    <small class="text-muted" id="progressText">1 / {{ all_variables_extracted|length }}</small>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-primary" role="progressbar" 
+                         style="width: 0%" 
+                         id="simulationProgress"></div>
+                </div>
+            </div>
+
+            <div id="dailyResultsContainer">
+                {% for item in all_variables_extracted %}
+                <div class="daily-result-item" 
+                     data-day="{{ forloop.counter }}" 
+                     data-demand="{{ item.demand_mean|default:0 }}"
+                     data-revenue="{{ item.IT|default:0 }}"
+                     data-profit="{{ item.GT|default:0 }}"
+                     style="{% if not forloop.first %}display: none;{% endif %}">
+                    
+                    <!-- Enhanced Day Header -->
+                    <div class="day-header mb-3 p-3 bg-primary bg-opacity-10 rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="text-primary mb-0">
+                                <i class="bx bx-calendar-event me-2"></i>
+                                {% if item.date %}
+                                    {{ item.date|date:"d/m/Y" }}
+                                {% else %}
+                                    Día {{ forloop.counter }}
+                                {% endif %}
+                            </h6>
+                            <div class="day-performance-badge">
+                                {% if item.GT > 0 %}
+                                    <span class="badge bg-success">Rentable</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Pérdida</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Key Metrics Cards -->
+                    <div class="row g-2 mb-4">
+                        <div class="col-6">
+                            <div class="metric-mini-card p-3 bg-primary text-white rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="bx bx-trending-up fs-4 me-2"></i>
+                                    <div>
+                                        <small class="d-block opacity-75">Demanda</small>
+                                        <h6 class="mb-0">{{ item.demand_mean|floatformat:0 }} L</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-mini-card p-3 bg-success text-white rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="bx bx-dollar fs-4 me-2"></i>
+                                    <div>
+                                        <small class="d-block opacity-75">Ingresos</small>
+                                        <h6 class="mb-0">{{ item.IT|floatformat:0 }} Bs</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-mini-card p-3 {% if item.GT >= 0 %}bg-info{% else %}bg-danger{% endif %} text-white rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="bx {% if item.GT >= 0 %}bx-trophy{% else %}bx-error{% endif %} fs-4 me-2"></i>
+                                    <div>
+                                        <small class="d-block opacity-75">Ganancia</small>
+                                        <h6 class="mb-0">{{ item.GT|floatformat:0 }} Bs</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-mini-card p-3 bg-warning text-white rounded">
+                                <div class="d-flex align-items-center">
+                                    <i class="bx bx-percentage fs-4 me-2"></i>
+                                    <div>
+                                        <small class="d-block opacity-75">Rentabilidad</small>
+                                        <h6 class="mb-0">{{ item.NR|floatformat:1 }}%</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Detailed Variables Table -->
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40%">Variable</th>
+                                    <th style="width: 25%">Valor</th>
+                                    <th style="width: 20%">Unidad</th>
+                                    <th style="width: 15%">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for key, value in item.items %}
+                                    {% if key != 'day' and key != 'date' and key != 'demand_mean' and key != 'demand_std' %}
+                                    <tr class="variable-row" data-variable="{{ key }}">
+                                        <td class="small">
+                                            <div class="variable-info">
+                                                <strong>{{ key }}</strong>
+                                                <br>
+                                                <small class="text-muted variable-description" data-key="{{ key }}">
+                                                    <!-- Descripción será agregada por JavaScript -->
+                                                </small>
+                                            </div>
+                                        </td>
+                                        <td class="fw-bold">
+                                            <div class="value-display" data-key="{{ key }}" data-value="{{ value }}">
+                                                {{ value|floatformat:2 }}
+                                            </div>
+                                        </td>
+                                        <td class="small text-muted">
+                                            <span class="variable-unit" data-key="{{ key }}">
+                                                <!-- Unidad será agregada por JavaScript -->
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if key == 'NR' %}
+                                                {% if value >= 0.2 %}
+                                                    <span class="badge bg-success">Óptimo</span>
+                                                {% elif value >= 0.1 %}
+                                                    <span class="badge bg-warning">Aceptable</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Crítico</span>
+                                                {% endif %}
+                                            {% elif key == 'NSC' %}
+                                                {% if value >= 0.9 %}
+                                                    <span class="badge bg-success">Excelente</span>
+                                                {% elif value >= 0.7 %}
+                                                    <span class="badge bg-warning">Bueno</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Bajo</span>
+                                                {% endif %}
+                                            {% elif key == 'EOG' %}
+                                                {% if value >= 0.8 %}
+                                                    <span class="badge bg-success">Alta</span>
+                                                {% elif value >= 0.6 %}
+                                                    <span class="badge bg-warning">Media</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Baja</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-info">Normal</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Day Summary -->
+                    <div class="day-summary mt-4 p-3 bg-light rounded">
+                        <h6 class="mb-2"><i class="bx bx-analytics me-2"></i>Resumen del Día {{ forloop.counter }}</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <small class="text-muted">Resultado:</small>
+                                <div class="fw-bold {% if item.GT >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if item.GT >= 0 %}
+                                        <i class="bx bx-trending-up me-1"></i>Día rentable
+                                    {% else %}
+                                        <i class="bx bx-trending-down me-1"></i>Día con pérdidas
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">Eficiencia:</small>
+                                <div class="fw-bold">
+                                    {% if item.EOG >= 0.8 %}
+                                        <span class="text-success">Alta eficiencia</span>
+                                    {% elif item.EOG >= 0.6 %}
+                                        <span class="text-warning">Eficiencia media</span>
+                                    {% else %}
+                                        <span class="text-danger">Baja eficiencia</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5">
+                    <i class="bx bx-info-circle display-4 text-muted"></i>
+                    <h5 class="mt-3 text-muted">No hay datos disponibles</h5>
+                    <p class="text-muted">Los resultados de la simulación no contienen datos para mostrar.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Enhanced Pagination Controls -->
+        <div class="pagination-controls p-3 bg-light border-top">
+            <div class="row align-items-center">
+                <div class="col-4">
+                    <button type="button" class="btn btn-sm btn-outline-primary w-100" id="prevDayBtn">
+                        <i class="bx bx-chevron-left me-1"></i>Anterior
+                    </button>
+                </div>
+                <div class="col-4 text-center">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <span id="dayCounter">Día 1 de {{ all_variables_extracted|length }}</span>
+                        </button>
+                        <ul class="dropdown-menu" id="dayDropdown">
+                            {% for item in all_variables_extracted %}
+                            <li>
+                                <button class="dropdown-item" onclick="goToDay({{ forloop.counter }})">
+                                    Día {{ forloop.counter }}
+                                    {% if item.GT >= 0 %}
+                                        <span class="badge bg-success ms-2">+</span>
+                                    {% else %}
+                                        <span class="badge bg-danger ms-2">-</span>
+                                    {% endif %}
+                                </button>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <button type="button" class="btn btn-sm btn-outline-primary w-100" id="nextDayBtn">
+                        Siguiente<i class="bx bx-chevron-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// Enhanced JavaScript functionality
+let currentDay = 1;
+let totalDays = 0;
+let filteredDays = [];
+let isFiltered = false;
+
+// Diccionario completo de variables con nombres y unidades
+const variableDefinitions = {
+    // Variables Financieras Principales
+    'PVP': { name: 'Precio de Venta al Público', unit: 'Bs.', decimals: 2 },
+    'TPV': { name: 'Total Productos Vendidos', unit: 'Litros', decimals: 0 },
+    'IT': { name: 'Ingresos Totales', unit: 'Bs.', decimals: 2 },
+    'TG': { name: 'Total Gastos', unit: 'Bs.', decimals: 2 },
+    'GT': { name: 'Ganancia Total', unit: 'Bs.', decimals: 2 },
+    'NR': { name: 'Nivel de Rentabilidad', unit: '%', decimals: 3 },
+    'NSC': { name: 'Nivel de Satisfacción del Cliente', unit: '%', decimals: 3 },
+    'EOG': { name: 'Eficiencia Operativa General', unit: '%', decimals: 3 },
+    
+    // Variables de Demanda
+    'DPH': { name: 'Demanda Promedio Histórica', unit: 'Litros', decimals: 2 },
+    'DH': { name: 'Demanda Histórica', unit: 'Litros', decimals: 2 },
+    'DE': { name: 'Demanda Esperada', unit: 'Litros', decimals: 2 },
+    'DSD': { name: 'Desviación Estándar Demanda', unit: 'Litros', decimals: 2 },
+    'CVD': { name: 'Coeficiente Variación Demanda', unit: '%', decimals: 3 },
+    'DDP': { name: 'Demanda Diaria Proyectada', unit: 'Litros', decimals: 2 },
+    'ED': { name: 'Estacionalidad de la Demanda', unit: '%', decimals: 2 },
+    'DT': { name: 'Demanda Total', unit: 'Litros', decimals: 2 },
+    'DI': { name: 'Demanda Insatisfecha', unit: 'Litros', decimals: 2 },
+    
+    // Variables de Costos
+    'CFD': { name: 'Costo Fijo Diario', unit: 'Bs.', decimals: 2 },
+    'CVU': { name: 'Costo Variable Unitario', unit: 'Bs/L', decimals: 2 },
+    'CUIP': { name: 'Costo Unitario Insumo', unit: 'Bs/L', decimals: 2 },
+    'CRP': { name: 'Costo Reparaciones', unit: 'Bs.', decimals: 2 },
+    'CREP': { name: 'Costo Repuestos', unit: 'Bs.', decimals: 2 },
+    'CMOM': { name: 'Costo Mano Obra Mantenimiento', unit: 'Bs.', decimals: 2 },
+    'CC': { name: 'Costo de Compra', unit: 'Bs.', decimals: 2 },
+    'CTI': { name: 'Costo de Transporte Insumos', unit: 'Bs.', decimals: 2 },
+    'CAL': { name: 'Costo de Almacenamiento', unit: 'Bs.', decimals: 2 },
+    'CCAP': { name: 'Costo Capacitación Mensual', unit: 'Bs/mes', decimals: 2 },
+    'CCF': { name: 'Costo Cadena Frío', unit: 'Bs.', decimals: 2 },
+    'CLOG': { name: 'Costo Logístico', unit: 'Bs.', decimals: 2 },
+    'CTR': { name: 'Costo Total Reorden', unit: 'Bs.', decimals: 2 },
+    'CTAI': { name: 'Costo Total Adquisición Insumos', unit: 'Bs.', decimals: 2 },
+    'CTTL': { name: 'Costo Total Transporte', unit: 'Bs.', decimals: 2 },
+    'CPP': { name: 'Costo Promedio Producción', unit: 'Bs.', decimals: 2 },
+    'CPV': { name: 'Costo Promedio Venta', unit: 'Bs.', decimals: 2 },
+    'CPI': { name: 'Costo Promedio Insumos', unit: 'Bs.', decimals: 2 },
+    'CPMO': { name: 'Costo Promedio Mano Obra', unit: 'Bs.', decimals: 2 },
+    'CUP': { name: 'Costo Unitario Producción', unit: 'Bs.', decimals: 2 },
+    'CHO': { name: 'Costo Horas Ociosas', unit: 'Bs.', decimals: 2 },
+    'CA': { name: 'Costo Almacenamiento', unit: 'Bs.', decimals: 2 },
+    'CUAC': { name: 'Costo Unitario de Adquisición de Clientes', unit: 'Bs.', decimals: 2 },
+    'CUI': { name: 'Costo Unitario Inventario', unit: 'Bs.', decimals: 2 },
+    'CTM': { name: 'Costo Total Mermas Calculado', unit: 'Bs.', decimals: 2 },
+    'CTA': { name: 'Costo Total de Adquisición', unit: 'Bs.', decimals: 2 },
+    'CCE': { name: 'Costo Capacitación por Empleado', unit: 'Bs/EMPLEADO', decimals: 2 },
+    'CLL': { name: 'Costo Laboral por Litro', unit: 'Bs/L', decimals: 2 },
+    'CPL_MKT': { name: 'Costo por Lead', unit: 'Bs/LEAD', decimals: 2 },
+    'CDL': { name: 'Costo Distribución por Litro', unit: 'Bs/L', decimals: 2 },
+    'CML': { name: 'Costo Mantenimiento por Litro', unit: 'Bs/L', decimals: 2 },
+    
+    // Variables de Producción
+    'CPROD': { name: 'Capacidad de Producción', unit: 'L/día', decimals: 0 },
+    'NEPP': { name: 'Número de Empleados en Producción', unit: 'Personas', decimals: 0 },
+    'CPPL': { name: 'Cantidad Promedio Producción por Lote', unit: 'Litros', decimals: 0 },
+    'TPE': { name: 'Tiempo de producción por empleado', unit: 'minutos', decimals: 0 },
+    'QMAX': { name: 'Cantidad Máxima Producible', unit: 'Litros', decimals: 0 },
+    'QPL': { name: 'Cantidad producida de productos lácteos', unit: 'Litros', decimals: 2 },
+    'UII': { name: 'Uso de Inventario Insumos', unit: 'Litros', decimals: 2 },
+    'PPL': { name: 'Productos Producidos por Lote', unit: 'Litros', decimals: 2 },
+    'QC': { name: 'Cantidad Conforme', unit: 'Litros', decimals: 2 },
+    'TPPRO': { name: 'Total Productos Producidos', unit: 'Litros', decimals: 2 },
+    'POD': { name: 'Producción Objetivo Diaria', unit: 'Litros', decimals: 2 },
+    'EP': { name: 'Eficiencia Producción', unit: '%', decimals: 3 },
+    'HNP': { name: 'Horas Necesarias Producción', unit: 'minutos', decimals: 0 },
+    'MP': { name: 'Merma Producción Calculada', unit: 'Litros', decimals: 2 },
+    'PED': { name: 'Punto de Equilibrio Diario', unit: 'Litros', decimals: 2 },
+    
+    // Variables de Inventario
+    'IPF_INICIAL': { name: 'Inventario Productos Finales Inicial', unit: 'Litros', decimals: 0 },
+    'II_INICIAL': { name: 'Inventario Insumos Inicial', unit: 'Litros', decimals: 0 },
+    'IPF_NEW': { name: 'Inventario Productos Finales Nuevo', unit: 'Litros', decimals: 2 },
+    'II': { name: 'Inventario Insumos', unit: 'Litros', decimals: 2 },
+    'IPF': { name: 'Inventario Productos Finales', unit: 'Litros', decimals: 2 },
+    'PI': { name: 'Pedido Insumos', unit: 'Litros', decimals: 2 },
+    'CIP': { name: 'Capacidad Inventario Productos', unit: 'Litros', decimals: 0 },
+    'CMIPF': { name: 'Capacidad Máxima Inventario Producto Final', unit: 'Litros', decimals: 0 },
+    'SI': { name: 'Stock Inventario Seguridad', unit: 'Litros', decimals: 0 },
+    'IIF': { name: 'Inventario Final Insumos', unit: 'Litros', decimals: 2 },
+    'NIL': { name: 'Nivel Ideal del Inventario Leche', unit: 'Litros', decimals: 2 },
+    'IOP': { name: 'Inventario Objetivo Productos', unit: 'Litros', decimals: 2 },
+    'IOI': { name: 'Inventario Objetivo Insumos', unit: 'Litros', decimals: 2 },
+    'DCI': { name: 'Días Cobertura Inventario', unit: 'DÍAS', decimals: 0 },
+    'MI': { name: 'Merma Inventario Calculada', unit: 'Litros', decimals: 2 },
+    'RTI': { name: 'Rotación Inventario', unit: 'VECES', decimals: 2 },
+    'RIMP': { name: 'Rotación Inventario Materias Primas', unit: 'VECES/AÑO', decimals: 2 },
+    
+    // Variables de Tiempo
+    'TPC': { name: 'Tiempo Promedio entre Compras', unit: 'DÍAS', decimals: 0 },
+    'TR': { name: 'Tiempo Reabastecimiento', unit: 'DÍAS', decimals: 0 },
+    'TMP': { name: 'Tiempo Medio Procesamiento Pedido', unit: 'DÍAS', decimals: 0 },
+    'DPL': { name: 'Días Promedio de Reposición de Leche', unit: 'DÍAS', decimals: 0 },
+    'NMD': { name: 'Número Máximo de Días', unit: 'DÍAS', decimals: 0 },
+    'TE1': { name: 'Tiempo Entrega Proveedor 1', unit: 'DÍAS', decimals: 0 },
+    'TE2': { name: 'Tiempo Entrega Proveedor 2', unit: 'DÍAS', decimals: 0 },
+    'TE3': { name: 'Tiempo Entrega Proveedor 3', unit: 'DÍAS', decimals: 0 },
+    'MLP': { name: 'Minutos Laborables Por Día', unit: 'minutos', decimals: 0 },
+    'HTO': { name: 'Horas Totales de Operación', unit: 'HORAS', decimals: 0 },
+    'TEO': { name: 'Tiempo Entrega Objetivo', unit: 'HORAS', decimals: 0 },
+    'TP': { name: 'Tiempo de Parada', unit: 'HORAS', decimals: 2 },
+    'HMP': { name: 'Horas Mantenimiento Preventivo', unit: 'HORAS', decimals: 2 },
+    'HMC': { name: 'Horas Mantenimiento Correctivo', unit: 'HORAS', decimals: 2 },
+    'HAU': { name: 'Horas Ausentismo', unit: 'HORAS', decimals: 2 },
+    'HTP': { name: 'Horas Trabajadas Programadas', unit: 'HORAS', decimals: 2 },
+    'TTED': { name: 'Tiempo Total Entregas Distribución', unit: 'HORAS', decimals: 2 },
+    'TER': { name: 'Tiempo Entrega Real', unit: 'HORAS', decimals: 2 },
+    'DF': { name: 'Tiempo Formulación Pedido', unit: 'DÍAS', decimals: 0 },
+    'TPEP': { name: 'Tiempo Promedio Entrega Proveedores', unit: 'DÍAS', decimals: 1 },
+    'TPEC': { name: 'Tiempo Promedio Entrega Cliente', unit: 'HORAS', decimals: 1 },
+    'HO': { name: 'Horas Ociosas', unit: 'HORAS', decimals: 2 },
+    
+    // Variables de Clientes
+    'CPD': { name: 'Clientes Por Día', unit: 'Personas', decimals: 0 },
+    'VPC_BASE': { name: 'Ventas por Cliente Base', unit: 'Litros', decimals: 2 },
+    'VPC': { name: 'Ventas Por Cliente', unit: 'Litros', decimals: 2 },
+    'TCAE': { name: 'Total Clientes Atendidos en el Día', unit: 'Personas', decimals: 0 },
+    'TCA': { name: 'Total Clientes Atendidos', unit: 'Personas', decimals: 0 },
+    'FC': { name: 'Frecuencia de Compra', unit: 'VECES/DÍA', decimals: 2 },
+    'RTC': { name: 'Rotación Clientes', unit: 'VECES', decimals: 2 },
+    'ISC': { name: 'Índice Satisfacción Cliente Calculado', unit: '%', decimals: 3 },
+    'NC': { name: 'Nuevos Clientes', unit: 'Personas', decimals: 0 },
+    
+    // Variables de Empleados
+    'SE': { name: 'Sueldos Empleados', unit: 'Bs/mes', decimals: 2 },
+    'ES': { name: 'Empleados Salieron', unit: 'Personas', decimals: 0 },
+    'EE': { name: 'Empleados Entraron', unit: 'Personas', decimals: 0 },
+    'IRP': { name: 'Índice Rotación Personal', unit: '%', decimals: 2 },
+    'PPE': { name: 'Productividad por Empleado', unit: 'L/EMPLEADO', decimals: 2 },
+    'TAU': { name: 'Tasa Ausentismo', unit: '%', decimals: 3 },
+    'PE': { name: 'Productividad Empleados', unit: 'L/EMPLEADO', decimals: 2 },
+    
+    // Variables de Competencia
+    'PC': { name: 'Precio de Venta de la Competencia', unit: 'Bs.', decimals: 2 },
+    'PMC': { name: 'Participación Mercado Competidor', unit: '%', decimals: 2 },
+    'NPC': { name: 'Número Productos Competencia', unit: 'Personas', decimals: 0 },
+    'NCM': { name: 'Nivel de Competencia en el Mercado', unit: '%', decimals: 2 },
+    'CDP': { name: 'Calidad Diferenciada Producto', unit: 'PUNTOS', decimals: 2 },
+    'CCP': { name: 'Costo Competitivo Producto', unit: 'PUNTOS', decimals: 2 },
+    'CSP': { name: 'Servicio Competitivo Producto', unit: 'PUNTOS', decimals: 2 },
+    'ICC': { name: 'Intensidad Campañas Competencia', unit: 'INDICE', decimals: 2 },
+    'VCP': { name: 'Ventaja Competitiva Precio', unit: '%', decimals: 3 },
+    'PMR': { name: 'Participación Mercado Relativa', unit: '%', decimals: 3 },
+    'IDP': { name: 'Índice Diferenciación Producto', unit: 'PUNTOS', decimals: 2 },
+    'EEC': { name: 'Efectividad Estrategia Competitiva', unit: '%', decimals: 3 },
+    'AMEN': { name: 'Amenaza Competitiva', unit: 'INDICE', decimals: 2 },
+    'IC': { name: 'Índice Competitividad', unit: '%', decimals: 3 },
+    'PM': { name: 'Participación Mercado', unit: '%', decimals: 3 },
+    
+    // Variables de Transporte y Logística
+    'DPE': { name: 'Distancia Promedio de Entrega', unit: 'KM', decimals: 1 },
+    'CUTRANS': { name: 'Costo Transporte Unitario', unit: 'Bs/L', decimals: 2 },
+    'CTPLV': { name: 'Cantidad transportada por viaje', unit: 'Litros', decimals: 0 },
+    'KMT': { name: 'Kilómetros Totales', unit: 'KM', decimals: 2 },
+    'NE': { name: 'Número de Entregas', unit: 'Personas', decimals: 0 },
+    'PD': { name: 'Productos Devueltos', unit: 'Litros', decimals: 2 },
+    'ERE': { name: 'Eficiencia Rutas Entrega', unit: 'L/KM', decimals: 2 },
+    'ICE': { name: 'Índice Calidad Entrega', unit: '%', decimals: 2 },
+    'TD': { name: 'Tasa Devoluciones', unit: '%', decimals: 3 },
+    
+    // Variables de Marketing
+    'GMM': { name: 'Gastos Marketing Mensual', unit: 'Bs/mes', decimals: 2 },
+    'LG': { name: 'Leads Generados', unit: 'Personas', decimals: 0 },
+    'AC': { name: 'Alcance de Campañas', unit: 'Personas', decimals: 0 },
+    'ALC': { name: 'Alcance Campañas', unit: 'Personas', decimals: 0 },
+    'MRE': { name: 'Marca Reconocimiento Espontáneo', unit: '%', decimals: 2 },
+    'MRA': { name: 'Marca Reconocimiento Asistido', unit: '%', decimals: 2 },
+    'EM': { name: 'Efectividad Marketing', unit: '%', decimals: 3 },
+    'ROIA': { name: 'ROI Inversión Publicitaria', unit: '%', decimals: 3 },
+    'TCL': { name: 'Tasa Conversión Leads', unit: '%', decimals: 3 },
+    'AEC': { name: 'Alcance Efectivo Campañas', unit: 'Personas', decimals: 0 },
+    'RMI': { name: 'Reconocimiento Marca Índice', unit: 'PUNTOS', decimals: 2 },
+    
+    // Variables de Proveedores
+    'NPD': { name: 'Número de Proveedores de Leche', unit: 'Personas', decimals: 0 },
+    'P1': { name: 'Peso Proveedor 1', unit: '%', decimals: 2 },
+    'P2': { name: 'Peso Proveedor 2', unit: '%', decimals: 2 },
+    'P3': { name: 'Peso Proveedor 3', unit: '%', decimals: 2 },
+    'CMP1': { name: 'Calidad Materia Prima 1', unit: 'PUNTOS', decimals: 2 },
+    'CMP2': { name: 'Calidad Materia Prima 2', unit: 'PUNTOS', decimals: 2 },
+    'CMP3': { name: 'Calidad Materia Prima 3', unit: 'PUNTOS', decimals: 2 },
+    'V1': { name: 'Volumen Proveedor 1', unit: 'Litros', decimals: 2 },
+    'V2': { name: 'Volumen Proveedor 2', unit: 'Litros', decimals: 2 },
+    'V3': { name: 'Volumen Proveedor 3', unit: 'Litros', decimals: 2 },
+    'EAT': { name: 'Entregas a Tiempo', unit: 'Personas', decimals: 0 },
+    'TTEP': { name: 'Total de Entregas Proveedores', unit: 'Personas', decimals: 0 },
+    'ICP': { name: 'Índice Calidad Proveedores', unit: 'PUNTOS', decimals: 2 },
+    'CDE': { name: 'Cumplimiento Entregas', unit: '%', decimals: 2 },
+    'PRL': { name: 'Pedido Reabastecimiento Leche', unit: 'Litros', decimals: 2 },
+    
+    // Variables de Calidad y Control
+    'TCFO': { name: 'Temperatura Cadena Frío Objetivo', unit: '°C', decimals: 1 },
+    'TCF': { name: 'Temperatura Cadena Frío', unit: '°C', decimals: 1 },
+    'CINSP': { name: 'Conversión Insumos', unit: 'L/L', decimals: 2 },
+    'NF': { name: 'Número de Fallas', unit: 'Personas', decimals: 0 },
+    'DISP': { name: 'Disponibilidad', unit: '%', decimals: 3 },
+    'OEE': { name: 'Efectividad General Equipos', unit: '%', decimals: 3 },
+    'FF': { name: 'Frecuencia de Fallas', unit: 'FALLAS/1000H', decimals: 2 },
+    'RMP': { name: 'Ratio Mantenimiento Preventivo', unit: '%', decimals: 3 },
+    
+    // Variables Adicionales
+    'CTL': { name: 'Consumo diario promedio', unit: 'Litros', decimals: 2 },
+    'GO': { name: 'Gastos Operativos', unit: 'Bs.', decimals: 2 },
+    'GG': { name: 'Gastos Generales', unit: 'Bs.', decimals: 2 },
+    'PVR': { name: 'Precio Venta Recomendado', unit: 'Bs.', decimals: 2 },
+    'FU': { name: 'Factor Utilización', unit: '%', decimals: 3 },
+    'IB': { name: 'Ingreso Bruto', unit: 'Bs.', decimals: 2 },
+    'MB': { name: 'Margen Bruto', unit: '%', decimals: 3 },
+    'RI': { name: 'Retorno Inversión', unit: '%', decimals: 3 },
+    'IE': { name: 'Ingresos Esperados', unit: 'Bs.', decimals: 2 },
+    'RVE': { name: 'Rentabilidad vs Esperada', unit: '%', decimals: 3 },
+    'IDG': { name: 'Índice Desempeño Global', unit: '%', decimals: 3 }
+};
+
+// Initialization
+document.addEventListener('DOMContentLoaded', function() {
+    initializeEnhancedSidebar();
+    calculateAndDisplayStats();
+    setupEventListeners();
+    updateVariableDescriptions(); // Nueva función para actualizar descripciones
+});
+
+function updateVariableDescriptions() {
+    // Actualizar descripciones de variables
+    document.querySelectorAll('.variable-description').forEach(element => {
+        const key = element.dataset.key;
+        const definition = variableDefinitions[key];
+        if (definition) {
+            element.textContent = definition.name;
+        } else {
+            element.textContent = key; // Fallback al código si no se encuentra
+        }
+    });
+    
+    // Actualizar unidades
+    document.querySelectorAll('.variable-unit').forEach(element => {
+        const key = element.dataset.key;
+        const definition = variableDefinitions[key];
+        if (definition) {
+            element.textContent = definition.unit;
+        } else {
+            element.textContent = 'Unidad'; // Fallback
+        }
+    });
+    
+    // Actualizar formato de valores según decimales recomendados
+    document.querySelectorAll('.value-display').forEach(element => {
+        const key = element.dataset.key;
+        const value = parseFloat(element.dataset.value || element.textContent);
+        const definition = variableDefinitions[key];
+        
+        if (definition && !isNaN(value)) {
+            const formattedValue = value.toFixed(definition.decimals);
+            element.textContent = formattedValue;
+        }
+    });
+}
+
+function initializeEnhancedSidebar() {
+    totalDays = document.querySelectorAll('.daily-result-item').length;
+    filteredDays = Array.from({length: totalDays}, (_, i) => i + 1);
+    
+    initializeDailyResultsPagination();
+    updateProgress();
+    animateMetricCards();
+}
+
+function calculateAndDisplayStats() {
+    const allItems = document.querySelectorAll('.daily-result-item');
+    let profitableDays = 0;
+    let lossyDays = 0;
+    
+    allItems.forEach(item => {
+        const profit = parseFloat(item.dataset.profit || 0);
+        if (profit > 0) profitableDays++;
+        else if (profit < 0) lossyDays++;
+    });
+    
+    document.getElementById('profitableDaysCount').textContent = profitableDays;
+    document.getElementById('lossyDaysCount').textContent = lossyDays;
+}
+
+function initializeDailyResultsPagination() {
+    const prevBtn = document.getElementById('prevDayBtn');
+    const nextBtn = document.getElementById('nextDayBtn');
+    
+    if (!prevBtn || !nextBtn) return;
+    
+    prevBtn.addEventListener('click', function() {
+        if (currentDay > 1) {
+            currentDay--;
+            updateDayDisplay();
+            showToast(`Navegando al día ${currentDay}`, 'info');
+        }
+    });
+    
+    nextBtn.addEventListener('click', function() {
+        if (currentDay < totalDays) {
+            currentDay++;
+            updateDayDisplay();
+            showToast(`Navegando al día ${currentDay}`, 'info');
+        }
+    });
+    
+    updateDayDisplay();
+}
+
+function updateDayDisplay() {
+    // Hide all items
+    document.querySelectorAll('.daily-result-item').forEach(item => {
+        item.style.display = 'none';
+    });
+    
+    // Show current item with animation
+    const currentItem = document.querySelector(`[data-day="${currentDay}"]`);
+    if (currentItem) {
+        currentItem.style.display = 'block';
+        currentItem.classList.add('animate__animated', 'animate__fadeIn');
+    }
+    
+    updateControls();
+    updateProgress();
+}
+
+function updateControls() {
+    const prevBtn = document.getElementById('prevDayBtn');
+    const nextBtn = document.getElementById('nextDayBtn');
+    const dayCounter = document.getElementById('dayCounter');
+    const currentDayIndicator = document.getElementById('currentDayIndicator');
+    
+    // Update counters
+    if (dayCounter) dayCounter.textContent = `Día ${currentDay} de ${totalDays}`;
+    if (currentDayIndicator) currentDayIndicator.textContent = `Día ${currentDay}`;
+    
+    // Update button states
+    prevBtn.disabled = currentDay === 1;
+    nextBtn.disabled = currentDay === totalDays;
+    
+    // Update button classes
+    prevBtn.className = currentDay === 1 ? 
+        'btn btn-sm btn-secondary w-100' : 
+        'btn btn-sm btn-outline-primary w-100';
+    nextBtn.className = currentDay === totalDays ? 
+        'btn btn-sm btn-secondary w-100' : 
+        'btn btn-sm btn-outline-primary w-100';
+}
+
+function updateProgress() {
+    const progressBar = document.getElementById('simulationProgress');
+    const progressText = document.getElementById('progressText');
+    
+    if (progressBar && totalDays > 0) {
+        const percentage = (currentDay / totalDays) * 100;
+        progressBar.style.width = `${percentage}%`;
+        progressBar.setAttribute('aria-valuenow', percentage);
+    }
+    
+    if (progressText) {
+        progressText.textContent = `${currentDay} / ${totalDays}`;
+    }
+}
+
+function animateMetricCards() {
+    const cards = document.querySelectorAll('.metric-card, .recommendation-card, .data-table-container');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('animate__animated', 'animate__fadeInUp');
+        }, index * 100);
+    });
+}
+
+function setupEventListeners() {
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            if (e.key === 'ArrowLeft' && currentDay > 1) {
+                e.preventDefault();
+                currentDay--;
+                updateDayDisplay();
+            } else if (e.key === 'ArrowRight' && currentDay < totalDays) {
+                e.preventDefault();
+                currentDay++;
+                updateDayDisplay();
+            }
+        }
+    });
+    
+    // Variable row hover effects
+    document.addEventListener('mouseover', function(e) {
+        if (e.target.closest('.variable-row')) {
+            e.target.closest('.variable-row').style.backgroundColor = '#f8f9fa';
+        }
+    });
+    
+    document.addEventListener('mouseout', function(e) {
+        if (e.target.closest('.variable-row')) {
+            e.target.closest('.variable-row').style.backgroundColor = '';
+        }
+    });
+}
+
+// Navigation Functions
+function goToDay(dayNumber) {
+    if (dayNumber >= 1 && dayNumber <= totalDays) {
+        currentDay = dayNumber;
+        updateDayDisplay();
+        showToast(`Mostrando resultados del día ${currentDay}`, 'success');
+    }
+}
+
+function filterDays(filterType) {
+    const allItems = document.querySelectorAll('.daily-result-item');
+    filteredDays = [];
+    
+    allItems.forEach((item, index) => {
+        const dayNumber = index + 1;
+        const profit = parseFloat(item.dataset.profit || 0);
+        const demand = parseFloat(item.dataset.demand || 0);
+        
+        let matches = false;
+        
+        switch(filterType) {
+            case 'profitable':
+                matches = profit > 0;
+                break;
+            case 'losses':
+                matches = profit < 0;
+                break;
+            case 'high-demand':
+                matches = demand > 400; // Ajustar según datos reales
+                break;
+            case 'all':
+                matches = true;
+                break;
+        }
+        
+        if (matches) {
+            filteredDays.push(dayNumber);
+        }
+    });
+    
+    if (filteredDays.length > 0) {
+        isFiltered = filterType !== 'all';
+        currentDay = filteredDays[0];
+        updateDayDisplay();
+        showToast(`Filtro aplicado: ${filteredDays.length} días encontrados`, 'info');
+    } else {
+        showToast('No se encontraron días que coincidan con el filtro', 'warning');
+    }
+}
+
+// Action Functions
+function redirectToQuestionnaire() {
+    showToast('Redirigiendo al cuestionario base...', 'info');
+    // Simular redirección - reemplazar con URL real
+    setTimeout(() => {
+        window.location.href = '/questionnaire/{{ simulation_instance.id }}/edit/';
+    }, 1000);
+}
+
+function exportResults() {
+    showToast('Preparando exportación de datos...', 'info');
+    
+    // Simular proceso de exportación
+    setTimeout(() => {
+        const data = collectAllData();
+        downloadCSV(data, `simulacion_${new Date().getTime()}.csv`);
+        showToast('Datos exportados exitosamente', 'success');
+    }, 2000);
+}
+
+function collectAllData() {
+    const allItems = document.querySelectorAll('.daily-result-item');
+    const data = [];
+    
+    // Header
+    data.push(['Día', 'Fecha', 'Demanda', 'Ingresos', 'Gastos', 'Ganancia', 'Rentabilidad', 'Satisfacción']);
+    
+    allItems.forEach((item, index) => {
+        const dayNumber = index + 1;
+        const demand = item.dataset.demand || '0';
+        const revenue = item.dataset.revenue || '0';
+        const profit = item.dataset.profit || '0';
+        
+        // Buscar valores adicionales en la tabla
+        const rows = item.querySelectorAll('.variable-row');
+        let gastos = '0', rentabilidad = '0', satisfaccion = '0';
+        
+        rows.forEach(row => {
+            const variable = row.dataset.variable;
+            const value = row.querySelector('.value-display').textContent.trim();
+            
+            if (variable === 'TG') gastos = value;
+            if (variable === 'NR') rentabilidad = value;
+            if (variable === 'NSC') satisfaccion = value;
+        });
+        
+        data.push([
+            dayNumber,
+            `Día ${dayNumber}`,
+            demand,
+            revenue,
+            gastos,
+            profit,
+            rentabilidad,
+            satisfaccion
+        ]);
+    });
+    
+    return data;
+}
+
+function downloadCSV(data, filename) {
+    const csvContent = data.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+
+function shareResults() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Resultados de Simulación',
+            text: `Resultados de la simulación - Día ${currentDay} de ${totalDays}`,
+            url: window.location.href
+        }).then(() => {
+            showToast('Contenido compartido exitosamente', 'success');
+        }).catch(() => {
+            copyToClipboard();
+        });
+    } else {
+        copyToClipboard();
+    }
+}
+
+function copyToClipboard() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('Enlace copiado al portapapeles', 'success');
+    }).catch(() => {
+        showToast('No se pudo copiar el enlace', 'error');
+    });
+}
+
+function showBestDays() {
+    const allItems = document.querySelectorAll('.daily-result-item');
+    const bestDays = [];
+    
+    allItems.forEach((item, index) => {
+        const profit = parseFloat(item.dataset.profit || 0);
+        bestDays.push({ day: index + 1, profit: profit });
+    });
+    
+    bestDays.sort((a, b) => b.profit - a.profit);
+    const topDays = bestDays.slice(0, 3);
+    
+    if (topDays.length > 0) {
+        currentDay = topDays[0].day;
+        updateDayDisplay();
+        showToast(`Mostrando el mejor día (Día ${topDays[0].day})`, 'success');
+    }
+}
+
+function showWorstDays() {
+    const allItems = document.querySelectorAll('.daily-result-item');
+    const worstDays = [];
+    
+    allItems.forEach((item, index) => {
+        const profit = parseFloat(item.dataset.profit || 0);
+        worstDays.push({ day: index + 1, profit: profit });
+    });
+    
+    worstDays.sort((a, b) => a.profit - b.profit);
+    
+    if (worstDays.length > 0) {
+        currentDay = worstDays[0].day;
+        updateDayDisplay();
+        showToast(`Mostrando el día más crítico (Día ${worstDays[0].day})`, 'warning');
+    }
+}
+
+function generateReport() {
+    showToast('Generando reporte completo...', 'info');
+    
+    // Simular generación de reporte
+    setTimeout(() => {
+        const reportData = generateReportData();
+        createReportModal(reportData);
+    }, 1500);
+}
+
+function generateReportData() {
+    const allItems = document.querySelectorAll('.daily-result-item');
+    let totalProfit = 0;
+    let totalRevenue = 0;
+    let totalDemand = 0;
+    let profitableDays = 0;
+    
+    allItems.forEach(item => {
+        const profit = parseFloat(item.dataset.profit || 0);
+        const revenue = parseFloat(item.dataset.revenue || 0);
+        const demand = parseFloat(item.dataset.demand || 0);
+        
+        totalProfit += profit;
+        totalRevenue += revenue;
+        totalDemand += demand;
+        
+        if (profit > 0) profitableDays++;
+    });
+    
+    return {
+        totalDays: totalDays,
+        totalProfit: totalProfit,
+        totalRevenue: totalRevenue,
+        totalDemand: totalDemand,
+        avgProfit: totalProfit / totalDays,
+        avgRevenue: totalRevenue / totalDays,
+        avgDemand: totalDemand / totalDays,
+        profitableDays: profitableDays,
+        profitabilityRate: (profitableDays / totalDays) * 100
+    };
+}
+
+function createReportModal(data) {
+    const modalHTML = `
+        <div class="modal fade" id="reportModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bx bx-file-blank me-2"></i>
+                            Reporte de Simulación Completo
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="card border-primary">
+                                    <div class="card-body text-center">
+                                        <i class="bx bx-calendar fs-1 text-primary mb-2"></i>
+                                        <h4>${data.totalDays}</h4>
+                                        <p class="text-muted">Días Simulados</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-success">
+                                    <div class="card-body text-center">
+                                        <i class="bx bx-trending-up fs-1 text-success mb-2"></i>
+                                        <h4>${data.profitableDays}</h4>
+                                        <p class="text-muted">Días Rentables</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <strong>Ganancia Total</strong>
+                                    <div class="h5 ${data.totalProfit >= 0 ? 'text-success' : 'text-danger'}">
+                                        ${data.totalProfit.toFixed(2)} Bs
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <strong>Ingresos Totales</strong>
+                                    <div class="h5 text-primary">
+                                        ${data.totalRevenue.toFixed(2)} Bs
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center p-3 bg-light rounded">
+                                    <strong>Demanda Total</strong>
+                                    <div class="h5 text-info">
+                                        ${data.totalDemand.toFixed(2)} L
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <h6>Promedios Diarios</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Ganancia Promedio</small>
+                                        <div class="fw-bold">${data.avgProfit.toFixed(2)} Bs/día</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Ingresos Promedio</small>
+                                        <div class="fw-bold">${data.avgRevenue.toFixed(2)} Bs/día</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Demanda Promedio</small>
+                                        <div class="fw-bold">${data.avgDemand.toFixed(2)} L/día</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h6><i class="bx bx-info-circle me-2"></i>Resumen Ejecutivo</h6>
+                                    <p class="mb-0">
+                                        La simulación muestra una tasa de rentabilidad del 
+                                        <strong>${data.profitabilityRate.toFixed(1)}%</strong> 
+                                        con ${data.profitableDays} días rentables de ${data.totalDays} días simulados.
+                                        ${data.totalProfit >= 0 ? 
+                                            'El resultado general es positivo.' : 
+                                            'Se requiere optimización de parámetros.'
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" onclick="exportResults()">
+                            <i class="bx bx-download me-1"></i>Exportar Reporte
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('reportModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('reportModal'));
+    modal.show();
+    
+    showToast('Reporte generado exitosamente', 'success');
+}
+
+function applyRecommendation(recommendationId) {
+    showToast(`Aplicando recomendación ${recommendationId}...`, 'info');
+    
+    // Simular aplicación de recomendación
+    setTimeout(() => {
+        showToast('Recomendación aplicada. Recalculando simulación...', 'success');
+        // Aquí iría la lógica para aplicar la recomendación
+    }, 2000);
+}
+
+// Utility Functions
+function showToast(message, type = 'info') {
+    const toastHTML = `
+        <div class="toast align-items-center text-white bg-${type === 'error' ? 'danger' : type} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bx bx-${type === 'success' ? 'check' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info'}-circle me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+    }
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+    
+    const toastElement = toastContainer.lastElementChild;
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+    
+    // Remove toast element after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+// Export functions for global access
+window.goToDay = goToDay;
+window.filterDays = filterDays;
+window.redirectToQuestionnaire = redirectToQuestionnaire;
+window.exportResults = exportResults;
+window.shareResults = shareResults;
+window.showBestDays = showBestDays;
+window.showWorstDays = showWorstDays;
+window.generateReport = generateReport;
+window.applyRecommendation = applyRecommendation;
+</script>

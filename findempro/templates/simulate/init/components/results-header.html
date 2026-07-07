@@ -1,0 +1,35 @@
+<!-- Results Header Component -->
+<div class="results-header">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h1 class="mb-3">
+                <i class="bx bx-bar-chart-alt-2 me-3"></i>
+                Resultados de Simulación
+            </h1>
+            <p class="fs-5 mb-0">
+                Análisis completo para {{ product_instance.name }} - {{ business_instance.name }}
+            </p>
+            <p class="opacity-75 mb-0">
+                Simulación ejecutada el {{ simulation_instance.date_created|date:"d/m/Y H:i" }}
+            </p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <div class="export-section">
+                <h5 class="mb-3">
+                    <i class="bx bx-download me-2"></i>
+                    Exportar Resultados
+                </h5>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="exportToPDF()">
+                        <i class="bx bx-file-pdf me-2"></i>
+                        Exportar PDF
+                    </button>
+                    <button class="btn btn-success" onclick="exportToExcel()">
+                        <i class="bx bx-file me-2"></i>
+                        Exportar Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,2289 @@
+
+<style>
+
+    /* Variables de color */
+:root {
+   --color-primary: #4a5568;
+   --color-primary-light: #718096;
+   --color-success: #2d7d32;
+   --color-info: #1976d2;
+   --color-warning: #f57c00;
+   --color-danger: #d32f2f;
+   --color-secondary: #6c757d;
+   
+   --bg-primary: #ffffff;
+   --bg-secondary: #f8f9fa;
+   --bg-light: #f1f3f4;
+   --bg-card: #ffffff;
+   
+   --text-primary: #212529;
+   --text-secondary: #495057;
+   --text-muted: #6c757d;
+   --text-light: #ffffff;
+   
+   --border-color: #dee2e6;
+   --border-light: #e9ecef;
+   
+   --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+   --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+   --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+}
+
+/* Estilos generales */
+body {
+   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   background-color: var(--bg-secondary);
+   color: var(--text-primary);
+   line-height: 1.6;
+}
+
+/* Tab pane */
+.tab-pane {
+   padding: 1.5rem;
+   background-color: var(--bg-primary);
+   border-radius: 0.5rem;
+   box-shadow: var(--shadow-sm);
+}
+
+/* Alert principal */
+.alert-primary {
+   background-color: #e3f2fd;
+   border-color: #bbdefb;
+   color: var(--text-primary);
+   border-radius: 0.5rem;
+   border: 1px solid var(--border-color);
+}
+
+.alert-heading {
+   color: var(--color-primary);
+   font-weight: 600;
+   margin-bottom: 1rem;
+}
+
+.alert-heading i {
+   color: var(--color-info);
+}
+
+/* Cards */
+.card {
+   background-color: var(--bg-card);
+   border: 1px solid var(--border-light);
+   border-radius: 0.5rem;
+   box-shadow: var(--shadow-sm);
+   transition: all 0.3s ease;
+}
+
+.card:hover {
+   box-shadow: var(--shadow);
+}
+
+.card-header {
+   background-color: var(--bg-light);
+   border-bottom: 1px solid var(--border-light);
+   padding: 1rem 1.25rem;
+   font-weight: 600;
+   color: var(--text-primary);
+}
+
+.card-body {
+   padding: 1.25rem;
+}
+
+.card-title {
+   color: var(--text-primary);
+   font-weight: 600;
+   margin-bottom: 0.5rem;
+}
+
+/* Card de gradiente */
+.bg-gradient-primary {
+   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+   color: var(--text-light);
+   border: none;
+}
+
+.bg-gradient-primary .card-body {
+   color: var(--text-light);
+}
+
+.text-white-50 {
+   color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Chart cards */
+.chart-card {
+   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chart-card:hover {
+   transform: translateY(-2px);
+   box-shadow: var(--shadow);
+}
+
+.chart-container {
+   position: relative;
+   min-height: 200px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+.chart-image {
+   max-width: 100%;
+   height: auto;
+   border-radius: 0.25rem;
+   cursor: pointer;
+   transition: opacity 0.2s ease;
+}
+
+.chart-image:hover {
+   opacity: 0.9;
+}
+
+.chart-placeholder {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   min-height: 150px;
+   color: var(--text-muted);
+   background-color: var(--bg-light);
+   border-radius: 0.25rem;
+}
+
+/* Data table container */
+.data-table-container {
+   background-color: var(--bg-card);
+   border-radius: 0.5rem;
+   box-shadow: var(--shadow-sm);
+   overflow: hidden;
+}
+
+/* Table */
+.table {
+   margin-bottom: 0;
+   color: var(--text-primary);
+}
+
+.table th {
+   background-color: var(--bg-light);
+   color: var(--text-primary);
+   font-weight: 600;
+   border-bottom: 2px solid var(--border-color);
+   padding: 1rem 0.75rem;
+   vertical-align: middle;
+}
+
+.table td {
+   padding: 0.875rem 0.75rem;
+   vertical-align: middle;
+   border-bottom: 1px solid var(--border-light);
+}
+
+.table-hover tbody tr:hover {
+   background-color: var(--bg-light);
+}
+
+.table-responsive {
+   border-radius: 0.5rem;
+}
+
+/* Variable info */
+.variable-info strong {
+   color: var(--text-primary);
+   font-weight: 600;
+}
+
+.variable-info small {
+   color: var(--text-muted);
+   font-size: 0.85rem;
+}
+
+.variable-total {
+   font-weight: 600;
+   color: var(--text-primary);
+}
+
+.variable-unit .badge {
+   background-color: var(--bg-light) !important;
+   color: var(--text-primary) !important;
+   border: 1px solid var(--border-color);
+   font-weight: 500;
+}
+
+/* Badges */
+.badge {
+   font-size: 0.75rem;
+   font-weight: 500;
+   padding: 0.375rem 0.5rem;
+   border-radius: 0.25rem;
+}
+
+.bg-success {
+   background-color: var(--color-success) !important;
+   color: var(--text-light) !important;
+}
+
+.bg-danger {
+   background-color: var(--color-danger) !important;
+   color: var(--text-light) !important;
+}
+
+.bg-secondary {
+   background-color: var(--color-secondary) !important;
+   color: var(--text-light) !important;
+}
+
+.bg-light {
+   background-color: var(--bg-light) !important;
+   color: var(--text-primary) !important;
+}
+
+/* Text colors */
+.text-success {
+   color: var(--color-success) !important;
+}
+
+.text-info {
+   color: var(--color-info) !important;
+}
+
+.text-danger {
+   color: var(--color-danger) !important;
+}
+
+.text-warning {
+   color: var(--color-warning) !important;
+}
+
+.text-secondary {
+   color: var(--color-secondary) !important;
+}
+
+.text-muted {
+   color: var(--text-muted) !important;
+}
+
+.text-primary {
+   color: var(--color-primary) !important;
+}
+
+/* Buttons */
+.btn {
+   font-weight: 500;
+   border-radius: 0.375rem;
+   transition: all 0.2s ease;
+}
+
+.btn-sm {
+   padding: 0.25rem 0.5rem;
+   font-size: 0.875rem;
+}
+
+.btn-outline-primary {
+   color: var(--color-primary);
+   border-color: var(--color-primary);
+   background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+   background-color: var(--color-primary);
+   border-color: var(--color-primary);
+   color: var(--text-light);
+}
+
+.btn-secondary {
+   background-color: var(--color-secondary);
+   border-color: var(--color-secondary);
+   color: var(--text-light);
+}
+
+.btn-secondary:hover {
+   background-color: #545b62;
+   border-color: #545b62;
+}
+
+.btn-close {
+   background-color: transparent;
+   border: none;
+   opacity: 0.7;
+}
+
+.btn-close:hover {
+   opacity: 1;
+}
+
+/* Button groups */
+.btn-group .btn {
+   border-radius: 0.25rem;
+}
+
+/* Icons */
+.bx {
+   font-size: 1.1em;
+   vertical-align: middle;
+}
+
+.display-1 {
+   font-size: 6rem;
+   opacity: 0.3;
+}
+
+.display-4 {
+   font-size: 2.5rem;
+   opacity: 0.4;
+}
+
+.display-6 {
+   font-size: 1.75rem;
+}
+
+/* Empty states */
+.text-center.py-5 {
+   padding: 3rem 0;
+   color: var(--text-muted);
+}
+
+.text-center.py-4 {
+   padding: 2rem 0;
+   color: var(--text-muted);
+}
+
+/* Modals */
+.modal-content {
+   border: none;
+   border-radius: 0.5rem;
+   box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+   background-color: var(--bg-light);
+   border-bottom: 1px solid var(--border-light);
+   border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.modal-title {
+   color: var(--text-primary);
+   font-weight: 600;
+}
+
+.modal-body {
+   background-color: var(--bg-primary);
+   color: var(--text-primary);
+}
+
+.modal-footer {
+   background-color: var(--bg-light);
+   border-top: 1px solid var(--border-light);
+   border-radius: 0 0 0.5rem 0.5rem;
+}
+
+/* Responsive spacing */
+.mb-4 {
+   margin-bottom: 1.5rem;
+}
+
+.mt-3 {
+   margin-top: 1rem;
+}
+
+.me-2 {
+   margin-right: 0.5rem;
+}
+
+.me-1 {
+   margin-right: 0.25rem;
+}
+
+/* Grid spacing */
+.g-3 > * {
+   padding: 0.75rem;
+}
+
+/* Sortable headers */
+.sortable-header {
+   cursor: pointer;
+   user-select: none;
+   transition: background-color 0.2s ease;
+}
+
+.sortable-header:hover {
+   background-color: var(--bg-secondary);
+}
+
+.sort-asc::after {
+   content: " ↑";
+   color: var(--color-primary);
+}
+
+.sort-desc::after {
+   content: " ↓";
+   color: var(--color-primary);
+}
+
+/* Category filter buttons */
+.category-filter-btn {
+   margin-right: 0.5rem;
+   margin-bottom: 0.5rem;
+}
+
+.category-filter-btn.active {
+   background-color: var(--color-primary);
+   border-color: var(--color-primary);
+   color: var(--text-light);
+}
+
+/* Search input */
+#variableSearchInput {
+   border: 1px solid var(--border-color);
+   border-radius: 0.375rem;
+   padding: 0.5rem 0.75rem;
+   background-color: var(--bg-primary);
+   color: var(--text-primary);
+}
+
+#variableSearchInput:focus {
+   border-color: var(--color-primary);
+   box-shadow: 0 0 0 0.2rem rgba(74, 85, 104, 0.25);
+   outline: none;
+}
+
+/* Variable chart container */
+.variable-chart-container {
+   min-height: 100px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   background-color: var(--bg-light);
+   border-radius: 0.25rem;
+   margin-top: 0.5rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+   .tab-pane {
+       padding: 1rem;
+   }
+   
+   .card-body {
+       padding: 1rem;
+   }
+   
+   .table-responsive {
+       font-size: 0.875rem;
+   }
+   
+   .display-1 {
+       font-size: 4rem;
+   }
+   
+   .display-4 {
+       font-size: 2rem;
+   }
+}
+
+@media (max-width: 576px) {
+   .chart-container {
+       min-height: 150px;
+   }
+   
+   .variable-info {
+       font-size: 0.875rem;
+   }
+   
+   .btn-sm {
+       padding: 0.2rem 0.4rem;
+       font-size: 0.75rem;
+   }
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+   from { opacity: 0; transform: translateY(10px); }
+   to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+   animation: fadeIn 0.3s ease-out;
+}
+
+/* Print styles */
+@media print {
+   .btn, .modal, .btn-group {
+       display: none !important;
+   }
+   
+   .card {
+       box-shadow: none !important;
+       border: 1px solid var(--border-color) !important;
+   }
+   
+   body {
+       background-color: white !important;
+   }
+}
+
+</style>
+
+
+<!-- Endogenous Variables Tab -->
+<div class="tab-pane fade" id="endogenous" role="tabpanel">
+    <!-- Título Principal -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-primary">
+                <h4 class="alert-heading mb-3">
+                    <i class="bx bx-trending-up me-2"></i>
+                    Resultados completos
+                </h4>
+                <p class="mb-2">
+                    Las variables endógenas son aquellas que se determinan dentro del modelo de simulación 
+                    basándose en las relaciones matemáticas establecidas y las variables exógenas.
+                </p>
+                <small class="text-muted">
+                    Total de variables endógenas procesadas: <strong>{{ totales_acumulativos|length|default:0 }}</strong> | 
+                    Período de simulación: <strong>{{ all_variables_extracted|length|default:0 }} días</strong>
+                </small>
+            </div>
+        </div>
+    </div>
+    <!-- Métricas Resumen -->
+    <div class="row mb-4" id="endogenousMetrics">
+        <div class="col-md-3">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-white-50">Variables Totales</h6>
+                            <h3 class="mb-0" id="totalVarsCount">{{ totales_acumulativos|length|default:0 }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bx bx-list-ul display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Gráficos de Variables Endógenas -->
+{% if endogenous_charts or chart_images %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bx bx-bar-chart me-2"></i>
+                    Gráficos de Variables Endógenas
+                </h5>
+                <p class="text-muted mb-0">
+                    Análisis visual de las variables internas del modelo de simulación
+                </p>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- Gráficos endógenos específicos -->
+                    {% for chart_name, chart_data in endogenous_charts.items %}
+                    <div class="col-lg-6">
+                        <div class="card chart-card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    {% if 'IT' in chart_name %}
+                                        <i class="bx bx-dollar text-success me-2"></i>Ingresos Totales (IT)
+                                    {% elif 'GT' in chart_name %}
+                                        <i class="bx bx-trending-up text-info me-2"></i>Ganancia Total (GT)
+                                    {% elif 'TG' in chart_name %}
+                                        <i class="bx bx-receipt text-danger me-2"></i>Total Gastos (TG)
+                                    {% elif 'TPV' in chart_name %}
+                                        <i class="bx bx-box text-primary me-2"></i>Total Productos Vendidos (TPV)
+                                    {% elif 'NSC' in chart_name %}
+                                        <i class="bx bx-star text-warning me-2"></i>Nivel de Satisfacción del Cliente (NSC)
+                                    {% elif 'EOG' in chart_name %}
+                                        <i class="bx bx-cog text-secondary me-2"></i>Eficiencia Operativa Global (EOG)
+                                    {% elif 'NR' in chart_name %}
+                                        <i class="bx bx-percentage text-success me-2"></i>Nivel de Rentabilidad (NR)
+                                    {% elif 'PVP' in chart_name %}
+                                        <i class="bx bx-tag text-info me-2"></i>Precio de Venta al Público (PVP)
+                                    {% elif 'CVU' in chart_name %}
+                                        <i class="bx bx-calculator text-warning me-2"></i>Costo Variable Unitario (CVU)
+                                    {% elif 'CFD' in chart_name %}
+                                        <i class="bx bx-credit-card text-danger me-2"></i>Costos Fijos Diarios (CFD)
+                                    {% else %}
+                                        <i class="bx bx-stats me-2"></i>{{ chart_name|upper }}
+                                    {% endif %}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- Descripción y interpretación del gráfico -->
+                                <div class="mb-3">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <small class="text-muted">
+                                                <strong>Descripción:</strong>
+                                                {% if 'IT' in chart_name %}
+                                                    Evolución de los ingresos totales diarios generados por las ventas
+                                                {% elif 'GT' in chart_name %}
+                                                    Comportamiento de la ganancia neta diaria (Ingresos - Gastos)
+                                                {% elif 'TG' in chart_name %}
+                                                    Progresión de los gastos operativos totales por día
+                                                {% elif 'TPV' in chart_name %}
+                                                    Cantidad total de productos vendidos diariamente
+                                                {% elif 'NSC' in chart_name %}
+                                                    Índice de satisfacción del cliente basado en el nivel de servicio
+                                                {% elif 'EOG' in chart_name %}
+                                                    Medida de eficiencia en el uso de recursos operativos
+                                                {% elif 'NR' in chart_name %}
+                                                    Porcentaje de rentabilidad sobre las ventas
+                                                {% elif 'PVP' in chart_name %}
+                                                    Precio unitario de venta establecido por día
+                                                {% elif 'CVU' in chart_name %}
+                                                    Costo variable por unidad producida
+                                                {% elif 'CFD' in chart_name %}
+                                                    Costos fijos distribuidos diariamente
+                                                {% else %}
+                                                    Variable del modelo de simulación {{ chart_name }}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted">
+                                                <strong>Interpretación:</strong>
+                                                {% if 'IT' in chart_name %}
+                                                    Tendencia creciente indica aumento en ventas; volatilidad sugiere variabilidad en demanda
+                                                {% elif 'GT' in chart_name %}
+                                                    Valores positivos confirman rentabilidad; tendencia ascendente es favorable
+                                                {% elif 'TG' in chart_name %}
+                                                    Control de gastos es crítico; aumentos deben justificarse con mayor producción
+                                                {% elif 'TPV' in chart_name %}
+                                                    Refleja la capacidad de satisfacer demanda y eficiencia de ventas
+                                                {% elif 'NSC' in chart_name %}
+                                                    Valores altos (>80%) indican buen servicio al cliente y fidelización
+                                                {% elif 'EOG' in chart_name %}
+                                                    Mayor eficiencia (>70%) sugiere optimización de recursos operativos
+                                                {% elif 'NR' in chart_name %}
+                                                    Margen saludable típicamente >15%; evalúa sostenibilidad financiera
+                                                {% elif 'PVP' in chart_name %}
+                                                    Estabilidad de precios es positiva; cambios deben ser estratégicos
+                                                {% elif 'CVU' in chart_name %}
+                                                    Costos bajos mejoran rentabilidad; monitorear para control de gastos
+                                                {% elif 'CFD' in chart_name %}
+                                                    Distribución equilibrada reduce presión sobre cash flow diario
+                                                {% else %}
+                                                    Analizar tendencias, volatilidad y valores extremos para insights
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Métricas clave del gráfico -->
+                                {% if totales_acumulativos %}
+                                    {% for var_name, var_data in totales_acumulativos.items %}
+                                        {% if var_name in chart_name %}
+                                        <div class="row mb-3">
+                                            <div class="col-md-3">
+                                                <div class="text-center">
+                                                    <h6 class="mb-1 text-primary">{{ var_data.total|floatformat:2 }}</h6>
+                                                    <small class="text-muted">Total Acumulado</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center">
+                                                    <h6 class="mb-1 text-info">{{ var_data.mean|floatformat:2 }}</h6>
+                                                    <small class="text-muted">Promedio</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center">
+                                                    <h6 class="mb-1 
+                                                        {% if var_data.trend == 'increasing' %}text-success
+                                                        {% elif var_data.trend == 'decreasing' %}text-danger
+                                                        {% else %}text-warning{% endif %}">
+                                                        {% if var_data.trend == 'increasing' %}↗️
+                                                        {% elif var_data.trend == 'decreasing' %}↘️
+                                                        {% else %}➡️{% endif %}
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        {% if var_data.trend == 'increasing' %}Creciente
+                                                        {% elif var_data.trend == 'decreasing' %}Decreciente
+                                                        {% else %}Estable{% endif %}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="text-center">
+                                                    <h6 class="mb-1 text-secondary">{{ var_data.cv|floatformat:3 }}</h6>
+                                                    <small class="text-muted">Coef. Variación</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+
+                                <!-- Gráfico -->
+                                <div class="chart-container">
+                                    {% if chart_data %}
+                                        <img src="data:image/png;base64,{{ chart_data }}" 
+                                            class="img-fluid chart-image" 
+                                            alt="Gráfico {{ chart_name }}"
+                                            onclick="expandChart('{{ chart_name }}', this.src)"
+                                            style="cursor: pointer; border: 1px solid #e9ecef; border-radius: 0.375rem;">
+                                    {% else %}
+                                        <div class="chart-placeholder text-center py-4">
+                                            <i class="bx bx-bar-chart display-4 text-muted"></i>
+                                            <p class="text-muted">Gráfico no disponible</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Recomendaciones basadas en la variable -->
+                                <div class="mt-3">
+                                    <div class="alert alert-info alert-sm">
+                                        <i class="bx bx-info-circle me-2"></i>
+                                        <strong>Recomendación:</strong>
+                                        {% if 'IT' in chart_name %}
+                                            Monitorear correlación con demanda. Si hay caídas, revisar estrategias de marketing y precios.
+                                        {% elif 'GT' in chart_name %}
+                                            Mantener ganancia positiva. Si es negativa, evaluar reducción de costos o aumento de precios.
+                                        {% elif 'TG' in chart_name %}
+                                            Optimizar gastos operativos. Identificar áreas de mejora en eficiencia de costos.
+                                        {% elif 'TPV' in chart_name %}
+                                            Asegurar que la producción satisfaga la demanda sin exceso de inventario.
+                                        {% elif 'NSC' in chart_name %}
+                                            Mantener niveles >80%. Valores bajos requieren mejora en servicio al cliente.
+                                        {% elif 'EOG' in chart_name %}
+                                            Buscar eficiencia >70%. Implementar mejores prácticas operativas si es necesario.
+                                        {% elif 'NR' in chart_name %}
+                                            Objetivo: mantener rentabilidad >15%. Ajustar precios o costos según sea necesario.
+                                        {% elif 'PVP' in chart_name %}
+                                            Evaluar competitividad de precios. Cambios deben basarse en análisis de mercado.
+                                        {% elif 'CVU' in chart_name %}
+                                            Optimizar costos variables. Negociar mejores precios con proveedores.
+                                        {% elif 'CFD' in chart_name %}
+                                            Controlar costos fijos. Evaluar renegociación de contratos a largo plazo.
+                                        {% else %}
+                                            Analizar comportamiento y correlaciones con otras variables para optimización.
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Gráficos adicionales del análisis -->
+                    {% for chart_key, chart_data in chart_images.items %}
+                        {% if 'endogenous' in chart_key or 'variables' in chart_key %}
+                        <div class="col-lg-6">
+                            <div class="card chart-card">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">
+                                        <i class="bx bx-line-chart me-2"></i>
+                                        {% if 'trend' in chart_key %}
+                                            Análisis de Tendencias
+                                        {% elif 'correlation' in chart_key %}
+                                            Matriz de Correlaciones
+                                        {% elif 'distribution' in chart_key %}
+                                            Análisis de Distribuciones
+                                        {% else %}
+                                            {{ chart_key|title }}
+                                        {% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Descripción del gráfico adicional -->
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <strong>Descripción:</strong>
+                                            {% if 'trend' in chart_key %}
+                                                Muestra las tendencias temporales de múltiples variables endógenas
+                                            {% elif 'correlation' in chart_key %}
+                                                Visualiza las correlaciones entre variables del modelo
+                                            {% elif 'distribution' in chart_key %}
+                                                Presenta la distribución estadística de las variables
+                                            {% else %}
+                                                Análisis especializado de variables del modelo
+                                            {% endif %}
+                                        </small>
+                                    </div>
+
+                                    <div class="chart-container">
+                                        <img src="data:image/png;base64,{{ chart_data }}" 
+                                            class="img-fluid chart-image" 
+                                            alt="Gráfico {{ chart_key }}"
+                                            onclick="expandChart('{{ chart_key }}', this.src)"
+                                            style="cursor: pointer; border: 1px solid #e9ecef; border-radius: 0.375rem;">
+                                    </div>
+
+                                    <!-- Interpretación del gráfico adicional -->
+                                    <div class="mt-3">
+                                        <div class="alert alert-light alert-sm">
+                                            <i class="bx bx-lightbulb me-2"></i>
+                                            <strong>Interpretación:</strong>
+                                            {% if 'trend' in chart_key %}
+                                                Identifica patrones temporales y ciclos en el comportamiento de variables.
+                                            {% elif 'correlation' in chart_key %}
+                                                Correlaciones altas (>0.7) indican relaciones fuertes entre variables.
+                                            {% elif 'distribution' in chart_key %}
+                                                Evalúa normalidad y dispersión de datos para validación del modelo.
+                                            {% else %}
+                                                Proporciona insights adicionales sobre el comportamiento del modelo.
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Mensaje si no hay gráficos -->
+                    {% if not endogenous_charts and not chart_images %}
+                    <div class="col-12">
+                        <div class="text-center py-5">
+                            <i class="bx bx-bar-chart display-1 text-muted"></i>
+                            <h5 class="mt-3 text-muted">No hay gráficos disponibles</h5>
+                            <p class="text-muted">Los gráficos de variables endógenas se generarán durante el análisis.</p>
+                            <small class="text-muted">
+                                Los gráficos incluirán métricas como IT (Ingresos Totales), GT (Ganancia Total), 
+                                TG (Total Gastos), TPV (Total Productos Vendidos), NSC (Nivel Satisfacción Cliente), 
+                                EOG (Eficiencia Operativa Global), entre otros.
+                            </small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tabla Resumen de Variables Endógenas -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">
+                            <i class="bx bx-list-ul me-2"></i>
+                            Resumen Completo de Variables Endógenas
+                        </h5>
+                        <small class="text-muted">
+                            Mostrando variables del modelo de simulación (máximo 10 visibles)
+                        </small>
+                    </div>
+                    <div>
+                        <span class="badge bg-primary">
+                            {{ totales_acumulativos|length }} variable{{ totales_acumulativos|length|pluralize:"s" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <!-- Container con altura fija y scroll -->
+                <div class="table-scroll-container" style="max-height: 500px; overflow-y: auto; border-radius: 0 0 0.375rem 0.375rem;">
+                    <table class="table table-hover mb-0" id="endogenousTable">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th style="width: 25%; padding: 12px;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bx bx-tag me-2"></i>
+                                        Variable
+                                    </div>
+                                </th>
+                                <th style="width: 15%; padding: 12px;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bx bx-calculator me-2"></i>
+                                        Promedio Diario
+                                    </div>
+                                </th>
+                                <th style="width: 12%; padding: 12px;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bx bx-cube me-2"></i>
+                                        Unidad
+                                    </div>
+                                </th>
+                                <th style="width: 15%; padding: 12px;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bx bx-sum me-2"></i>
+                                        Valor Total
+                                    </div>
+                                </th>
+                                <th style="width: 10%; padding: 12px;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bx bx-trending-up me-2"></i>
+                                        Tendencia
+                                    </div>
+                                </th>
+                                <th style="width: 13%; padding: 12px;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bx bx-stats me-2"></i>
+                                        Rango
+                                    </div>
+                                </th>
+                                <th style="width: 10%; padding: 12px;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bx bx-cog me-2"></i>
+                                        Acciones
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="endogenousTableBody">
+                            {% for name_variable, info_variable in totales_acumulativos.items %}
+                            <tr class="variable-row" 
+                                data-variable="{{ name_variable }}" 
+                                data-category="{% if info_variable.unit and 'Bs' in info_variable.unit or 'BS' in info_variable.unit %}financial{% elif info_variable.unit and '%' in info_variable.unit %}quality{% else %}operational{% endif %}"
+                                data-trend="{{ info_variable.trend|default:'stable' }}"
+                                style="border-left: 4px solid 
+                                    {% if info_variable.unit and 'Bs' in info_variable.unit or 'BS' in info_variable.unit %}
+                                        {% if info_variable.trend == 'increasing' %}#28a745{% else %}#dc3545{% endif %}
+                                    {% elif info_variable.unit and '%' in info_variable.unit %}#ffc107
+                                    {% elif info_variable.unit and 'L' in info_variable.unit %}#007bff
+                                    {% else %}#6c757d{% endif %};">
+                                <td style="padding: 15px 12px;">
+                                    <div class="variable-info">
+                                        <div class="d-flex align-items-center mb-1">
+                                            {% comment %}Icono dinámico basado en la unidad o tipo de variable{% endcomment %}
+                                            {% if info_variable.unit and 'Bs' in info_variable.unit or 'BS' in info_variable.unit %}
+                                                <i class="bx bx-dollar text-success me-2 fs-5"></i>
+                                            {% elif info_variable.unit and '%' in info_variable.unit %}
+                                                <i class="bx bx-percentage text-info me-2 fs-5"></i>
+                                            {% elif info_variable.unit and 'L' in info_variable.unit %}
+                                                <i class="bx bx-droplet text-primary me-2 fs-5"></i>
+                                            {% elif info_variable.unit and 'Horas' in info_variable.unit %}
+                                                <i class="bx bx-time text-warning me-2 fs-5"></i>
+                                            {% elif info_variable.trend == 'increasing' %}
+                                                <i class="bx bx-trending-up text-success me-2 fs-5"></i>
+                                            {% elif info_variable.trend == 'decreasing' %}
+                                                <i class="bx bx-trending-down text-danger me-2 fs-5"></i>
+                                            {% else %}
+                                                <i class="bx bx-stats text-secondary me-2 fs-5"></i>
+                                            {% endif %}
+                                            <strong class="text-dark">{{ name_variable }}</strong>
+                                        </div>
+                                        <small class="text-muted d-block">
+                                            {% comment %}Descripción dinámica basada en el nombre de la variable{% endcomment %}
+                                            {% if name_variable %}
+                                                Variable {{ name_variable }} del modelo de simulación
+                                            {% else %}
+                                                Variable del modelo
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </td>
+                                <td style="padding: 15px 12px;">
+                                    <div class="text-center">
+                                        {% if all_variables_extracted|length > 0 %}
+                                            {% widthratio info_variable.total 1 all_variables_extracted|length as daily_average %}
+                                            {% if info_variable.unit == "BS" %}
+                                                <span class="fw-bold text-success fs-6">Bs. {{ daily_average|floatformat:2 }}</span>
+                                            {% elif "%" in info_variable.unit %}
+                                                <span class="fw-bold text-info fs-6">{{ daily_average|floatformat:3 }}%</span>
+                                            {% else %}
+                                                <span class="fw-bold text-dark fs-6">{{ daily_average|floatformat:2 }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td style="padding: 15px 12px;">
+                                    <div class="text-center">
+                                        <span class="badge 
+                                            {% if 'Bs' in info_variable.unit or 'BS' in info_variable.unit or 'bs' in info_variable.unit %}bg-success-subtle text-success
+                                            {% elif 'L' in info_variable.unit or 'l' in info_variable.unit or 'Litros' in info_variable.unit or 'litros' in info_variable.unit %}bg-primary-subtle text-primary
+                                            {% elif '%' in info_variable.unit or 'Porcentaje' in info_variable.unit or 'porcentaje' in info_variable.unit %}bg-info-subtle text-info
+                                            {% elif 'Hora' in info_variable.unit or 'hora' in info_variable.unit %}bg-warning-subtle text-warning
+                                            {% elif 'Cliente' in info_variable.unit or 'cliente' in info_variable.unit or 'Persona' in info_variable.unit %}bg-secondary-subtle text-secondary
+                                            {% elif 'Día' in info_variable.unit or 'día' in info_variable.unit or 'dia' in info_variable.unit %}bg-primary-subtle text-primary
+                                            {% elif 'Factor' in info_variable.unit or 'factor' in info_variable.unit %}bg-warning-subtle text-warning
+                                            {% elif '/' in info_variable.unit %}bg-info-subtle text-info
+                                            {% else %}bg-light text-dark{% endif %}" 
+                                            style="font-size: 0.75rem;">
+                                            {% if info_variable.unit %}
+                                                {% if 'Bs' in info_variable.unit or 'BS' in info_variable.unit or 'bs' in info_variable.unit %}
+                                                    💰 {{ info_variable.unit }}
+                                                {% elif 'L' in info_variable.unit or 'l' in info_variable.unit or 'Litros' in info_variable.unit %}
+                                                    🥛 {{ info_variable.unit }}
+                                                {% elif '%' in info_variable.unit or 'Porcentaje' in info_variable.unit %}
+                                                    📊 {{ info_variable.unit }}
+                                                {% elif 'Hora' in info_variable.unit or 'hora' in info_variable.unit %}
+                                                    ⏰ {{ info_variable.unit }}
+                                                {% elif 'Cliente' in info_variable.unit or 'Persona' in info_variable.unit %}
+                                                    👥 {{ info_variable.unit }}
+                                                {% elif 'Día' in info_variable.unit or 'día' in info_variable.unit %}
+                                                    📅 {{ info_variable.unit }}
+                                                {% elif '/' in info_variable.unit %}
+                                                    📈 {{ info_variable.unit }}
+                                                {% else %}
+                                                    📋 {{ info_variable.unit }}
+                                                {% endif %}
+                                            {% else %}
+                                                📋 Sin unidad
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td style="padding: 15px 12px;">
+                                    <div class="text-center">
+                                        {% if info_variable.unit %}
+                                            <span class="fw-bold 
+                                                {% if 'Bs' in info_variable.unit or 'BS' in info_variable.unit %}text-success
+                                                {% elif '%' in info_variable.unit %}text-info
+                                                {% else %}text-dark{% endif %} fs-6">
+                                                {{ info_variable.total|floatformat:2 }}
+                                                {% if info_variable.unit %} {{ info_variable.unit }}{% endif %}
+                                            </span>
+                                        {% else %}
+                                            <span class="fw-bold text-dark fs-6">{{ info_variable.total|floatformat:2 }}</span>
+                                        {% endif %}
+                                        {% if info_variable.mean %}
+                                            <br><small class="text-muted">μ = {{ info_variable.mean|floatformat:2 }}</small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td style="padding: 15px 12px;">
+                                    <div class="text-center">
+                                        {% if info_variable.trend == "increasing" %}
+                                            <span class="badge bg-success d-flex align-items-center justify-content-center" style="min-width: 85px;">
+                                                <i class="bx bx-trending-up me-1"></i>Creciente
+                                            </span>
+                                        {% elif info_variable.trend == "decreasing" %}
+                                            <span class="badge bg-danger d-flex align-items-center justify-content-center" style="min-width: 85px;">
+                                                <i class="bx bx-trending-down me-1"></i>Decreciente
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary d-flex align-items-center justify-content-center" style="min-width: 85px;">
+                                                <i class="bx bx-minus me-1"></i>Estable
+                                            </span>
+                                        {% endif %}
+                                        {% if info_variable.trend_strength %}
+                                            <br><small class="text-muted mt-1">{{ info_variable.trend_strength|floatformat:1 }}% fuerza</small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td style="padding: 15px 12px;">
+                                    <div class="text-center">
+                                        {% if info_variable.min_value and info_variable.max_value %}
+                                            <div class="text-muted small">
+                                                <div><strong>Min:</strong> {{ info_variable.min_value|floatformat:1 }}</div>
+                                                <div><strong>Max:</strong> {{ info_variable.max_value|floatformat:1 }}</div>
+                                                {% if info_variable.std_deviation %}
+                                                    <div class="mt-1"><small>σ = {{ info_variable.std_deviation|floatformat:2 }}</small></div>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <small class="text-muted">N/A</small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td style="padding: 15px 12px;">
+                                    <div class="text-center">
+                                        <div class="btn-group-vertical" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary mb-1" 
+                                                    onclick="showVariableDetails('{{ name_variable }}', '{{ info_variable.unit|default:"" }}', '{{ info_variable.total|floatformat:2 }}', '{{ info_variable.mean|default:0|floatformat:2 }}', '{{ info_variable.trend|default:"stable" }}', '{{ info_variable.min_value|default:0|floatformat:2 }}', '{{ info_variable.max_value|default:0|floatformat:2 }}', '{{ info_variable.std_deviation|default:0|floatformat:2 }}', '{{ info_variable.cv|default:0|floatformat:3 }}', '{{ info_variable.count|default:0 }}')"
+                                                    title="Ver análisis detallado de {{ name_variable }}"
+                                                    style="min-width: 70px;">
+                                                <i class="bx bx-line-chart me-1"></i>Análisis
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                    onclick="exportVariableData('{{ name_variable }}')"
+                                                    title="Exportar datos de {{ name_variable }}"
+                                                    style="min-width: 70px;">
+                                                <i class="bx bx-download me-1"></i>Export
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5" style="padding: 40px 12px;">
+                                    <div class="empty-state">
+                                        <i class="bx bx-info-circle display-1 text-muted mb-3"></i>
+                                        <h5 class="text-muted">No hay variables endógenas disponibles</h5>
+                                        <p class="text-muted">Las variables se generarán durante el procesamiento de la simulación.</p>
+                                        <small class="text-muted">
+                                            Las variables típicas incluyen: IT (Ingresos), GT (Ganancia), TG (Gastos), 
+                                            TPV (Productos Vendidos), NSC (Satisfacción), EOG (Eficiencia)
+                                        </small>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Footer con información adicional -->
+                {% if totales_acumulativos %}
+                <div class="card-footer bg-light">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <small class="text-muted">
+                                <i class="bx bx-info-circle me-1"></i>
+                                <strong>Scroll:</strong> Use la barra de desplazamiento para ver todas las variables
+                            </small>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">
+                                <i class="bx bx-trending-up me-1"></i>
+                                <strong>Tendencia:</strong> Basada en regresión lineal de los datos
+                            </small>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">
+                                <i class="bx bx-calculator me-1"></i>
+                                <strong>Estadísticas:</strong> μ = media, σ = desviación estándar
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS personalizado para mejorar la experiencia de scroll -->
+<style>
+.table-scroll-container {
+    /* Barra de scroll personalizada */
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #f8f9fa;
+}
+
+.table-scroll-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table-scroll-container::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 4px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #0056b3;
+}
+
+/* Header fijo */
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Efectos hover mejorados */
+.variable-row:hover {
+    background-color: #f8f9fa;
+    transform: translateX(2px);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Separadores visuales */
+.variable-row {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.variable-row:last-child {
+    border-bottom: none;
+}
+
+/* Badges más consistentes */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+/* Mejoras para botones */
+.btn-group-vertical .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Estado vacío mejorado */
+.empty-state {
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 0.5rem;
+    margin: 1rem;
+}
+</style>
+
+<!-- Modal para detalles de variable -->
+<div class="modal fade" id="variableDetailsModal" tabindex="-1" aria-labelledby="variableDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="variableDetailsModalLabel">
+                    <i class="bx bx-line-chart me-2"></i>
+                    Análisis Detallado de Variable: <span id="modalVariableName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Resumen estadístico -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bx bx-calculator me-2"></i>Resumen Estadístico</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-2">
+                                        <div class="stat-item">
+                                            <h4 class="text-primary mb-1" id="modalTotal">-</h4>
+                                            <small class="text-muted">Total Acumulado</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="stat-item">
+                                            <h4 class="text-info mb-1" id="modalMean">-</h4>
+                                            <small class="text-muted">Promedio</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="stat-item">
+                                            <h4 class="text-success mb-1" id="modalMin">-</h4>
+                                            <small class="text-muted">Mínimo</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="stat-item">
+                                            <h4 class="text-danger mb-1" id="modalMax">-</h4>
+                                            <small class="text-muted">Máximo</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="stat-item">
+                                            <h4 class="text-warning mb-1" id="modalStd">-</h4>
+                                            <small class="text-muted">Desv. Estándar</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="stat-item">
+                                            <h4 class="text-secondary mb-1" id="modalCV">-</h4>
+                                            <small class="text-muted">Coef. Variación</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Análisis de tendencia -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bx bx-trending-up me-2"></i>Análisis de Tendencia</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="trend-indicator me-3" id="modalTrendIcon">
+                                        <i class="bx bx-minus fs-2 text-secondary"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1" id="modalTrendText">Estable</h5>
+                                        <small class="text-muted">Comportamiento detectado</small>
+                                    </div>
+                                </div>
+                                <div class="alert alert-info alert-sm">
+                                    <i class="bx bx-info-circle me-2"></i>
+                                    <span id="modalTrendInterpretation">La variable mantiene un comportamiento estable durante el período analizado.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="bx bx-shield-check me-2"></i>Evaluación de Estabilidad</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label small">Volatilidad (CV)</label>
+                                    <div class="progress mb-2" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar" id="modalVolatilityBar" style="width: 0%;">
+                                            <span id="modalVolatilityText">0%</span>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted" id="modalVolatilityInterpretation">Evaluando estabilidad...</small>
+                                </div>
+                                <div class="stability-score">
+                                    <span class="badge" id="modalStabilityBadge">Evaluando</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datos diarios -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0"><i class="bx bx-calendar me-2"></i>Comportamiento Diario</h6>
+                                <div>
+                                    <span class="badge bg-primary" id="modalDaysCount">0 días</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- Tabla de datos diarios con scroll -->
+                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                    <table class="table table-sm table-hover">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th>Día</th>
+                                                <th>Fecha</th>
+                                                <th>Valor</th>
+                                                <th>Variación</th>
+                                                <th>% Acum.</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="modalDailyDataTable">
+                                            <!-- Se llenará dinámicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Gráfico simple de comportamiento -->
+                                <div class="mt-3">
+                                    <canvas id="modalVariableChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" onclick="exportVariableData(document.getElementById('modalVariableName').textContent)">
+                    <i class="bx bx-download me-2"></i>Exportar Datos
+                </button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                    <i class="bx bx-check me-2"></i>Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SEGURIDAD: datos serializados con json_script (escape seguro) en vez de |safe -->
+{{ all_variables_extracted|json_script:"all-vars-extracted" }}
+<!-- JavaScript mejorado para funcionalidades adicionales -->
+<script>
+// Datos de variables parseados de forma segura desde el bloque json_script.
+function _getAllVariablesExtracted() {
+    const el = document.getElementById('all-vars-extracted');
+    if (!el) return [];
+    try { return JSON.parse(el.textContent) || []; } catch (e) { return []; }
+}
+// Función mejorada para mostrar detalles de variable
+function showVariableDetails(varName, unit, total, mean, trend, minVal, maxVal, stdDev, cv, count) {
+    // Actualizar información básica
+    document.getElementById('modalVariableName').textContent = varName;
+    document.getElementById('modalTotal').textContent = total + (unit ? ' ' + unit : '');
+    document.getElementById('modalMean').textContent = mean + (unit ? ' ' + unit : '');
+    document.getElementById('modalMin').textContent = minVal + (unit ? ' ' + unit : '');
+    document.getElementById('modalMax').textContent = maxVal + (unit ? ' ' + unit : '');
+    document.getElementById('modalStd').textContent = stdDev + (unit ? ' ' + unit : '');
+    document.getElementById('modalCV').textContent = (parseFloat(cv) * 100).toFixed(1) + '%';
+    document.getElementById('modalDaysCount').textContent = count + ' días';
+    
+    // Actualizar análisis de tendencia
+    updateTrendAnalysis(trend);
+    
+    // Actualizar evaluación de estabilidad
+    updateStabilityAnalysis(parseFloat(cv));
+    
+    // Cargar datos diarios (simulados para ejemplo)
+    loadDailyData(varName, count, mean, stdDev);
+    
+    // Mostrar modal
+    var modal = new bootstrap.Modal(document.getElementById('variableDetailsModal'));
+    modal.show();
+}
+
+function updateTrendAnalysis(trend) {
+    const trendIcon = document.getElementById('modalTrendIcon');
+    const trendText = document.getElementById('modalTrendText');
+    const trendInterpretation = document.getElementById('modalTrendInterpretation');
+    
+    switch(trend) {
+        case 'increasing':
+            trendIcon.innerHTML = '<i class="bx bx-trending-up fs-2 text-success"></i>';
+            trendText.textContent = 'Tendencia Creciente';
+            trendText.className = 'mb-1 text-success';
+            trendInterpretation.textContent = 'La variable muestra un patrón de crecimiento sostenido durante el período. Esto indica mejora continua o incremento en la demanda.';
+            break;
+        case 'decreasing':
+            trendIcon.innerHTML = '<i class="bx bx-trending-down fs-2 text-danger"></i>';
+            trendText.textContent = 'Tendencia Decreciente';
+            trendText.className = 'mb-1 text-danger';
+            trendInterpretation.textContent = 'La variable presenta una disminución progresiva. Requiere análisis para determinar si es resultado de optimización o deterioro.';
+            break;
+        default:
+            trendIcon.innerHTML = '<i class="bx bx-minus fs-2 text-secondary"></i>';
+            trendText.textContent = 'Comportamiento Estable';
+            trendText.className = 'mb-1 text-secondary';
+            trendInterpretation.textContent = 'La variable mantiene un comportamiento estable sin tendencias marcadas, indicando consistencia en el proceso.';
+    }
+}
+
+function updateStabilityAnalysis(cv) {
+    const volatilityBar = document.getElementById('modalVolatilityBar');
+    const volatilityText = document.getElementById('modalVolatilityText');
+    const volatilityInterpretation = document.getElementById('modalVolatilityInterpretation');
+    const stabilityBadge = document.getElementById('modalStabilityBadge');
+    
+    const cvPercent = cv * 100;
+    const progressWidth = Math.min(cvPercent, 100);
+    
+    volatilityBar.style.width = progressWidth + '%';
+    volatilityText.textContent = cvPercent.toFixed(1) + '%';
+    
+    if (cvPercent < 10) {
+        volatilityBar.className = 'progress-bar bg-success';
+        stabilityBadge.className = 'badge bg-success';
+        stabilityBadge.textContent = 'Muy Estable';
+        volatilityInterpretation.textContent = 'Excelente estabilidad. Variabilidad muy baja y predecible.';
+    } else if (cvPercent < 25) {
+        volatilityBar.className = 'progress-bar bg-warning';
+        stabilityBadge.className = 'badge bg-warning';
+        stabilityBadge.textContent = 'Moderadamente Estable';
+        volatilityInterpretation.textContent = 'Estabilidad aceptable con variabilidad moderada.';
+    } else {
+        volatilityBar.className = 'progress-bar bg-danger';
+        stabilityBadge.className = 'badge bg-danger';
+        stabilityBadge.textContent = 'Alta Volatilidad';
+        volatilityInterpretation.textContent = 'Alta variabilidad. Requiere análisis de causas de fluctuación.';
+    }
+}
+
+function loadDailyData(varName, days, mean, stdDev) {
+    const tableBody = document.getElementById('modalDailyDataTable');
+    tableBody.innerHTML = '';
+    
+    // Buscar datos reales de la variable en all_variables_extracted
+    const allVariables = _getAllVariablesExtracted();
+    let variableData = [];
+    let accumPercent = 0;
+    
+    // Extraer datos reales de la variable
+    allVariables.forEach((dayData, index) => {
+        if (dayData[varName] !== undefined && dayData[varName] !== null) {
+            const value = parseFloat(dayData[varName]);
+            const prevValue = index > 0 && allVariables[index-1][varName] ? parseFloat(allVariables[index-1][varName]) : value;
+            const variation = index > 0 ? ((value - prevValue) / prevValue * 100) : 0;
+            accumPercent += (value / parseFloat(mean)) * 100 / allVariables.length;
+            
+            variableData.push({
+                day: dayData.day || (index + 1),
+                date: dayData.date || `Día ${index + 1}`,
+                value: value,
+                variation: variation,
+                accumPercent: accumPercent
+            });
+        }
+    });
+    
+    // Si no hay datos reales, generar datos de ejemplo
+    if (variableData.length === 0) {
+        for (let i = 1; i <= Math.min(days, 30); i++) {
+            const noise = (Math.random() - 0.5) * 2 * parseFloat(stdDev);
+            const value = parseFloat(mean) + noise;
+            const prevValue = i > 1 ? parseFloat(mean) + (Math.random() - 0.5) * 2 * parseFloat(stdDev) : value;
+            const variation = i > 1 ? ((value - prevValue) / prevValue * 100) : 0;
+            accumPercent += (value / parseFloat(mean)) * 100 / days;
+            
+            variableData.push({
+                day: i,
+                date: `Día ${i}`,
+                value: value,
+                variation: variation,
+                accumPercent: accumPercent
+            });
+        }
+    }
+    
+    // Llenar tabla
+    variableData.forEach(data => {
+        const row = tableBody.insertRow();
+        row.innerHTML = `
+            <td><strong>${data.day}</strong></td>
+            <td><small class="text-muted">${data.date}</small></td>
+            <td><span class="fw-bold">${data.value.toFixed(2)}</span></td>
+            <td>
+                <span class="badge ${data.variation > 0 ? 'bg-success' : data.variation < 0 ? 'bg-danger' : 'bg-secondary'} bg-opacity-75">
+                    ${data.variation > 0 ? '+' : ''}${data.variation.toFixed(1)}%
+                </span>
+            </td>
+            <td><small class="text-muted">${data.accumPercent.toFixed(1)}%</small></td>
+        `;
+    });
+    
+    // Crear gráfico simple (requiere Chart.js si está disponible)
+    createSimpleChart(variableData, varName);
+}
+
+function createSimpleChart(data, varName) {
+    const canvas = document.getElementById('modalVariableChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Limpiar canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (data.length === 0) return;
+    
+    // Configuración básica del gráfico
+    const padding = 40;
+    const width = canvas.width - 2 * padding;
+    const height = canvas.height - 2 * padding;
+    
+    const values = data.map(d => d.value);
+    const minVal = Math.min(...values);
+    const maxVal = Math.max(...values);
+    const range = maxVal - minVal || 1;
+    
+    // Dibujar ejes
+    ctx.strokeStyle = '#dee2e6';
+    ctx.lineWidth = 1;
+    
+    // Eje Y
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, canvas.height - padding);
+    ctx.stroke();
+    
+    // Eje X
+    ctx.beginPath();
+    ctx.moveTo(padding, canvas.height - padding);
+    ctx.lineTo(canvas.width - padding, canvas.height - padding);
+    ctx.stroke();
+    
+    // Dibujar línea de datos
+    ctx.strokeStyle = '#007bff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    
+    data.forEach((point, index) => {
+        const x = padding + (index / (data.length - 1 || 1)) * width;
+        const y = canvas.height - padding - ((point.value - minVal) / range) * height;
+        
+        if (index === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    });
+    
+    ctx.stroke();
+    
+    // Dibujar puntos
+    ctx.fillStyle = '#007bff';
+    data.forEach((point, index) => {
+        const x = padding + (index / (data.length - 1 || 1)) * width;
+        const y = canvas.height - padding - ((point.value - minVal) / range) * height;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, 2 * Math.PI);
+        ctx.fill();
+    });
+    
+    // Etiquetas
+    ctx.fillStyle = '#6c757d';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    
+    // Título
+    ctx.fillText(`Evolución de ${varName}`, canvas.width / 2, 20);
+    
+    // Etiquetas de valor
+    ctx.textAlign = 'right';
+    ctx.fillText(maxVal.toFixed(1), padding - 5, padding + 5);
+    ctx.fillText(minVal.toFixed(1), padding - 5, canvas.height - padding + 5);
+}
+
+// Función para exportar datos de variable (mejorada)
+function exportVariableData(variableName) {
+    const allVariables = _getAllVariablesExtracted();
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Día,Fecha,Variable,Valor\n";
+    
+    allVariables.forEach((dayData, index) => {
+        if (dayData[variableName] !== undefined && dayData[variableName] !== null) {
+            csvContent += `${dayData.day || (index + 1)},${dayData.date || 'N/A'},${variableName},${dayData[variableName]}\n`;
+        }
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${variableName}_datos_simulacion.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Mostrar notificación
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `
+        <div class="alert alert-success alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999;">
+            <i class="bx bx-check-circle me-2"></i>
+            Datos de ${variableName} exportados exitosamente
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    // Remover notificación después de 3 segundos
+    setTimeout(() => {
+        if (document.body.contains(toast)) {
+            document.body.removeChild(toast);
+        }
+    }, 3000);
+}
+
+// Scroll suave al cargar con indicador mejorado
+document.addEventListener('DOMContentLoaded', function() {
+    const scrollContainer = document.querySelector('.table-scroll-container');
+    if (scrollContainer) {
+        // Agregar indicador de scroll si hay overflow
+        setTimeout(() => {
+            if (scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+                // Crear indicador visual temporal
+                const indicator = document.createElement('div');
+                indicator.className = 'scroll-indicator';
+                indicator.innerHTML = '<small class="text-primary"><i class="bx bx-mouse me-1"></i>Scroll para ver más</small>';
+                indicator.style.cssText = `
+                    position: absolute;
+                    bottom: 10px;
+                    right: 20px;
+                    background: rgba(255,255,255,0.9);
+                    padding: 5px 10px;
+                    border-radius: 15px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    z-index: 100;
+                `;
+                
+                scrollContainer.style.position = 'relative';
+                scrollContainer.appendChild(indicator);
+                
+                // Remover indicador al hacer scroll o después de 3 segundos
+                const removeIndicator = () => {
+                    if (scrollContainer.contains(indicator)) {
+                        indicator.style.transition = 'opacity 0.3s ease';
+                        indicator.style.opacity = '0';
+                        setTimeout(() => {
+                            if (scrollContainer.contains(indicator)) {
+                                scrollContainer.removeChild(indicator);
+                            }
+                        }, 300);
+                    }
+                };
+                
+                scrollContainer.addEventListener('scroll', removeIndicator, { once: true });
+                setTimeout(removeIndicator, 3000);
+            }
+        }, 500);
+    }
+});
+</script>
+
+<!-- CSS personalizado para mejorar la experiencia de scroll -->
+<style>
+.table-scroll-container {
+    /* Barra de scroll personalizada */
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #f8f9fa;
+}
+
+.table-scroll-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table-scroll-container::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 4px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #0056b3;
+}
+
+/* Header fijo */
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Efectos hover mejorados */
+.variable-row:hover {
+    background-color: #f8f9fa;
+    transform: translateX(2px);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Separadores visuales */
+.variable-row {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.variable-row:last-child {
+    border-bottom: none;
+}
+
+/* Badges más consistentes */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+/* Mejoras para botones */
+.btn-group-vertical .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Estado vacío mejorado */
+.empty-state {
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 0.5rem;
+    margin: 1rem;
+}
+</style>
+
+<!-- JavaScript para funcionalidades adicionales -->
+<script>
+// Función para mostrar detalles de variable
+function showVariableDetails(variableName) {
+    // Aquí puedes implementar un modal o expandir información
+    console.log('Mostrando detalles de:', variableName);
+    // Ejemplo de alerta (reemplazar con modal)
+    alert('Detalles de ' + variableName + '\n\nEsta funcionalidad abrirá un modal con información detallada de la variable.');
+}
+
+// Función para exportar datos de variable
+function exportVariableData(variableName) {
+    // Aquí puedes implementar exportación a CSV/Excel
+    console.log('Exportando datos de:', variableName);
+    // Ejemplo básico
+    alert('Exportando datos de ' + variableName + '\n\nEsta funcionalidad generará un archivo CSV con los datos de la variable.');
+}
+
+// Scroll suave al cargar
+document.addEventListener('DOMContentLoaded', function() {
+    const scrollContainer = document.querySelector('.table-scroll-container');
+    if (scrollContainer) {
+        // Agregar indicador de scroll si hay overflow
+        setTimeout(() => {
+            if (scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+                scrollContainer.style.borderRight = '3px solid #007bff';
+                setTimeout(() => {
+                    scrollContainer.style.borderRight = 'none';
+                }, 2000);
+            }
+        }, 500);
+    }
+});
+</script>
+
+    <!-- Modal para expandir gráficos -->
+    <div class="modal fade" id="chartModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="chartModalTitle">Gráfico de Variable</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="chartModalImage" src="" class="img-fluid" alt="Gráfico expandido">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para detalles de variable -->
+    <div class="modal fade" id="variableDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="variableDetailsTitle">Detalles de Variable</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="variableDetailsBody">
+                    <!-- Contenido dinámico -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// FUNCIONES ESPECÍFICAS PARA VARIABLES ENDÓGENAS
+// ==========================================
+
+function updateVariableCounts() {
+    try {
+        const rows = document.querySelectorAll('#endogenousTableBody tr[data-category]');
+        let financial = 0, operational = 0, quality = 0;
+        
+        rows.forEach(row => {
+            const category = row.dataset.category;
+            if (category === 'financial') financial++;
+            else if (category === 'operational') operational++;
+            else if (category === 'quality') quality++;
+        });
+        
+        const financialCount = document.getElementById('financialVarsCount');
+        const operationalCount = document.getElementById('operationalVarsCount');
+        const qualityCount = document.getElementById('qualityVarsCount');
+        
+        if (financialCount) financialCount.textContent = financial;
+        if (operationalCount) operationalCount.textContent = operational;
+        if (qualityCount) qualityCount.textContent = quality;
+    } catch (error) {
+        console.error('Error updating variable counts:', error);
+    }
+}
+
+function expandChart(chartName, imageSrc) {
+    try {
+        const modal = document.getElementById('mainFullscreenModal');
+        const modalTitle = document.getElementById('mainFullscreenModalTitle');
+        const modalImage = document.getElementById('mainFullscreenModalImage');
+        
+        if (modal && modalTitle && modalImage) {
+            modalTitle.textContent = `Gráfico: ${chartName}`;
+            modalImage.src = imageSrc || '';
+            
+            new bootstrap.Modal(modal).show();
+        }
+    } catch (error) {
+        console.error('Error expanding chart:', error);
+    }
+}
+
+function showVariableDetails(variableName) {
+    try {
+        const row = document.querySelector(`tr[data-variable="${variableName}"]`);
+        if (!row) return;
+        
+        const modal = document.getElementById('mainDetailsModal');
+        const modalTitle = document.getElementById('mainDetailsModalTitle');
+        const modalBody = document.getElementById('mainDetailsModalBody');
+        
+        if (modal && modalTitle && modalBody) {
+            modalTitle.textContent = `Detalles: ${variableName}`;
+            
+            const category = row.dataset.category || 'unknown';
+            const trend = row.dataset.trend || 'stable';
+            const totalElement = row.querySelector('.variable-total');
+            const unitElement = row.querySelector('.variable-unit');
+            const averageElement = row.querySelector('.variable-average');
+            
+            const total = totalElement?.textContent.trim() || 'N/A';
+            const unit = unitElement?.textContent.trim() || 'N/A';
+            const average = averageElement?.textContent.trim() || 'N/A';
+            
+            modalBody.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Información General</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Variable:</strong></td><td>${variableName}</td></tr>
+                            <tr><td><strong>Categoría:</strong></td><td class="text-capitalize">${category}</td></tr>
+                            <tr><td><strong>Unidad:</strong></td><td>${unit}</td></tr>
+                            <tr><td><strong>Tendencia:</strong></td><td class="text-capitalize">${trend}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Valores</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Total:</strong></td><td>${total}</td></tr>
+                            <tr><td><strong>Promedio:</strong></td><td>${average}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6>Descripción</h6>
+                    <p class="text-muted">${getVariableDescription(variableName)}</p>
+                </div>
+            `;
+            
+            new bootstrap.Modal(modal).show();
+        }
+    } catch (error) {
+        console.error('Error showing variable details:', error);
+    }
+}
+
+function getVariableDescription(variableName) {
+    const descriptions = {
+        'IT': 'Ingresos Totales: Suma de todos los ingresos generados durante el período de simulación.',
+        'GT': 'Ganancia Total: Diferencia entre ingresos totales y gastos totales del período.',
+        'TG': 'Total Gastos: Suma de todos los costos y gastos incurridos durante la simulación.',
+        'TPV': 'Total Productos Vendidos: Cantidad total de productos vendidos en el período.',
+        'NSC': 'Nivel de Satisfacción del Cliente: Indicador de calidad del servicio prestado.',
+        'EOG': 'Eficiencia Operativa General: Medida de la eficiencia en los procesos operativos.',
+        'NR': 'Nivel de Rentabilidad: Porcentaje de ganancia sobre los ingresos totales.',
+        'PVP': 'Precio de Venta al Público: Precio unitario de venta del producto.',
+        'CFD': 'Costo Fijo Diario: Costos fijos que se incurren diariamente.',
+        'CVU': 'Costo Variable Unitario: Costo variable por unidad producida.',
+        'DPH': 'Demanda Promedio Histórica: Promedio histórico de la demanda.',
+        'CPROD': 'Capacidad de Producción: Capacidad máxima de producción diaria.',
+        'NEPP': 'Número de Empleados en Producción: Personal asignado a producción.'
+    };
+    
+    return descriptions[variableName] || `Variable endógena ${variableName} del modelo de simulación.`;
+}
+
+// Exportar tabla de variables endógenas
+function exportEndogenousTable(format) {
+    try {
+        const table = document.getElementById('endogenousTable');
+        const rows = table.querySelectorAll('tbody tr[data-variable]');
+        
+        if (format === 'excel' || format === 'csv') {
+            let csvContent = 'Variable,Valor Total,Unidad,Promedio Diario,Tendencia,Rango,Volatilidad\n';
+            
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    const variable = row.dataset.variable;
+                    const total = row.querySelector('.variable-total')?.textContent.replace(/[,]/g, '') || '';
+                    const unit = row.querySelector('.variable-unit')?.textContent || '';
+                    const average = row.querySelector('.variable-average')?.textContent.replace(/[,]/g, '') || '';
+                    const trend = row.dataset.trend || '';
+                    const range = row.querySelector('.variable-range')?.textContent || '';
+                    const volatility = row.querySelector('.variable-volatility')?.textContent || '';
+                    
+                    csvContent += `"${variable}","${total}","${unit}","${average}","${trend}","${range}","${volatility}"\n`;
+                }
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'variables_endogenas_' + new Date().getTime() + '.csv';
+            link.click();
+            
+            showNotification('Variables endógenas exportadas exitosamente', 'success');
+        } else if (format === 'pdf') {
+            window.print();
+        }
+    } catch (error) {
+        console.error('Error exporting endogenous table:', error);
+        showNotification('Error al exportar tabla', 'error');
+    }
+}
+
+// Filtrar variables por categoría
+function filterVariablesByCategory(category) {
+    const rows = document.querySelectorAll('#endogenousTableBody tr[data-variable]');
+    
+    rows.forEach(row => {
+        const rowCategory = row.dataset.category;
+        if (category === 'all' || rowCategory === category) {
+            row.style.display = 'table-row';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Actualizar contadores después del filtro
+    updateVariableCounts();
+    
+    // Actualizar estado de botones de filtro
+    document.querySelectorAll('.category-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    const activeBtn = document.querySelector(`[data-category="${category}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+}
+
+// Ordenar tabla por columna
+function sortTableByColumn(columnIndex) {
+    const table = document.getElementById('endogenousTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr[data-variable]'));
+    
+    // Determinar dirección de ordenamiento
+    const header = table.querySelectorAll('th')[columnIndex];
+    const isAscending = !header.classList.contains('sort-desc');
+    
+    // Limpiar clases de ordenamiento anteriores
+    table.querySelectorAll('th').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+    });
+    
+    // Aplicar nueva clase de ordenamiento
+    header.classList.add(isAscending ? 'sort-asc' : 'sort-desc');
+    
+    // Ordenar filas
+    rows.sort((a, b) => {
+        const cellA = a.cells[columnIndex];
+        const cellB = b.cells[columnIndex];
+        
+        let valueA = cellA.textContent.trim();
+        let valueB = cellB.textContent.trim();
+        
+        // Convertir a números si es posible
+        const numA = parseFloat(valueA.replace(/[^\d.-]/g, ''));
+        const numB = parseFloat(valueB.replace(/[^\d.-]/g, ''));
+        
+        if (!isNaN(numA) && !isNaN(numB)) {
+            return isAscending ? numA - numB : numB - numA;
+        } else {
+            return isAscending ? 
+                valueA.localeCompare(valueB) : 
+                valueB.localeCompare(valueA);
+        }
+    });
+    
+    // Reordenar el DOM
+    rows.forEach(row => tbody.appendChild(row));
+    
+    showNotification(`Tabla ordenada por ${header.textContent}`, 'info');
+}
+
+// Buscar variables
+function searchVariables(searchTerm) {
+    const rows = document.querySelectorAll('#endogenousTableBody tr[data-variable]');
+    const term = searchTerm.toLowerCase();
+    
+    rows.forEach(row => {
+        const variable = row.dataset.variable.toLowerCase();
+        const description = getVariableDescription(row.dataset.variable).toLowerCase();
+        
+        if (variable.includes(term) || description.includes(term)) {
+            row.style.display = 'table-row';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Mostrar mensaje si no hay resultados
+    const visibleRows = document.querySelectorAll('#endogenousTableBody tr[data-variable][style*="table-row"], #endogenousTableBody tr[data-variable]:not([style])');
+    
+    if (visibleRows.length === 0 && searchTerm.trim() !== '') {
+        showNotification('No se encontraron variables que coincidan con la búsqueda', 'info');
+    }
+}
+
+// Comparar variables
+function compareVariables(variable1, variable2) {
+    const row1 = document.querySelector(`tr[data-variable="${variable1}"]`);
+    const row2 = document.querySelector(`tr[data-variable="${variable2}"]`);
+    
+    if (!row1 || !row2) {
+        showNotification('Variables no encontradas para comparación', 'warning');
+        return;
+    }
+    
+    const modal = document.getElementById('mainDetailsModal');
+    const modalTitle = document.getElementById('mainDetailsModalTitle');
+    const modalBody = document.getElementById('mainDetailsModalBody');
+    
+    if (modal && modalTitle && modalBody) {
+        modalTitle.textContent = `Comparación: ${variable1} vs ${variable2}`;
+        
+        const getRowData = (row) => {
+            return {
+                total: row.querySelector('.variable-total')?.textContent.trim() || 'N/A',
+                unit: row.querySelector('.variable-unit')?.textContent.trim() || 'N/A',
+                average: row.querySelector('.variable-average')?.textContent.trim() || 'N/A',
+                trend: row.dataset.trend || 'stable',
+                category: row.dataset.category || 'unknown'
+            };
+        };
+        
+        const data1 = getRowData(row1);
+        const data2 = getRowData(row2);
+        
+        modalBody.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-primary">${variable1}</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>Total:</strong></td><td>${data1.total}</td></tr>
+                        <tr><td><strong>Unidad:</strong></td><td>${data1.unit}</td></tr>
+                        <tr><td><strong>Promedio:</strong></td><td>${data1.average}</td></tr>
+                        <tr><td><strong>Tendencia:</strong></td><td class="text-capitalize">${data1.trend}</td></tr>
+                        <tr><td><strong>Categoría:</strong></td><td class="text-capitalize">${data1.category}</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-success">${variable2}</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>Total:</strong></td><td>${data2.total}</td></tr>
+                        <tr><td><strong>Unidad:</strong></td><td>${data2.unit}</td></tr>
+                        <tr><td><strong>Promedio:</strong></td><td>${data2.average}</td></tr>
+                        <tr><td><strong>Tendencia:</strong></td><td class="text-capitalize">${data2.trend}</td></tr>
+                        <tr><td><strong>Categoría:</strong></td><td class="text-capitalize">${data2.category}</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="mt-3">
+                <h6>Análisis Comparativo</h6>
+                <p class="text-muted">
+                    ${generateComparisonAnalysis(variable1, data1, variable2, data2)}
+                </p>
+            </div>
+        `;
+        
+        new bootstrap.Modal(modal).show();
+    }
+}
+
+function generateComparisonAnalysis(var1, data1, var2, data2) {
+    let analysis = `Comparación entre ${var1} y ${var2}: `;
+    
+    // Comparar categorías
+    if (data1.category === data2.category) {
+        analysis += `Ambas variables pertenecen a la categoría ${data1.category}. `;
+    } else {
+        analysis += `${var1} es de categoría ${data1.category} mientras que ${var2} es de categoría ${data2.category}. `;
+    }
+    
+    // Comparar tendencias
+    if (data1.trend === data2.trend) {
+        analysis += `Ambas muestran una tendencia ${data1.trend}. `;
+    } else {
+        analysis += `${var1} muestra tendencia ${data1.trend} mientras que ${var2} muestra tendencia ${data2.trend}. `;
+    }
+    
+    // Comparar unidades
+    if (data1.unit === data2.unit) {
+        analysis += `Ambas se miden en ${data1.unit}.`;
+    } else {
+        analysis += `${var1} se mide en ${data1.unit} y ${var2} en ${data2.unit}.`;
+    }
+    
+    return analysis;
+}
+
+// Configurar gráficos de variables
+function setupVariableCharts() {
+    const chartContainers = document.querySelectorAll('.variable-chart-container');
+    
+    chartContainers.forEach(container => {
+        const variableName = container.dataset.variable;
+        const chartType = container.dataset.chartType || 'line';
+        
+        // Simular datos para el gráfico
+        const data = generateMockChartData(variableName);
+        
+        // Crear mini gráfico
+        createMiniChart(container, data, chartType);
+    });
+}
+
+function generateMockChartData(variableName) {
+    // Generar datos simulados basados en el tipo de variable
+    const days = Array.from({length: 30}, (_, i) => i + 1);
+    const baseValue = Math.random() * 1000 + 100;
+    
+    return days.map(day => ({
+        day: day,
+        value: baseValue + (Math.random() - 0.5) * baseValue * 0.2
+    }));
+}
+
+function createMiniChart(container, data, type) {
+    // Crear un canvas pequeño para el gráfico
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 100;
+    container.appendChild(canvas);
+    
+    // Aquí iría la lógica para crear el gráfico con Chart.js o similar
+    // Por simplicidad, solo agregamos un placeholder
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#e9ecef';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#6c757d';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Mini Gráfico', canvas.width/2, canvas.height/2);
+}
+
+// Inicializar cuando se muestre el tab
+document.addEventListener('shown.bs.tab', function(e) {
+    if (e.target.getAttribute('aria-controls') === 'endogenous') {
+        setTimeout(() => {
+            updateVariableCounts();
+            setupVariableCharts();
+        }, 100);
+    }
+});
+
+// Configurar eventos de búsqueda y filtros
+document.addEventListener('DOMContentLoaded', function() {
+    // Búsqueda en tiempo real
+    const searchInput = document.getElementById('variableSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            searchVariables(e.target.value);
+        });
+    }
+    
+    // Filtros de categoría
+    document.querySelectorAll('.category-filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const category = this.dataset.category;
+            filterVariablesByCategory(category);
+        });
+    });
+    
+    // Ordenamiento de columnas
+    document.querySelectorAll('.sortable-header').forEach((header, index) => {
+        header.addEventListener('click', function() {
+            sortTableByColumn(index);
+        });
+    });
+});
+
+// Exportar funciones globales
+window.updateVariableCounts = updateVariableCounts;
+window.expandChart = expandChart;
+window.showVariableDetails = showVariableDetails;
+window.getVariableDescription = getVariableDescription;
+window.exportEndogenousTable = exportEndogenousTable;
+window.filterVariablesByCategory = filterVariablesByCategory;
+window.sortTableByColumn = sortTableByColumn;
+window.searchVariables = searchVariables;
+window.compareVariables = compareVariables;
+</script>

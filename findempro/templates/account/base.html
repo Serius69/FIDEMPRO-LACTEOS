@@ -1,0 +1,418 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %}{% endblock title %} | Findempro AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Findempro AI — Decisiones financieras para PYME" name="description" />
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico'%}">
+    <!-- Google Fonts: Space Grotesk + Inter + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    {% block css %}
+    <link href="{% static 'css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'css/icons.min.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'css/tokens.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'css/kapitalya.css'%}" rel="stylesheet" type="text/css" />
+    {% endblock css %}
+
+    <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        background-color: var(--bg-deep);
+        font-family: var(--font-ui);
+        min-height: 100vh;
+    }
+
+    /* ── Layout split-screen ───────────────────────────────── */
+    .auth-wrapper {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        min-height: 100vh;
+    }
+
+    /* ── Panel izquierdo: branding ─────────────────────────── */
+    .auth-panel {
+        background-color: var(--navy);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 48px 40px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .auth-panel-logo {
+        margin-bottom: 56px;
+    }
+
+    .auth-panel-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 32px;
+    }
+
+    .auth-panel-headline {
+        font: 600 28px/1.2 var(--font-brand);
+        letter-spacing: -0.03em;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+
+    .auth-panel-headline span {
+        color: var(--product);
+    }
+
+    .auth-panel-sub {
+        font: 400 14px/1.65 var(--font-ui);
+        color: var(--text-secondary);
+    }
+
+    /* Features list */
+    .auth-features {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .auth-feature {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .auth-feature-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: var(--r-md);
+        background: var(--product-bg);
+        border: 1px solid var(--product-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .auth-feature-label {
+        font: 500 14px/1 var(--font-ui);
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .auth-feature-desc {
+        font: 400 12px/1.5 var(--font-ui);
+        color: var(--text-secondary);
+    }
+
+    .auth-panel-footer {
+        margin-top: auto;
+        padding-top: 32px;
+        border-top: 1px solid var(--border);
+        font: 400 10px/1 var(--font-data);
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+
+    /* ── Panel derecho: formulario ─────────────────────────── */
+    .auth-form-area {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 64px 40px;
+        background-color: var(--bg-deep);
+    }
+
+    .auth-form-box {
+        width: 100%;
+        max-width: 380px;
+    }
+
+    .auth-title {
+        font: 600 24px/1.2 var(--font-brand) !important;
+        letter-spacing: -0.02em;
+        color: var(--text-primary) !important;
+        margin-bottom: 6px;
+    }
+
+    .auth-subtitle {
+        font: 400 14px/1.5 var(--font-ui) !important;
+        color: var(--text-secondary) !important;
+        margin-bottom: 28px;
+    }
+
+    /* Google button */
+    .btn-google {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 10px 20px;
+        background: transparent;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--r-md);
+        color: var(--text-secondary);
+        font: 500 14px/1 var(--font-ui);
+        text-decoration: none;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        cursor: pointer;
+    }
+
+    .btn-google:hover {
+        background: rgba(255,255,255,0.06);
+        color: var(--text-primary);
+        border-color: rgba(255,255,255,0.2);
+        text-decoration: none;
+    }
+
+    /* Divider */
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 24px 0;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    .auth-divider span {
+        font: 400 10px/1 var(--font-data);
+        letter-spacing: 0.10em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    /* Password field wrapper */
+    .input-pw-wrap {
+        position: relative;
+    }
+
+    .input-pw-wrap .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        padding: 0;
+        color: var(--text-muted);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        transition: color 0.15s;
+        line-height: 1;
+    }
+
+    .input-pw-wrap .password-toggle:hover { color: var(--text-secondary); }
+    .input-pw-wrap .form-control { padding-right: 44px !important; }
+
+    /* "Forgot password" inline */
+    .pw-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .pw-header .form-label { margin-bottom: 0 !important; }
+
+    .pw-forgot {
+        font: 400 12px/1 var(--font-ui);
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: color 0.15s;
+    }
+
+    .pw-forgot:hover { color: var(--text-secondary); }
+
+    /* Footer link */
+    .auth-footer-link {
+        margin-top: 28px;
+        text-align: center;
+        font: 400 13px/1 var(--font-ui);
+        color: var(--text-secondary);
+    }
+
+    .auth-footer-link a {
+        color: var(--product);
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.15s;
+    }
+
+    .auth-footer-link a:hover { color: var(--product-deep); }
+
+    /* Terms text */
+    .auth-terms {
+        font: 400 11px/1.6 var(--font-ui);
+        color: var(--text-muted);
+        margin-bottom: 20px;
+    }
+
+    .auth-terms a {
+        color: var(--text-secondary);
+        text-decoration: none;
+    }
+
+    .auth-terms a:hover { color: var(--text-primary); }
+
+    /* Overrides crispy Bootstrap4 labels */
+    .auth-form-box .form-group > label,
+    .auth-form-box .form-group label {
+        color: var(--text-secondary) !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        margin-bottom: 6px !important;
+    }
+
+    .auth-form-box .form-check-label {
+        color: var(--text-secondary) !important;
+        font-size: 13px !important;
+    }
+
+    /* Fallback: inputs sin .form-control (renderizados sin crispy) */
+    .auth-form-box input[type="text"],
+    .auth-form-box input[type="email"],
+    .auth-form-box input[type="password"] {
+        display: block;
+        width: 100%;
+        background-color: var(--bg-surface) !important;
+        border: 1px solid var(--border-strong) !important;
+        border-radius: var(--r-md) !important;
+        color: var(--text-primary) !important;
+        font-family: var(--font-ui) !important;
+        font-size: 14px !important;
+        padding: 9px 14px !important;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .auth-form-box input[type="text"]:focus,
+    .auth-form-box input[type="email"]:focus,
+    .auth-form-box input[type="password"]:focus {
+        outline: none !important;
+        border-color: var(--product) !important;
+        box-shadow: 0 0 0 3px rgba(0,212,200,0.12) !important;
+    }
+
+    /* ── Responsive ────────────────────────────────────────── */
+    @media (max-width: 768px) {
+        .auth-wrapper { grid-template-columns: 1fr; }
+        .auth-panel   { display: none; }
+        .auth-form-area { padding: 40px 24px; align-items: flex-start; }
+    }
+    </style>
+</head>
+<body>
+<div class="auth-wrapper">
+
+    <!-- ── Panel izquierdo ─────────────────────────────────── -->
+    <aside class="auth-panel">
+        <div class="auth-panel-logo">
+            {% include "components/_logo.html" %}
+        </div>
+
+        <div class="auth-panel-body">
+            <div>
+                <h1 class="auth-panel-headline">
+                    Decisiones financieras<br>
+                    <span>precisas para tu PYME</span>
+                </h1>
+                <p class="auth-panel-sub">
+                    Modela la demanda, simula escenarios y toma decisiones con datos reales de tu negocio lácteo.
+                </p>
+            </div>
+
+            <div class="auth-features">
+                <div class="auth-feature">
+                    <div class="auth-feature-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <polyline points="22,7 13,16 8.5,11.5 2,18"
+                                      stroke="var(--product)" stroke-width="2"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="auth-feature-label">Modelado de demanda</div>
+                        <div class="auth-feature-desc">Distribuciones probabilísticas ajustadas a tu historial real.</div>
+                    </div>
+                </div>
+
+                <div class="auth-feature">
+                    <div class="auth-feature-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="9" stroke="var(--product)" stroke-width="2"/>
+                            <path d="M12 7v5l3.5 3.5" stroke="var(--product)" stroke-width="2"
+                                  stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="auth-feature-label">Simulaciones Monte Carlo</div>
+                        <div class="auth-feature-desc">Miles de escenarios en segundos para anticipar el riesgo.</div>
+                    </div>
+                </div>
+
+                <div class="auth-feature">
+                    <div class="auth-feature-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 11l3 3L22 4" stroke="var(--product)" stroke-width="2"
+                                  stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"
+                                  stroke="var(--product)" stroke-width="2"
+                                  stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="auth-feature-label">KPIs y reportes automáticos</div>
+                        <div class="auth-feature-desc">Alertas y recomendaciones financieras en tiempo real.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="auth-panel-footer">
+            &copy; 2025 Kapitalya &mdash; Findempro AI v3
+        </footer>
+    </aside>
+
+    <!-- ── Panel derecho: formulario ──────────────────────── -->
+    <main class="auth-form-area">
+        <div class="auth-form-box">
+            {% block messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'alert-success' %}alert-success{% else %}alert-danger{% endif %} mb-4" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+            {% endblock messages %}
+
+            {% block content %}
+            {% endblock content %}
+        </div>
+    </main>
+
+</div>
+
+{% block javascript %}
+<script src="{% static 'libs/bootstrap/dist/js/bootstrap.bundle.min.js'%}"></script>
+{% block extra_js %}
+{% endblock extra_js %}
+{% endblock javascript %}
+</body>
+</html>

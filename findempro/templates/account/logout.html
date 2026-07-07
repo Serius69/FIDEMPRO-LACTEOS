@@ -1,0 +1,31 @@
+{% extends "account/base.html" %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "Cerrar Sesion" %}{% endblock title %}
+    
+{% block content %}
+                                <div class="p-lg-5 p-4 text-center">
+                                    <lord-icon
+                                        src="https://cdn.lordicon.com/hzomhqxz.json"
+                                        trigger="loop"
+                                        colors="primary:#405189,secondary:#08a88a"
+                                        style="width:180px;height:180px">
+                                    </lord-icon>
+
+                                    <div class="mt-4">
+                                        <h5>{% trans "Cerrar Sesion" %}</h5>
+                                        <p class="text-muted">{% trans '¿Estás seguro de que quieres cerrar sesión?' %}</p>
+                                        <form method="post" action="{% url 'account_logout' %}">
+                                            {% csrf_token %}
+                                            {% if redirect_field_value %}
+                                            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+                                            {% endif %}
+                                            <button type="submit" class="btn btn-danger w-100">Cerrar sesión</button>
+                                        </form>
+                                    </div>
+                                    <div class="mt-4 text-center">
+                                        <p class="mb-0">¿Volver al inicio? <a href="{% url 'dashboard:index' %}" class="fw-semibold text-primary text-decoration-underline">Inicio</a></p>
+                                    </div>
+                                </div>
+                                <!-- end col -->
+{% endblock content %}

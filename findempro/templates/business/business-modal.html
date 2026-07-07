@@ -1,0 +1,296 @@
+<!-- Modal para agregar/actualizar negocio -->
+<div class="modal fade" id="addOrUpdateBusiness" tabindex="-1" aria-labelledby="addOrUpdateBusinessLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addOrUpdateBusinessLabel">
+                    <i class="ri-store-2-line me-2"></i>Agregar Nuevo Negocio
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Tutorial flotante -->
+                <div class="alert alert-info alert-dismissible fade show d-none" id="modalTutorial" role="alert">
+                    <strong><i class="ri-information-line me-2"></i>Consejo:</strong> 
+                    Completa todos los campos para registrar tu negocio. La imagen es opcional pero recomendada.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <form class="needs-validation business-form" id="businessForm" method="POST" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="business_id" id="business_id" value="">
+                    
+                    <div class="form-sections">
+                        <!-- Sección de imagen -->
+                        <div class="image-section">
+                            <label for="{{ form.image_src.id_for_label }}" class="form-label">
+                                <i class="ri-image-line me-1"></i>{{ form.image_src.label }}
+                            </label>
+                            <div class="image-upload-container">
+                                <div class="image-preview">
+                                    <img id="logo-img" alt="Vista previa" />
+                                    <div class="image-placeholder">
+                                        <i class="ri-image-add-line"></i>
+                                        <span>Subir imagen</span>
+                                    </div>
+                                </div>
+                                <div class="upload-controls">
+                                    <input type="file" 
+                                           class="form-control" 
+                                           id="id_image_src" 
+                                           name="image_src" 
+                                           accept="image/png, image/jpeg, image/jpg, image/webp">
+                                    <button class="btn btn-outline-secondary" type="button" id="clearImage">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </div>
+                                <div class="upload-info">
+                                    Formatos permitidos: PNG, JPG, WEBP. Tamaño máximo: 5MB
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <!-- Nombre del negocio -->
+                            <div class="form-group">
+                                <label for="id_name" class="form-label required">
+                                    <i class="ri-store-line me-1"></i>Nombre del Negocio
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="id_name" 
+                                       name="name" 
+                                       placeholder="Ej: Mi Tienda Favorita" 
+                                       required
+                                       minlength="2"
+                                       maxlength="255">
+                                <div class="invalid-feedback">
+                                    Por favor ingresa un nombre válido (mínimo 2 caracteres).
+                                </div>
+                                {% if form.name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Tipo de negocio -->
+                            <div class="form-group">
+                                <label for="id_type" class="form-label required">
+                                    <i class="ri-apps-line me-1"></i>Tipo de Negocio
+                                </label>
+                                <select class="form-select" id="id_type" name="type" required>
+                                    <option value="" disabled selected>Selecciona un tipo</option>
+                                    <option value="1">🥛 Lácteos</option>
+                                    <option value="2">🍞 Panadería</option>
+                                    <option value="3">🥩 Carnicería</option>
+                                    <option value="4">🥬 Verdulería</option>
+                                    <option value="5">📦 Otros</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Selecciona un tipo de negocio.
+                                </div>
+                                {% if form.type.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Ubicación -->
+                            <div class="form-group full-width">
+                                <label for="id_location" class="form-label required">
+                                    <i class="ri-map-pin-line me-1"></i>Ubicación
+                                </label>
+                                <select class="form-select" id="id_location" name="location" required>
+                                    <option value="" disabled selected>Selecciona una ciudad</option>
+                                    <optgroup label="Ciudades principales">
+                                        <option value="La Paz">La Paz</option>
+                                        <option value="Santa Cruz">Santa Cruz</option>
+                                        <option value="Cochabamba">Cochabamba</option>
+                                    </optgroup>
+                                    <optgroup label="Otras ciudades">
+                                        <option value="Sucre">Sucre</option>
+                                        <option value="Oruro">Oruro</option>
+                                        <option value="Potosí">Potosí</option>
+                                        <option value="Tarija">Tarija</option>
+                                        <option value="Beni">Beni</option>
+                                        <option value="Pando">Pando</option>
+                                    </optgroup>
+                                </select>
+                                <div class="invalid-feedback">
+                                    Selecciona una ubicación para el negocio.
+                                </div>
+                                {% if form.location.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.location.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="form-group full-width">
+                                <label for="id_description" class="form-label required">
+                                    <i class="ri-file-text-line me-1"></i>Descripción
+                                </label>
+                                <textarea class="form-control" 
+                                          id="id_description" 
+                                          name="description" 
+                                          rows="4" 
+                                          placeholder="Describe tu negocio, productos principales, servicios que ofreces..." 
+                                          required
+                                          minlength="10"
+                                          maxlength="1000"></textarea>
+                                <div class="form-footer">
+                                    <div class="invalid-feedback">
+                                        La descripción debe tener al menos 10 caracteres.
+                                    </div>
+                                    <div class="character-count">
+                                        <span id="descriptionCount">0</span>/1000 caracteres
+                                    </div>
+                                </div>
+                                {% if form.description.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.description.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div><div class="invalid-feedback">
+                                    Por favor ingresa un nombre válido (mínimo 2 caracteres).
+                                </div>
+                                {% if form.name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Tipo de negocio -->
+                            <div class="form-group">
+                                <label for="{{ form.type.id_for_label }}" class="form-label required">
+                                    <i class="ri-apps-line me-1"></i>{{ form.type.label }}
+                                </label>
+                                <select class="form-select" id="{{ form.type.id_for_label }}" name="{{ form.type.name }}" required>
+                                    <option value="" disabled selected>Selecciona un tipo</option>
+                                    {% for value, display in form.type.field.choices %}
+                                        {% if value %}
+                                            <option value="{{ value }}">{{ display }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">
+                                    Selecciona un tipo de negocio.
+                                </div>
+                                {% if form.type.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Ubicación -->
+                            <div class="form-group full-width">
+                                <label for="{{ form.location.id_for_label }}" class="form-label required">
+                                    <i class="ri-map-pin-line me-1"></i>{{ form.location.label }}
+                                </label>
+                                {{ form.location }}
+                                <div class="invalid-feedback">
+                                    Selecciona una ubicación para el negocio.
+                                </div>
+                                {% if form.location.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.location.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="form-group full-width">
+                                <label for="{{ form.description.id_for_label }}" class="form-label required">
+                                    <i class="ri-file-text-line me-1"></i>{{ form.description.label }}
+                                </label>
+                                {{ form.description }}
+                                <div class="form-footer">
+                                    <div class="invalid-feedback">
+                                        La descripción debe tener al menos 10 caracteres.
+                                    </div>
+                                    <div class="character-count">
+                                        <span id="descriptionCount">0</span>/1000 caracteres
+                                    </div>
+                                </div>
+                                {% if form.description.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.description.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="ri-close-line me-1"></i>Cancelar
+                </button>
+                <button type="submit" form="businessForm" class="btn btn-primary" id="submitBtn">
+                    <i class="ri-save-line me-1"></i>
+                    <span id="submitBtnText">Guardar Negocio</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="removeBusinessModal" tabindex="-1" aria-labelledby="removeBusinessModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="removeBusinessModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="confirmation-content">
+                    <div class="confirmation-icon">
+                        <lord-icon 
+                            src="https://cdn.lordicon.com/gsqxdxog.json" 
+                            trigger="loop" 
+                            colors="primary:#f7b84b,secondary:#f06548" 
+                            style="width: 100px; height: 100px">
+                        </lord-icon>
+                    </div>
+                    
+                    <div class="confirmation-text">
+                        <h4>¿Estás seguro?</h4>
+                        <p class="warning-text">
+                            Esta acción eliminará permanentemente el negocio y todos sus productos asociados. 
+                            <strong>Esta acción no se puede deshacer.</strong>
+                        </p>
+                    </div>
+                </div>
+                
+                <form id="deleteBusinessForm" method="POST" action="">
+                    {% csrf_token %}
+                    <input type="hidden" id="delete-business-id" name="business_id" value="">
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    No, cancelar
+                </button>
+                <button type="submit" form="deleteBusinessForm" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="ri-delete-bin-line me-1"></i>Sí, eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer">
+    <!-- Los toasts se insertan aquí dinámicamente -->
+</div>

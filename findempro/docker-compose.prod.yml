@@ -1,0 +1,261 @@
+services:
+
+  # ────────────────────────────────────────────
+  # PostgreSQL
+  # ────────────────────────────────────────────
+  findempro_db:
+    image: postgres:16.3-alpine
+    container_name: findempro_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - findempro_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ────────────────────────────────────────────
+  # Redis
+  # ────────────────────────────────────────────
+  findempro_redis:
+    image: redis:7.2-alpine
+    container_name: findempro_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - findempro_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ────────────────────────────────────────────
+  # Backend Django + Gunicorn
+  # ────────────────────────────────────────────
+  findempro_backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: findempro_backend
+    restart: unless-stopped
+    environment:
+      DJANGO_ENV: production
+      DJANGO_SETTINGS_MODULE: findempro.settings.production
+      DB_HOST: findempro_db
+      DB_PORT: "5432"
+      REDIS_URL: redis://findempro_redis:6379/1
+      CELERY_BROKER_URL: redis://findempro_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://findempro_redis:6379/0
+      GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    env_file:
+      - .env
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - logs_volume:/app/logs
+    depends_on:
+      findempro_db:
+        condition: service_healthy
+      findempro_redis:
+        condition: service_healthy
+    networks:
+      - findempro_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # ────────────────────────────────────────────
+  # Celery Worker
+  # ────────────────────────────────────────────
+  findempro_celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: findempro_celery
+    restart: unless-stopped
+    command: celery -A findempro worker --loglevel=info --concurrency=4 -Q default,simulations
+    environment:
+      DJANGO_ENV: production
+      DJANGO_SETTINGS_MODULE: findempro.settings.production
+      DB_HOST: findempro_db
+      REDIS_URL: redis://findempro_redis:6379/1
+      CELERY_BROKER_URL: redis://findempro_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://findempro_redis:6379/0
+      CELERY_ALWAYS_EAGER: "false"
+    env_file:
+      - .env
+    volumes:
+      - logs_volume:/app/logs
+      - media_volume:/app/media
+    depends_on:
+      findempro_db:
+        condition: service_healthy
+      findempro_redis:
+        condition: service_healthy
+      findempro_backend:
+        condition: service_started
+    networks:
+      - findempro_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "15m"
+        max-file: "3"
+
+  # ────────────────────────────────────────────
+  # Celery Beat (scheduler)
+  # ────────────────────────────────────────────
+  findempro_celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: findempro_celery_beat
+    restart: unless-stopped
+    command: celery -A findempro beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      DJANGO_ENV: production
+      DJANGO_SETTINGS_MODULE: findempro.settings.production
+      DB_HOST: findempro_db
+      REDIS_URL: redis://findempro_redis:6379/1
+      CELERY_BROKER_URL: redis://findempro_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://findempro_redis:6379/0
+    env_file:
+      - .env
+    volumes:
+      - logs_volume:/app/logs
+    depends_on:
+      findempro_db:
+        condition: service_healthy
+      findempro_redis:
+        condition: service_healthy
+      findempro_backend:
+        condition: service_started
+    networks:
+      - findempro_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ────────────────────────────────────────────
+  # Frontend SPA React/Vite — nginx non-root (8080), servido bajo /app/
+  # ────────────────────────────────────────────
+  findempro_frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        # Vacío → enlaces server-rendered relativos (same-origin). Las llamadas
+        # a la API ya son rutas relativas y las enruta findempro_nginx.
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-}
+    container_name: findempro_frontend
+    restart: unless-stopped
+    expose:
+      - "8080"
+    networks:
+      - findempro_network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ────────────────────────────────────────────
+  # Nginx — Reverse proxy + static files
+  # ────────────────────────────────────────────
+  findempro_nginx:
+    image: nginx:1.25.5-alpine
+    container_name: findempro_nginx
+    restart: unless-stopped
+    expose:
+      - "80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      findempro_backend:
+        condition: service_healthy
+      findempro_frontend:
+        condition: service_started
+    networks:
+      - findempro_network
+      - red_publica_gateway
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health/live/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# ────────────────────────────────────────────
+# Volúmenes persistentes
+# ────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  static_volume:
+    driver: local
+  media_volume:
+    driver: local
+  logs_volume:
+    driver: local
+
+# ────────────────────────────────────────────
+# Red interna
+# ────────────────────────────────────────────
+networks:
+  findempro_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+  red_publica_gateway:
+    external: true

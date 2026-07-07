@@ -1,0 +1,38 @@
+{% extends "account/base.html" %}
+{% load static %}
+{% load i18n %}
+{% load account %}
+{% block title %}{% trans "Confirm E-mail Address" %}{% endblock %}
+{% block content %}
+                            <div class="p-lg-5 p-4 text-center">
+                                <div class="avatar-lg mx-auto mt-2">
+                                    <div class="avatar-title bg-light text-success display-3 rounded-circle">
+                                        <i class="ri-checkbox-circle-fill"></i>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <h4>{% trans "Confirm E-mail Address" %} !</h4>
+                                    {% if confirmation %}
+
+                                        {% user_display confirmation.email_address.user as user_display %}
+
+                                        <p>{% blocktrans with confirmation.email_address.email as email %}Por favor confirme eso<a href="mailto:{{ email }}">{{ email }}</a> Es una dirección de correo electrónico para el usuario. {{ user_display }}.{% endblocktrans %}</p>
+
+                                        <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+                                        {% csrf_token %}
+                                            <button class="btn btn-primary" type="submit">Confirmar correo</button>
+                                        </form>
+
+                                        {% else %}
+
+                                        {% url 'account_email' as email_url %}
+
+                                        <p>{% blocktrans %}Este enlace de confirmación por correo electrónico expiró o no es válido. Por favor <a href="{{ email_url }}">emitir una nueva solicitud de confirmación por correo electrónico</a>.{% endblocktrans %}</p>
+
+                                    {% endif %}
+                                </div>
+                                <div class="mt-4 text-center">
+                                    <p class="mb-0">Volver al Inicio ? <a href="{% url 'dashboard:index' %}" class="fw-semibold text-primary text-decoration-underline"> Panel </a> </p>
+                                </div>
+                            </div>
+{% endblock content %}

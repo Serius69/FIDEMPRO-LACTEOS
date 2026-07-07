@@ -1,0 +1,334 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Error - Sistema de Dashboard{% endblock title %}
+
+{% block extra_css %}
+<style>
+    .error-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .error-content {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .error-icon {
+        font-size: 8rem;
+        color: #ffffff;
+        opacity: 0.8;
+        margin-bottom: 2rem;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-20px);
+        }
+        100% {
+            transform: translateY(0px);
+        }
+    }
+    
+    .error-code {
+        font-size: 6rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .error-message {
+        font-size: 1.5rem;
+        color: #ffffff;
+        margin: 1rem 0 2rem;
+        opacity: 0.9;
+    }
+    
+    .error-details {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin: 2rem auto;
+        max-width: 600px;
+        backdrop-filter: blur(10px);
+        color: #ffffff;
+    }
+    
+    .error-details code {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.9rem;
+    }
+    
+    .error-actions {
+        margin-top: 2rem;
+    }
+    
+    .btn-error {
+        padding: 12px 30px;
+        margin: 0 10px;
+        border: none;
+        border-radius: 30px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-error-primary {
+        background: #ffffff;
+        color: #764ba2;
+    }
+    
+    .btn-error-primary:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .btn-error-secondary {
+        background: transparent;
+        color: #ffffff;
+        border: 2px solid #ffffff;
+    }
+    
+    .btn-error-secondary:hover {
+        background: #ffffff;
+        color: #764ba2;
+    }
+    
+    .suggestions {
+        margin-top: 3rem;
+        text-align: left;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .suggestions h5 {
+        color: #ffffff;
+        margin-bottom: 1rem;
+    }
+    
+    .suggestions ul {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .suggestions li {
+        color: #ffffff;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+    
+    .suggestions li:before {
+        content: "→";
+        position: absolute;
+        left: 0;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .error-code {
+            font-size: 4rem;
+        }
+        
+        .error-message {
+            font-size: 1.2rem;
+        }
+        
+        .error-icon {
+            font-size: 6rem;
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-content">
+        <div class="error-icon">
+            <i class="ri-emotion-sad-line"></i>
+        </div>
+        
+        {% if error_code %}
+            <h1 class="error-code">{{ error_code|default:"500" }}</h1>
+        {% else %}
+            <h1 class="error-code">¡Oops!</h1>
+        {% endif %}
+        
+        <p class="error-message">
+            {% if error_message %}
+                {{ error_message }}
+            {% else %}
+                Algo salió mal. No pudimos procesar tu solicitud.
+            {% endif %}
+        </p>
+        
+        {% if error_details %}
+        <div class="error-details">
+            <p><strong>Detalles del error:</strong></p>
+            <p><code>{{ error_details }}</code></p>
+            <p class="mt-3 mb-0">
+                <small>Referencia: ERR-{{ request.session.session_key|slice:":8"|upper|default:"UNKNOWN" }}-{% now "YmdHis" %}</small>
+            </p>
+        </div>
+        {% endif %}
+        
+        <div class="error-actions">
+            <a href="{% url 'dashboard:index' %}" class="btn-error btn-error-primary">
+                <i class="ri-home-4-line me-2"></i>Ir al Inicio
+            </a>
+            <a href="javascript:history.back()" class="btn-error btn-error-secondary">
+                <i class="ri-arrow-left-line me-2"></i>Volver Atrás
+            </a>
+        </div>
+        
+        <div class="suggestions">
+            <h5>Sugerencias:</h5>
+            <ul>
+                <li>Verifica que la URL sea correcta</li>
+                <li>Asegúrate de tener los permisos necesarios</li>
+                <li>Intenta refrescar la página</li>
+                <li>Si el problema persiste, contacta al soporte</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Contact Button -->
+<div style="position: fixed; bottom: 30px; right: 30px; z-index: 1000;">
+    <button class="btn btn-light btn-lg rounded-circle shadow-lg" 
+            onclick="showSupportModal()"
+            data-bs-toggle="tooltip" 
+            data-bs-placement="left" 
+            title="¿Necesitas ayuda?">
+        <i class="ri-customer-service-2-line"></i>
+    </button>
+</div>
+
+<!-- Support Modal -->
+<div class="modal fade" id="supportModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Contactar Soporte</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="supportForm">
+                    <div class="mb-3">
+                        <label class="form-label">Tu Email</label>
+                        <input type="email" class="form-control" required 
+                               value="{{ user.email|default:'' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Describe el problema</label>
+                        <textarea class="form-control" rows="4" required 
+                                  placeholder="Por favor, describe lo que estabas intentando hacer cuando ocurrió el error..."></textarea>
+                    </div>
+                    <div class="alert alert-info mb-0">
+                        <i class="ri-information-line me-2"></i>
+                        La información del error se enviará automáticamente con tu reporte.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="sendSupportRequest()">
+                    <i class="ri-send-plane-line me-2"></i>Enviar Reporte
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+// Initialize tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+});
+
+// Show support modal
+function showSupportModal() {
+    const modal = new bootstrap.Modal(document.getElementById('supportModal'));
+    modal.show();
+}
+
+// Send support request
+function sendSupportRequest() {
+    const form = document.getElementById('supportForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // Show loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
+    
+    // Simulate sending (replace with actual AJAX call)
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        // Close modal
+        bootstrap.Modal.getInstance(document.getElementById('supportModal')).hide();
+        
+        // Show success message
+        Swal.fire({
+            icon: 'success',
+            title: '¡Reporte Enviado!',
+            text: 'Hemos recibido tu reporte. Nuestro equipo lo revisará pronto.',
+            confirmButtonText: 'Entendido'
+        });
+    }, 2000);
+}
+
+// Log error details (for debugging)
+console.error('Error Details:', {
+    code: '{{ error_code|default:"Unknown" }}',
+    message: '{{ error_message|default:"Unknown error" }}',
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    url: window.location.href
+});
+
+// Auto-report critical errors (optional)
+{% if error_code == "500" %}
+window.addEventListener('load', function() {
+    // Automatically log critical errors
+    fetch('/api/log-error/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            error_code: '{{ error_code }}',
+            error_message: '{{ error_message }}',
+            error_details: '{{ error_details }}',
+            url: window.location.href,
+            timestamp: new Date().toISOString()
+        })
+    }).catch(console.error);
+});
+{% endif %}
+</script>
+{% endblock extra_js %}

@@ -1,0 +1,475 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Lista de Cuestionarios{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/questionary-list.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            {% block pagetitle %}
+                {% include "partials/page-title.html" with pagetitle="Cuestionarios" title="Lista de Resultados" %}
+            {% endblock pagetitle %}
+            
+            <!-- Botón de ayuda flotante -->
+            <button class="btn btn-info btn-floating" onclick="showListTutorial()" 
+                    data-bs-toggle="tooltip" title="Ver tutorial" aria-label="Ayuda">
+                <i class="fa fa-question-circle"></i>
+                <span class="d-none d-md-inline ms-1">Ayuda</span>
+            </button>
+            
+            <!-- Tutorial Modal -->
+            <div class="modal fade" id="listTutorialModal" tabindex="-1" aria-labelledby="tutorialModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="tutorialModalLabel">
+                                <i class="fa fa-graduation-cap"></i> Tutorial - Lista de Cuestionarios
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="tutorial-content">
+                                <h4>Bienvenido a la Lista de Cuestionarios</h4>
+                                <p class="lead">Aquí puede gestionar todos sus cuestionarios completados. Le mostraremos cómo usar cada función:</p>
+                                
+                                <div class="row mt-4">
+                                    <div class="col-md-6">
+                                        <div class="card h-100 border-primary">
+                                            <div class="card-header bg-primary text-white">
+                                                <h5 class="mb-0"><i class="fa fa-list"></i> Vista General</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <ul class="list-unstyled">
+                                                    <li class="mb-2"><i class="fa fa-check text-success"></i> <strong>Tabla principal:</strong> Muestra todos los cuestionarios completados</li>
+                                                    <li class="mb-2"><i class="fa fa-check text-success"></i> <strong>Información mostrada:</strong> Nombre, producto, fechas y estado</li>
+                                                    <li class="mb-2"><i class="fa fa-check text-success"></i> <strong>Paginación:</strong> Navegue entre páginas si tiene muchos registros</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card h-100 border-info">
+                                            <div class="card-header bg-info text-white">
+                                                <h5 class="mb-0"><i class="fa fa-tools"></i> Acciones Disponibles</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row text-center">
+                                                    <div class="col-4 mb-3">
+                                                        <button class="btn btn-sm btn-info mb-2"><i class="fa fa-eye"></i></button>
+                                                        <p class="small mb-0"><strong>Ver</strong></p>
+                                                        <p class="small text-muted">Visualiza resultados detallados</p>
+                                                    </div>
+                                                    <div class="col-4 mb-3">
+                                                        <button class="btn btn-sm btn-warning mb-2"><i class="fa fa-edit"></i></button>
+                                                        <p class="small mb-0"><strong>Editar</strong></p>
+                                                        <p class="small text-muted">Modifica las respuestas</p>
+                                                    </div>
+                                                    <div class="col-4 mb-3">
+                                                        <button class="btn btn-sm btn-danger mb-2"><i class="fa fa-trash"></i></button>
+                                                        <p class="small mb-0"><strong>Eliminar</strong></p>
+                                                        <p class="small text-muted">Elimina con confirmación</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <div class="card border-warning">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h5 class="mb-0"><i class="fa fa-lightbulb"></i> Consejos Útiles</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <ul class="list-unstyled">
+                                                        <li class="mb-2"><i class="fa fa-mouse-pointer text-primary"></i> Haga clic en el nombre para ver detalles rápidamente</li>
+                                                        <li class="mb-2"><i class="fa fa-tags text-info"></i> Los badges indican el estado del cuestionario</li>
+                                                        <li class="mb-2"><i class="fa fa-keyboard text-success"></i> Use Ctrl+K para buscar rápidamente</li>
+                                                    </ul>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <ul class="list-unstyled">
+                                                        <li class="mb-2"><i class="fa fa-filter text-warning"></i> Use el filtro para mostrar solo activos</li>
+                                                        <li class="mb-2"><i class="fa fa-question-circle text-secondary"></i> Los tooltips aparecen al pasar el cursor</li>
+                                                        <li class="mb-2"><i class="fa fa-graduation-cap text-primary"></i> Use Ctrl+H para abrir esta ayuda</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fa fa-times"></i> Cerrar
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="startListTour()">
+                                <i class="fa fa-play"></i> Tour Guiado
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mensajes flash -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="fa fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Header principal -->
+            <div class="card rounded-0 bg-success-subtle mx-n4 mt-n4 border-top">
+                <div class="px-4">
+                    <div class="row">
+                        <div class="col-xxl-9 align-self-center">
+                            <div class="py-4">
+                                <h4 class="display-6 mb-3">Lista de Resultados de Cuestionarios</h4>
+                                <div class="container">                      
+                                    <p class="lead">Aquí puede ver todos los cuestionarios completados, editarlos o eliminarlos según sea necesario.</p>
+                                    <div class="mt-3 d-flex flex-wrap gap-2">
+                                        <a href="{% url 'questionary:questionary.main' %}" class="btn btn-primary">
+                                            <i class="fa fa-plus"></i> Nuevo Cuestionario
+                                        </a>
+                                        <button class="btn btn-outline-primary btn-refresh" onclick="location.reload()" 
+                                                data-bs-toggle="tooltip" title="Actualizar lista">
+                                            <i class="fa fa-refresh"></i> <span class="d-none d-md-inline">Actualizar</span>
+                                        </button>
+                                        <button class="btn btn-outline-success" onclick="exportToCSV()" 
+                                                data-bs-toggle="tooltip" title="Exportar a CSV">
+                                            <i class="fa fa-download"></i> <span class="d-none d-md-inline">Exportar</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xxl-3 ms-auto">
+                            <div class="mb-n5 pb-1 faq-img d-none d-xxl-block">
+                                <img src="{% static 'images/questionary-img.webp'%}" alt="Cuestionarios" class="img-fluid" style="max-height: 200px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filtros y búsqueda -->
+            <div class="search-filters">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fa fa-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="search-input" 
+                                   placeholder="Buscar cuestionarios o productos..." 
+                                   value="{{ search_query|default:'' }}"
+                                   data-bs-toggle="tooltip" 
+                                   title="Use Ctrl+K para enfocar rápidamente">
+                            <button class="btn btn-outline-secondary" type="button" 
+                                    onclick="clearSearch()"
+                                    data-bs-toggle="tooltip" title="Limpiar búsqueda">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-md-end align-items-center gap-3">
+                            <div class="form-check form-switch form-switch-md">
+                                <input class="form-check-input" type="checkbox" id="filter-active" 
+                                       {% if status_filter == 'active' or not status_filter %}checked{% endif %}>
+                                <label class="form-check-label text-muted" for="filter-active">
+                                    <i class="fa fa-filter"></i> Solo activos
+                                </label>
+                            </div>
+                            <div class="filter-results text-muted small">
+                                <!-- Contador dinámico de resultados -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabla principal -->
+            <div class="row">
+                <div class="col-xl-12">
+                    <div class="card">
+                        <div class="card-header align-items-center d-flex">
+                            <h4 class="card-title mb-0 flex-grow-1">
+                                <i class="fa fa-list-alt"></i> Cuestionarios Completados
+                            </h4>
+                            <div class="flex-shrink-0">
+                                <div class="badge bg-primary">
+                                    Total: {{ questionary_results.paginator.count }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if questionary_results %}
+                            <div class="table-responsive">
+                                <table class="table align-middle table-nowrap table-hover mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th scope="col" style="width: 70px;" class="text-center">#</th>
+                                            <th scope="col">
+                                                <i class="fa fa-file-text"></i> Cuestionario
+                                            </th>
+                                            <th scope="col">
+                                                <i class="fa fa-box"></i> Producto
+                                            </th>
+                                            <th scope="col">
+                                                <i class="fa fa-calendar"></i> Fecha Creación
+                                            </th>
+                                            <th scope="col">
+                                                <i class="fa fa-clock"></i> Última Actualización
+                                            </th>
+                                            <th scope="col" class="text-center">
+                                                <i class="fa fa-toggle-on"></i> Estado
+                                            </th>
+                                            <th scope="col" style="width: 200px;" class="text-center">
+                                                <i class="fa fa-cogs"></i> Acciones
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for questionary in questionary_results %}
+                                            <tr data-id="{{ questionary.pk }}" class="questionary-row">
+                                                <td class="text-center">
+                                                    <div class="avatar-xs">
+                                                        <span class="avatar-title rounded-circle">
+                                                            {{ forloop.counter0|add:questionary_results.start_index }}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="flex-shrink-0 me-3">
+                                                            <div class="avatar-xs">
+                                                                <div class="avatar-title rounded bg-soft-primary text-primary">
+                                                                    <i class="fa fa-file-text"></i>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h5 class="font-size-14 mb-1">
+                                                                <a href="{% url 'questionary:questionary.result' questionary.pk %}" 
+                                                                   class="text-dark text-decoration-none"
+                                                                   data-bs-toggle="tooltip" 
+                                                                   title="Ver resultados detallados">
+                                                                    {{ questionary.fk_questionary.questionary|truncatechars:50 }}
+                                                                </a>
+                                                            </h5>
+                                                            <p class="text-muted mb-0 small">
+                                                                ID: #{{ questionary.pk }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fa fa-box text-muted me-2"></i>
+                                                        <div>
+                                                            <span class="fw-medium">{{ questionary.fk_questionary.fk_product.name }}</span>
+                                                            <br>
+                                                            <small class="text-muted">
+                                                                {{ questionary.fk_questionary.fk_product.fk_business.name|default:"Sin negocio" }}
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fa fa-calendar text-muted me-2"></i>
+                                                        <div>
+                                                            <span class="fw-medium">{{ questionary.date_created|date:"d/m/Y" }}</span>
+                                                            <br>
+                                                            <small class="text-muted">{{ questionary.date_created|date:"H:i" }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fa fa-clock text-muted me-2"></i>
+                                                        <div>
+                                                            <span class="fw-medium">{{ questionary.last_updated|date:"d/m/Y" }}</span>
+                                                            <br>
+                                                            <small class="text-muted">{{ questionary.last_updated|date:"H:i" }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center">
+                                                    {% if questionary.is_active %}
+                                                        <span class="badge bg-success status-badge">
+                                                            <i class="fa fa-check-circle"></i> Activo
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger status-badge">
+                                                            <i class="fa fa-times-circle"></i> Inactivo
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div class="action-buttons d-flex justify-content-center gap-1">
+                                                        <a href="{% url 'questionary:questionary.result' questionary.pk %}" 
+                                                           class="btn btn-sm btn-info" 
+                                                           data-bs-toggle="tooltip" 
+                                                           title="Ver resultados detallados">
+                                                            <i class="fa fa-eye"></i>
+                                                        </a>
+                                                        <a href="{% url 'questionary:questionary.edit' questionary.pk %}" 
+                                                           class="btn btn-sm btn-warning"
+                                                           data-bs-toggle="tooltip" 
+                                                           title="Editar respuestas">
+                                                            <i class="fa fa-edit"></i>
+                                                        </a>
+                                                        <a href="{% url 'questionary:questionary.delete' questionary.pk %}" 
+                                                           class="btn btn-sm btn-danger"
+                                                           data-bs-toggle="tooltip" 
+                                                           title="Eliminar cuestionario"
+                                                           onclick="return confirm('¿Está seguro de que desea eliminar este cuestionario?')">
+                                                            <i class="fa fa-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Paginación mejorada -->
+                            {% if questionary_results.has_other_pages %}
+                            <div class="row g-0 align-items-center pb-4 mt-4">
+                                <div class="col-sm">
+                                    <div class="text-muted d-flex align-items-center">
+                                        <i class="fa fa-info-circle me-2"></i>
+                                        Mostrando <span class="fw-semibold">{{ questionary_results.start_index }}</span>
+                                        a <span class="fw-semibold">{{ questionary_results.end_index }}</span>
+                                        de <span class="fw-semibold">{{ questionary_results.paginator.count }}</span> resultados
+                                    </div>
+                                </div>
+                                <div class="col-sm-auto">
+                                    <nav aria-label="Navegación de páginas">
+                                        <ul class="pagination pagination-separated pagination-sm mb-0">
+                                            {% if questionary_results.has_previous %}
+                                                <li class="page-item">
+                                                    <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                                                       class="page-link" data-bs-toggle="tooltip" title="Primera página">
+                                                        <i class="fa fa-angle-double-left"></i>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a href="?page={{ questionary_results.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                                                       class="page-link" data-bs-toggle="tooltip" title="Página anterior">
+                                                        <i class="fa fa-chevron-left"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            
+                                            {% for num in questionary_results.paginator.page_range %}
+                                                {% if questionary_results.number == num %}
+                                                    <li class="page-item active">
+                                                        <span class="page-link">{{ num }}</span>
+                                                    </li>
+                                                {% elif num > questionary_results.number|add:'-3' and num < questionary_results.number|add:'3' %}
+                                                    <li class="page-item">
+                                                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                                                           class="page-link">{{ num }}</a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% if questionary_results.has_next %}
+                                                <li class="page-item">
+                                                    <a href="?page={{ questionary_results.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                                                       class="page-link" data-bs-toggle="tooltip" title="Página siguiente">
+                                                        <i class="fa fa-chevron-right"></i>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a href="?page={{ questionary_results.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                                                       class="page-link" data-bs-toggle="tooltip" title="Última página">
+                                                        <i class="fa fa-angle-double-right"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% else %}
+                            <!-- Estado vacío mejorado -->
+                            <div class="empty-state">
+                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" 
+                                           trigger="loop" 
+                                           colors="primary:#405189,secondary:#0ab39c" 
+                                           style="width:100px;height:100px">
+                                </lord-icon>
+                                <h5 class="mt-3">No hay cuestionarios completados</h5>
+                                <p class="text-muted mb-0">
+                                    {% if search_query %}
+                                        No se encontraron resultados para "{{ search_query }}".
+                                        <br>
+                                        <button class="btn btn-link p-0" onclick="clearSearch()">
+                                            Limpiar búsqueda
+                                        </button>
+                                    {% else %}
+                                        Comience creando un nuevo cuestionario haciendo clic en el botón "Nuevo Cuestionario".
+                                    {% endif %}
+                                </p>
+                                <div class="mt-3">
+                                    <a href="{% url 'questionary:questionary.main' %}" class="btn btn-primary">
+                                        <i class="fa fa-plus"></i> Crear Cuestionario
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- container-fluid -->
+    </div>
+    <!-- End Page-content -->
+    
+    {% block footer %}
+        {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+<!-- end main content-->
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/questionary-list.js' %}"></script>
+<script>
+// Funciones adicionales para compatibilidad
+function clearSearch() {
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+    }
+}
+
+function exportToCSV() {
+    if (window.questionaryList && questionaryList.exportToCSV) {
+        questionaryList.exportToCSV();
+    } else {
+        alert('Función de exportación en desarrollo');
+    }
+}
+</script>
+{% endblock extra_js %}

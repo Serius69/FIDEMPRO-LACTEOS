@@ -1,0 +1,270 @@
+name: FindemproAI CI/CD
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+
+# ─────────────────────────────────────────────────────────
+# JOB 1 — Tests Django + pip-audit
+# CORREGIDO: usa PostgreSQL (igual que producción), no MySQL
+# ─────────────────────────────────────────────────────────
+jobs:
+  test:
+    name: Tests & Security Audit
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: findempro_test
+          POSTGRES_USER: findempro
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7.2-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    defaults:
+      run:
+        working-directory: findempro
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: findempro/requirements/production.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements/production.txt -r requirements/development.txt
+
+      - name: Security audit (pip-audit)
+        run: pip-audit -r requirements/production.txt
+
+      - name: Django system check
+        env:
+          DJANGO_ENV: test
+          DJANGO_SETTINGS_MODULE: findempro.settings.testing
+          SECRET_KEY: ci-insecure-key-1234567890-only-for-tests
+          DB_ENGINE: django.db.backends.postgresql
+          DB_NAME: findempro_test
+          DB_USER: findempro
+          DB_PASSWORD: test
+          DB_HOST: localhost
+          DB_PORT: "5432"
+          REDIS_URL: redis://localhost:6379/1
+          CELERY_BROKER_URL: redis://localhost:6379/0
+          CELERY_RESULT_BACKEND: redis://localhost:6379/0
+        run: python manage.py check
+
+      - name: Run migrations (test DB)
+        env:
+          DJANGO_ENV: test
+          DJANGO_SETTINGS_MODULE: findempro.settings.testing
+          SECRET_KEY: ci-insecure-key-1234567890-only-for-tests
+          DB_ENGINE: django.db.backends.postgresql
+          DB_NAME: findempro_test
+          DB_USER: findempro
+          DB_PASSWORD: test
+          DB_HOST: localhost
+          DB_PORT: "5432"
+          REDIS_URL: redis://localhost:6379/1
+          CELERY_BROKER_URL: redis://localhost:6379/0
+          CELERY_RESULT_BACKEND: redis://localhost:6379/0
+        run: python manage.py migrate --noinput
+
+      - name: Run tests
+        env:
+          DJANGO_ENV: test
+          DJANGO_SETTINGS_MODULE: findempro.settings.testing
+          SECRET_KEY: ci-insecure-key-1234567890-only-for-tests
+          DB_ENGINE: django.db.backends.postgresql
+          DB_NAME: findempro_test
+          DB_USER: findempro
+          DB_PASSWORD: test
+          DB_HOST: localhost
+          DB_PORT: "5432"
+          REDIS_URL: redis://localhost:6379/1
+          CELERY_BROKER_URL: redis://localhost:6379/0
+          CELERY_RESULT_BACKEND: redis://localhost:6379/0
+          CELERY_ALWAYS_EAGER: "true"
+        run: |
+          pytest simulate/tests/test_core_engine.py \
+                 simulate/tests/test_model_compiler.py \
+                 simulate/tests/test_p3_features.py \
+                 simulate/tests/test_canvas_views_p3.py \
+                 -v --tb=short
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: findempro/.pytest_cache/
+          retention-days: 7
+
+  # ── Frontend React/Vite build (typecheck via tsc -b + vite build) ──
+  frontend:
+    name: Frontend Build (React/Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install & build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+# ─────────────────────────────────────────────────────────
+# JOB 2 — Docker build smoke test
+# ─────────────────────────────────────────────────────────
+  docker-build:
+    name: Docker Build Smoke Test
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (smoke test)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./findempro
+          file: ./findempro/Dockerfile
+          target: runtime
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: findempro-ai:ci
+
+# ─────────────────────────────────────────────────────────
+# JOB 3 — Deploy a producción
+# ─────────────────────────────────────────────────────────
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [test, docker-build, frontend]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            set -euo pipefail
+
+            # El compose y el código están en findempro/
+            cd "${{ secrets.DEPLOY_PATH }}/FindemproAI"
+
+            echo "🔄 Pulling latest code..."
+            git pull origin ${{ github.ref_name }}
+
+            # El docker-compose está en el subdirectorio
+            cd findempro
+
+            # Guardar imagen actual para rollback
+            PREV_IMAGE=$(docker inspect --format='{{.Image}}' findempro_backend 2>/dev/null || true)
+
+            # Build nueva imagen
+            echo "🏗️ Building Docker image..."
+            docker compose -f docker-compose.prod.yml build findempro_backend
+
+            # Deploy backend sin downtime
+            echo "🚀 Iniciando nuevo backend..."
+            docker compose -f docker-compose.prod.yml up -d --no-deps findempro_backend
+
+            # Migraciones Django
+            echo "⚙️ Ejecutando migraciones..."
+            docker compose -f docker-compose.prod.yml exec -T findempro_backend \
+              python manage.py migrate --noinput
+
+            # Static files
+            echo "📁 Recolectando archivos estáticos..."
+            docker compose -f docker-compose.prod.yml exec -T findempro_backend \
+              python manage.py collectstatic --noinput
+
+            # Reiniciar workers Celery (recogen nuevo código)
+            echo "🔄 Reiniciando workers Celery..."
+            docker compose -f docker-compose.prod.yml restart findempro_celery findempro_celery_beat
+
+            # Health check post-deploy
+            echo "🔍 Verificando salud del backend..."
+            SUCCESS=false
+            for i in $(seq 1 20); do
+              HTTP=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 3 http://localhost/health/ 2>/dev/null || echo "000")
+              if [ "$HTTP" = "200" ]; then
+                echo "✅ Backend OK (intento $i)"
+                SUCCESS=true
+                break
+              fi
+              echo "  [$i/20] HTTP $HTTP — esperando 5s..."
+              sleep 5
+            done
+
+            if [ "$SUCCESS" = "false" ]; then
+              echo "❌ Health check falló — iniciando rollback..."
+              if [ -n "$PREV_IMAGE" ]; then
+                docker tag "$PREV_IMAGE" findempro_backend:rollback 2>/dev/null || true
+                docker compose -f docker-compose.prod.yml up -d --no-deps findempro_backend
+                docker compose -f docker-compose.prod.yml restart findempro_celery findempro_celery_beat
+                echo "🔄 Rollback completado."
+              fi
+              exit 1
+            fi
+
+            echo "✅ Deploy de FindemproAI completado — $(date '+%Y-%m-%d %H:%M:%S')"
+
+      - name: Notify failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              ...context.repo,
+              title: `🚨 Deploy FindemproAI falló — ${context.sha.substring(0, 7)}`,
+              body: `**Branch:** ${context.ref}\n**Actor:** ${context.actor}\n**Commit:** ${context.sha}`,
+              labels: ['deploy-failure']
+            })

@@ -1,0 +1,156 @@
+services:
+
+  # ────────────────────────────────────────────
+  # PostgreSQL (dev)
+  # ────────────────────────────────────────────
+  findempro_db:
+    image: postgres:16-alpine
+    container_name: findempro_db_dev
+    environment:
+      POSTGRES_DB: ${DB_NAME:-findempro_dev}
+      POSTGRES_USER: ${DB_USER:-findempro}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-devpassword}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-findempro} -d ${DB_NAME:-findempro_dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - findempro_network
+
+  # ────────────────────────────────────────────
+  # Redis (dev)
+  # ────────────────────────────────────────────
+  findempro_redis:
+    image: redis:7-alpine
+    container_name: findempro_redis_dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - findempro_network
+
+  # ────────────────────────────────────────────
+  # Backend Django — runserver con hot-reload
+  # ────────────────────────────────────────────
+  findempro_backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: findempro_backend_dev
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      DJANGO_ENV: development
+      DJANGO_SETTINGS_MODULE: findempro.settings.development
+      DEBUG: "True"
+      DB_HOST: findempro_db
+      DB_PORT: "5432"
+      REDIS_URL: redis://findempro_redis:6379/1
+      CELERY_BROKER_URL: redis://findempro_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://findempro_redis:6379/0
+    env_file:
+      - .env.development
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      findempro_db:
+        condition: service_healthy
+      findempro_redis:
+        condition: service_healthy
+    networks:
+      - findempro_network
+
+  # ────────────────────────────────────────────
+  # Celery Worker (dev)
+  # ────────────────────────────────────────────
+  findempro_celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: findempro_celery_dev
+    command: celery -A findempro worker --loglevel=debug
+    environment:
+      DJANGO_ENV: development
+      DJANGO_SETTINGS_MODULE: findempro.settings.development
+      DEBUG: "True"
+      DB_HOST: findempro_db
+      REDIS_URL: redis://findempro_redis:6379/1
+      CELERY_BROKER_URL: redis://findempro_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://findempro_redis:6379/0
+      CELERY_ALWAYS_EAGER: "false"
+    env_file:
+      - .env.development
+    volumes:
+      - ./:/app
+    depends_on:
+      findempro_db:
+        condition: service_healthy
+      findempro_redis:
+        condition: service_healthy
+      findempro_backend:
+        condition: service_started
+    networks:
+      - findempro_network
+
+  # ────────────────────────────────────────────
+  # Celery Beat (dev)
+  # ────────────────────────────────────────────
+  findempro_celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: findempro_celery_beat_dev
+    command: celery -A findempro beat --loglevel=debug --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      DJANGO_ENV: development
+      DJANGO_SETTINGS_MODULE: findempro.settings.development
+      DEBUG: "True"
+      DB_HOST: findempro_db
+      REDIS_URL: redis://findempro_redis:6379/1
+      CELERY_BROKER_URL: redis://findempro_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://findempro_redis:6379/0
+    env_file:
+      - .env.development
+    volumes:
+      - ./:/app
+    depends_on:
+      findempro_db:
+        condition: service_healthy
+      findempro_redis:
+        condition: service_healthy
+      findempro_backend:
+        condition: service_started
+    networks:
+      - findempro_network
+
+# ────────────────────────────────────────────
+# Volúmenes dev
+# ────────────────────────────────────────────
+volumes:
+  postgres_data_dev:
+    driver: local
+  redis_data_dev:
+    driver: local
+
+# ────────────────────────────────────────────
+# Red interna
+# ────────────────────────────────────────────
+networks:
+  findempro_network:
+    driver: bridge

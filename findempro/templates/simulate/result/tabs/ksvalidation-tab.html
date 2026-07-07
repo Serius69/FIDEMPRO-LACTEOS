@@ -1,0 +1,2790 @@
+<style>
+
+    /* ==========================================
+  ESTILOS PARA VALIDACIÓN KOLMOGOROV-SMIRNOV
+  ========================================== */
+
+/* Variables CSS */
+:root {
+   --primary-color: #2c3e50;
+   --secondary-color: #34495e;
+   --success-color: #27ae60;
+   --warning-color: #e67e22;
+   --danger-color: #c0392b;
+   --info-color: #2980b9;
+   --light-bg: #f8f9fa;
+   --white-bg: #ffffff;
+   --text-dark: #2c3e50;
+   --text-muted: #7f8c8d;
+   --border-light: #ecf0f1;
+   --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
+   --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.15);
+   --shadow-heavy: 0 8px 16px rgba(0, 0, 0, 0.2);
+   --border-radius: 8px;
+   --transition-base: all 0.3s ease;
+}
+
+/* Estilos base del tab */
+.tab-pane {
+   padding: 20px;
+   background-color: var(--light-bg);
+   min-height: 100vh;
+}
+
+/* Alert personalizada con colores suaves */
+.alert {
+   border: none;
+   border-radius: var(--border-radius);
+   box-shadow: var(--shadow-light);
+   color: var(--text-dark);
+}
+
+.alert-success {
+   background-color: #d5f4e6;
+   border-left: 4px solid var(--success-color);
+}
+
+.alert-warning {
+   background-color: #fef5e7;
+   border-left: 4px solid var(--warning-color);
+}
+
+.alert-danger {
+   background-color: #fadbd8;
+   border-left: 4px solid var(--danger-color);
+}
+
+.alert-info {
+   background-color: #e8f4f8;
+   border-left: 4px solid var(--info-color);
+}
+
+/* Header del análisis KS */
+.alert-heading {
+   color: var(--text-dark);
+   font-weight: 600;
+   font-size: 1.25rem;
+}
+
+/* Explanation box */
+.explanation-box {
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+   padding: 16px;
+   color: var(--text-dark);
+}
+
+.explanation-box h6 {
+   color: var(--primary-color);
+   font-weight: 600;
+   margin-bottom: 8px;
+}
+
+.explanation-box p, .explanation-box li {
+   color: var(--text-dark);
+   font-size: 0.9rem;
+   line-height: 1.5;
+}
+
+/* Metric cards */
+.metric-card {
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+   transition: var(--transition-base);
+   box-shadow: var(--shadow-light);
+}
+
+.metric-card:hover {
+   box-shadow: var(--shadow-medium);
+   transform: translateY(-2px);
+}
+
+.metric-value {
+   color: var(--primary-color);
+   font-weight: 700;
+   font-size: 1.5rem;
+}
+
+/* Chart containers */
+.chart-container {
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+   overflow: hidden;
+   box-shadow: var(--shadow-light);
+   margin-bottom: 24px;
+}
+
+.enhanced-chart {
+   transition: var(--transition-base);
+}
+
+.enhanced-chart:hover {
+   box-shadow: var(--shadow-medium);
+}
+
+.chart-header {
+   background-color: var(--light-bg);
+   padding: 16px;
+   border-bottom: 1px solid var(--border-light);
+}
+
+.chart-title {
+   color: var(--primary-color);
+   font-weight: 600;
+   font-size: 1.1rem;
+}
+
+.chart-content {
+   padding: 16px;
+   text-align: center;
+}
+
+.chart-image {
+   max-width: 100%;
+   height: auto;
+   border-radius: 4px;
+}
+
+.chart-footer {
+   padding: 12px 16px;
+   background-color: var(--light-bg);
+   border-top: 1px solid var(--border-light);
+   font-size: 0.85rem;
+   color: var(--text-muted);
+}
+
+.chart-controls {
+   display: flex;
+   gap: 8px;
+}
+
+.chart-control-btn {
+   width: 32px;
+   height: 32px;
+   border-radius: 50%;
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   cursor: pointer;
+   transition: var(--transition-base);
+   color: var(--text-dark);
+}
+
+.chart-control-btn:hover {
+   background-color: var(--light-bg);
+   color: var(--primary-color);
+}
+
+/* Cards mejoradas */
+.enhanced-card {
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+   box-shadow: var(--shadow-light);
+   background-color: var(--white-bg);
+}
+
+.card-header {
+   background-color: var(--light-bg);
+   border-bottom: 1px solid var(--border-light);
+   padding: 16px;
+}
+
+.card-title {
+   color: var(--primary-color);
+   font-weight: 600;
+   margin: 0;
+}
+
+/* Certification section */
+.certification-section {
+   padding: 16px;
+}
+
+.certification-badge .badge {
+   font-size: 1rem;
+   padding: 12px 16px;
+   border-radius: var(--border-radius);
+}
+
+.certification-explanation h6 {
+   color: var(--text-dark);
+   font-weight: 600;
+   margin-bottom: 4px;
+}
+
+.certification-explanation small {
+   color: var(--text-muted);
+}
+
+/* Reliability metrics */
+.reliability-metrics-enhanced {
+   margin-top: 16px;
+}
+
+.metric-row {
+   padding: 12px 0;
+   border-bottom: 1px solid var(--border-light);
+}
+
+.metric-row:last-child {
+   border-bottom: none;
+}
+
+.metric-label {
+   color: var(--text-dark);
+   font-weight: 500;
+}
+
+.metric-visual {
+   display: flex;
+   align-items: center;
+}
+
+/* Score circle */
+.score-circle {
+   width: 60px;
+   height: 60px;
+   border-radius: 50%;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   font-weight: 700;
+   color: white;
+   position: relative;
+}
+
+.score-excellent {
+   background: linear-gradient(135deg, var(--success-color) 0%, #2ecc71 100%);
+}
+
+.score-good {
+   background: linear-gradient(135deg, var(--warning-color) 0%, #f39c12 100%);
+}
+
+.score-poor {
+   background: linear-gradient(135deg, var(--danger-color) 0%, #e74c3c 100%);
+}
+
+.score-value {
+   font-size: 1.2rem;
+   line-height: 1;
+}
+
+/* Progress bars */
+.progress {
+   height: 8px;
+   background-color: var(--border-light);
+   border-radius: 4px;
+   overflow: hidden;
+}
+
+.progress-bar {
+   transition: width 2s cubic-bezier(0.4, 0, 0.2, 1);
+   position: relative;
+}
+
+/* Recommendation section */
+.recommendation-section {
+   padding: 16px;
+}
+
+.recommendation-box {
+   background-color: var(--light-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+   padding: 16px;
+   color: var(--text-dark);
+}
+
+/* Tests summary */
+.summary-grid {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+   gap: 16px;
+   margin-top: 16px;
+}
+
+.summary-item {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   padding: 12px;
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+}
+
+.summary-icon {
+   font-size: 1.5rem;
+}
+
+.summary-value {
+   font-size: 1.25rem;
+   font-weight: 700;
+   color: var(--primary-color);
+}
+
+.summary-label {
+   font-size: 0.8rem;
+   color: var(--text-muted);
+}
+
+/* Table enhancements */
+.enhanced-table {
+   background-color: var(--white-bg);
+   border: none;
+}
+
+.enhanced-table thead th {
+   background-color: var(--primary-color);
+   color: white;
+   border: none;
+   font-weight: 600;
+   padding: 16px 12px;
+}
+
+.enhanced-row {
+   transition: var(--transition-base);
+   cursor: pointer;
+   border-left: 4px solid transparent;
+}
+
+.enhanced-row:hover {
+   background-color: rgba(44, 62, 80, 0.05);
+   border-left-color: var(--primary-color);
+}
+
+.enhanced-row[data-importance="high"] {
+   border-left-color: var(--info-color);
+   background-color: rgba(41, 128, 185, 0.03);
+}
+
+.enhanced-row[data-importance="medium"] {
+   border-left-color: var(--text-muted);
+}
+
+/* Variable info */
+.variable-info strong {
+   color: var(--primary-color);
+   font-weight: 600;
+}
+
+.variable-info small {
+   color: var(--text-muted);
+}
+
+.variable-importance .badge {
+   font-size: 0.7rem;
+   padding: 4px 8px;
+}
+
+/* P-value display */
+.p-value-display .fw-bold {
+   font-size: 1.1rem;
+}
+
+.statistic-value .fw-bold {
+   color: var(--primary-color);
+}
+
+/* Interpretation text */
+.interpretation-text {
+   font-size: 0.85rem;
+   line-height: 1.4;
+}
+
+/* Confidence intervals */
+.confidence-interval-enhanced {
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+   transition: var(--transition-base);
+   cursor: pointer;
+}
+
+.confidence-interval-enhanced:hover {
+   box-shadow: var(--shadow-medium);
+   transform: translateY(-2px);
+}
+
+.interval-header {
+   padding-bottom: 12px;
+   border-bottom: 1px solid var(--border-light);
+}
+
+.confidence-info h6 {
+   color: var(--primary-color);
+   font-weight: 600;
+}
+
+.margin-error .badge {
+   font-size: 0.9rem;
+   padding: 6px 12px;
+}
+
+/* Range visualization */
+.range-bar {
+   background: linear-gradient(90deg, #e8f4f8 0%, var(--info-color) 50%, #e8f4f8 100%);
+   border-radius: 20px;
+   position: relative;
+   overflow: hidden;
+}
+
+.range-labels {
+   color: var(--text-dark);
+   font-weight: 600;
+}
+
+.range-labels .text-white {
+   color: white !important;
+}
+
+/* Scenario boxes */
+.scenario-box {
+   text-align: center;
+   transition: var(--transition-base);
+}
+
+.scenario-box:hover {
+   transform: scale(1.05);
+}
+
+.scenario-value {
+   font-size: 1.1rem;
+   font-weight: 700;
+}
+
+/* Variable intervals */
+.variable-interval-enhanced {
+   background-color: var(--light-bg);
+   border: 1px solid var(--border-light);
+   border-radius: var(--border-radius);
+}
+
+.variable-header {
+   margin-bottom: 8px;
+}
+
+.variable-name strong {
+   color: var(--primary-color);
+   font-weight: 600;
+}
+
+.variable-value {
+   color: var(--primary-color);
+}
+
+.mini-range-bar .progress {
+   height: 6px;
+}
+
+.variable-stats {
+   margin-top: 8px;
+}
+
+/* Empty state */
+.enhanced-empty-state {
+   background-color: var(--white-bg);
+   border: 1px solid var(--border-light);
+   text-align: center;
+   padding: 40px;
+}
+
+.empty-state-icon {
+   color: var(--text-muted);
+   margin-bottom: 20px;
+}
+
+.requirements-checklist {
+   margin-top: 24px;
+}
+
+.requirement-item {
+   display: flex;
+   align-items: center;
+   text-align: left;
+   justify-content: flex-start;
+}
+
+.guide-item {
+   display: flex;
+   align-items: center;
+   margin-bottom: 8px;
+}
+
+.next-steps {
+   margin-top: 24px;
+   text-align: left;
+}
+
+.next-steps ol {
+   max-width: 600px;
+   margin: 0 auto;
+}
+
+/* Interpretation guide */
+.interpretation-guide {
+   background-color: var(--light-bg);
+   border-radius: var(--border-radius);
+   padding: 12px;
+}
+
+/* Badges customizados */
+.badge {
+   font-weight: 500;
+   padding: 6px 12px;
+   border-radius: 4px;
+}
+
+.bg-primary {
+   background-color: var(--primary-color) !important;
+}
+
+.bg-success {
+   background-color: var(--success-color) !important;
+}
+
+.bg-warning {
+   background-color: var(--warning-color) !important;
+}
+
+.bg-danger {
+   background-color: var(--danger-color) !important;
+}
+
+.bg-info {
+   background-color: var(--info-color) !important;
+}
+
+.bg-secondary {
+   background-color: var(--secondary-color) !important;
+}
+
+/* Text colors */
+.text-primary {
+   color: var(--primary-color) !important;
+}
+
+.text-success {
+   color: var(--success-color) !important;
+}
+
+.text-warning {
+   color: var(--warning-color) !important;
+}
+
+.text-danger {
+   color: var(--danger-color) !important;
+}
+
+.text-info {
+   color: var(--info-color) !important;
+}
+
+.text-muted {
+   color: var(--text-muted) !important;
+}
+
+/* Tooltips personalizados */
+.enhanced-tooltip {
+   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.tooltip-header h6 {
+   color: white;
+   font-weight: 600;
+   margin: 0;
+}
+
+.tooltip-content p {
+   color: rgba(255, 255, 255, 0.9);
+   margin: 0;
+}
+
+/* Floating help button */
+.floating-help-btn {
+   box-shadow: var(--shadow-heavy);
+   transition: var(--transition-base);
+}
+
+/* Buttons */
+.btn {
+   border-radius: var(--border-radius);
+   font-weight: 500;
+   transition: var(--transition-base);
+   border: none;
+}
+
+.btn-outline-info {
+   color: var(--info-color);
+   border: 1px solid var(--info-color);
+   background-color: transparent;
+}
+
+.btn-outline-info:hover {
+   background-color: var(--info-color);
+   color: white;
+}
+
+.btn-outline-primary {
+   color: var(--primary-color);
+   border: 1px solid var(--primary-color);
+   background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+   background-color: var(--primary-color);
+   color: white;
+}
+
+.btn-primary {
+   background-color: var(--primary-color);
+   color: white;
+}
+
+.btn-primary:hover {
+   background-color: var(--secondary-color);
+}
+
+.btn-secondary {
+   background-color: var(--secondary-color);
+   color: white;
+}
+
+.btn-success {
+   background-color: var(--success-color);
+   color: white;
+}
+
+/* Small text improvements */
+.small, small {
+   color: var(--text-muted);
+   font-size: 0.85rem;
+}
+
+/* Collapse improvements */
+.collapse {
+   transition: height 0.35s ease;
+}
+
+/* Focus states for accessibility */
+.enhanced-row:focus,
+.confidence-interval-enhanced:focus,
+.metric-card:focus {
+   outline: 2px solid var(--info-color);
+   outline-offset: 2px;
+}
+
+/* Notification styles */
+.notification-enhanced {
+   border-radius: var(--border-radius);
+   box-shadow: var(--shadow-heavy);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+   .tab-pane {
+       padding: 16px;
+   }
+   
+   .chart-container {
+       margin-bottom: 16px;
+   }
+   
+   .chart-header {
+       padding: 12px;
+   }
+   
+   .chart-content {
+       padding: 12px;
+   }
+   
+   .metric-card {
+       margin-bottom: 12px;
+   }
+   
+   .summary-grid {
+       grid-template-columns: 1fr;
+       gap: 12px;
+   }
+   
+   .score-circle {
+       width: 50px;
+       height: 50px;
+   }
+   
+   .score-value {
+       font-size: 1rem;
+   }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+   :root {
+       --primary-color: #000000;
+       --text-dark: #000000;
+       --text-muted: #333333;
+       --border-light: #666666;
+   }
+   
+   .alert {
+       border: 2px solid var(--text-dark);
+   }
+   
+   .enhanced-row:hover {
+       background-color: #f0f0f0;
+       border-left-color: #000000;
+   }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+   * {
+       animation-duration: 0.01ms !important;
+       animation-iteration-count: 1 !important;
+       transition-duration: 0.01ms !important;
+   }
+}
+
+</style>
+
+
+<!-- Kolmogorov-Smirnov Validation Tab - Improved Version -->
+<div class="tab-pane fade" id="ks-validation" role="tabpanel">
+    <!-- Header del análisis KS con explicación expandida -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert {% if ks_validation.summary.overall_validity %}alert-success{% elif ks_validation.summary.passed_tests > 0 %}alert-warning{% else %}alert-danger{% endif %}">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="alert-heading mb-0">
+                        <i class="bx bx-test-tube me-2"></i>
+                        Validación Estadística Kolmogorov-Smirnov
+                    </h4>
+                    <button class="btn btn-outline-info btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#ksExplanation" aria-expanded="false">
+                        <i class="bx bx-info-circle me-1"></i>¿Qué es esto?
+                    </button>
+                </div>
+                
+                <div class="collapse" id="ksExplanation">
+                    <div class="explanation-box p-3 bg-white bg-opacity-75 rounded mb-3">
+                        <h6><i class="bx bx-book me-2"></i>¿Qué es la Validación Kolmogorov-Smirnov?</h6>
+                        <p class="mb-2">
+                            La prueba Kolmogorov-Smirnov (KS) es un método estadístico que verifica si los datos generados por nuestra simulación 
+                            siguen las distribuciones de probabilidad esperadas según nuestro modelo matemático.
+                        </p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary">¿Por qué es importante?</h6>
+                                <ul class="small">
+                                    <li>Garantiza que nuestras proyecciones son estadísticamente válidas</li>
+                                    <li>Confirma que el modelo matemático funciona correctamente</li>
+                                    <li>Proporciona confianza en las predicciones futuras</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-success">¿Cómo interpretarlo?</h6>
+                                <ul class="small">
+                                    <li><strong>P-value > 0.05:</strong> Los datos siguen la distribución esperada ✓</li>
+                                    <li><strong>P-value ≤ 0.05:</strong> Posible desviación del modelo ⚠️</li>
+                                    <li><strong>Score > 75:</strong> Alta confiabilidad en las proyecciones</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <div class="metric-card text-center p-2 bg-white bg-opacity-50 rounded">
+                            <div class="metric-value h5 mb-1 text-primary" data-target="{{ ks_validation.summary.total_tests|default:0 }}">
+                                {{ ks_validation.summary.total_tests|default:0 }}
+                            </div>
+                            <small class="text-muted">Tests Realizados</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card text-center p-2 bg-white bg-opacity-50 rounded">
+                            <div class="metric-value h5 mb-1 text-success" data-target="{{ ks_validation.summary.passed_tests|default:0 }}">
+                                {{ ks_validation.summary.passed_tests|default:0 }}
+                            </div>
+                            <small class="text-muted">Tests Aprobados</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card text-center p-2 bg-white bg-opacity-50 rounded">
+                            <div class="metric-value h5 mb-1 text-danger" data-target="{{ ks_validation.summary.critical_failures|default:0 }}">
+                                {{ ks_validation.summary.critical_failures|default:0 }}
+                            </div>
+                            <small class="text-muted">Fallas Críticas</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card text-center p-2 bg-white bg-opacity-50 rounded">
+                            {% if ks_validation.summary.overall_validity %}
+                                <div class="metric-value h5 mb-1 text-success">
+                                    <i class="bx bx-check-circle"></i> Válido
+                                </div>
+                            {% else %}
+                                <div class="metric-value h5 mb-1 text-warning">
+                                    <i class="bx bx-error-circle"></i> Revisar
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Estado General</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard de Confiabilidad Principal con explicación -->
+    {% if ks_validation.ks_charts.reliability_dashboard %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="chart-container enhanced-chart">
+                <div class="chart-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="chart-title mb-0">
+                            <i class="bx bx-dashboard me-2"></i>
+                            Dashboard de Confiabilidad Estadística
+                        </h5>
+                        <div class="chart-actions">
+                            <button class="btn btn-outline-info btn-sm me-2" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardExplanation" aria-expanded="false">
+                                <i class="bx bx-help-circle me-1"></i>Explicación
+                            </button>
+                            <div class="chart-controls">
+                                <div class="chart-control-btn" onclick="downloadChart('{{ ks_validation.ks_charts.reliability_dashboard }}', 'dashboard-confiabilidad.png')" title="Descargar">
+                                    <i class="bx bx-download"></i>
+                                </div>
+                                <div class="chart-control-btn" onclick="openFullscreen('{{ ks_validation.ks_charts.reliability_dashboard }}', 'Dashboard de Confiabilidad')" title="Pantalla completa">
+                                    <i class="bx bx-fullscreen"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="collapse mt-3" id="dashboardExplanation">
+                        <div class="explanation-box p-3 bg-light rounded">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h6><i class="bx bx-chart-bar me-2"></i>¿Qué muestra este dashboard?</h6>
+                                    <p class="mb-2">
+                                        Este gráfico integra múltiples métricas de validación para dar una visión completa de la confiabilidad de nuestro modelo:
+                                    </p>
+                                    <ul class="small mb-0">
+                                        <li><strong>Scores de Confiabilidad:</strong> Medidas generales de qué tan bien funciona el modelo</li>
+                                        <li><strong>Distribución de P-values:</strong> Muestra si los tests estadísticos están pasando</li>
+                                        <li><strong>Tendencias Temporales:</strong> Verifica que el modelo sea consistente en el tiempo</li>
+                                        <li><strong>Intervalos de Confianza:</strong> Rangos donde esperamos que estén los valores reales</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="interpretation-guide">
+                                        <h6 class="text-success">Guía de Interpretación:</h6>
+                                        <div class="guide-item">
+                                            <span class="badge bg-success me-2">Verde</span>
+                                            <small>Excelente confiabilidad</small>
+                                        </div>
+                                        <div class="guide-item">
+                                            <span class="badge bg-warning me-2">Amarillo</span>
+                                            <small>Confiabilidad aceptable</small>
+                                        </div>
+                                        <div class="guide-item">
+                                            <span class="badge bg-danger me-2">Rojo</span>
+                                            <small>Requiere atención</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-content">
+                    <img src="data:image/png;base64,{{ ks_validation.ks_charts.reliability_dashboard }}" 
+                        class="chart-image" 
+                        alt="Dashboard de Confiabilidad"
+                        loading="lazy">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Reporte de Confiabilidad Mejorado -->
+    {% if ks_validation.reliability_report %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card enhanced-card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bx bx-certificate me-2"></i>
+                            Certificado de Confiabilidad Estadística
+                        </h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="showCertificationDetails()">
+                            <i class="bx bx-info-square me-1"></i>Detalles del Certificado
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="certification-section">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="certification-badge me-3">
+                                        <span class="badge {% if ks_validation.reliability_report.certification_status == 'CERTIFIED' %}bg-success{% elif ks_validation.reliability_report.certification_status == 'CONDITIONAL' %}bg-warning{% else %}bg-danger{% endif %} p-3 fs-5">
+                                            <i class="bx {% if ks_validation.reliability_report.certification_status == 'CERTIFIED' %}bx-check-circle{% elif ks_validation.reliability_report.certification_status == 'CONDITIONAL' %}bx-error-circle{% else %}bx-x-circle{% endif %} me-2"></i>
+                                            {{ ks_validation.reliability_report.certification_status|default:"NO_CERTIFIED" }}
+                                        </span>
+                                    </div>
+                                    <div class="certification-explanation">
+                                        {% if ks_validation.reliability_report.certification_status == 'CERTIFIED' %}
+                                            <h6 class="text-success mb-1">Modelo Certificado</h6>
+                                            <small class="text-muted">Las proyecciones son estadísticamente válidas y confiables</small>
+                                        {% elif ks_validation.reliability_report.certification_status == 'CONDITIONAL' %}
+                                            <h6 class="text-warning mb-1">Certificación Condicional</h6>
+                                            <small class="text-muted">El modelo es válido con algunas observaciones menores</small>
+                                        {% else %}
+                                            <h6 class="text-danger mb-1">No Certificado</h6>
+                                            <small class="text-muted">Se requiere revisión antes de usar las proyecciones</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="reliability-metrics-enhanced">
+                                    <div class="metric-row mb-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="metric-label">
+                                                <strong>Score de Confiabilidad</strong>
+                                                <i class="bx bx-help-circle text-muted ms-1" title="Puntuación general basada en todos los tests realizados. 100 = Perfecta confiabilidad"></i>
+                                            </div>
+                                            <div class="metric-visual">
+                                                <div class="score-circle {% if ks_validation.reliability_report.reliability_score >= 75 %}score-excellent{% elif ks_validation.reliability_report.reliability_score >= 60 %}score-good{% else %}score-poor{% endif %}">
+                                                    <span class="score-value">{{ ks_validation.reliability_report.reliability_score|default:0|floatformat:0 }}</span>
+                                                    <small>/100</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="progress mt-2" style="height: 8px;">
+                                            <div class="progress-bar {% if ks_validation.reliability_report.reliability_score >= 75 %}bg-success{% elif ks_validation.reliability_report.reliability_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ ks_validation.reliability_report.reliability_score|default:0 }}%"
+                                                 data-animated-value="{{ ks_validation.reliability_report.reliability_score|default:0 }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="metric-row mb-2">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="metric-label">
+                                                <strong>Nivel de Confiabilidad:</strong>
+                                                <i class="bx bx-help-circle text-muted ms-1" title="Clasificación cualitativa basada en el score cuantitativo"></i>
+                                            </span>
+                                            <span class="badge {% if ks_validation.reliability_report.reliability_level == 'Alto' %}bg-success{% elif ks_validation.reliability_report.reliability_level == 'Medio' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                                {{ ks_validation.reliability_report.reliability_level|default:"Desconocido" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="metric-row">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="metric-label">
+                                                <strong>Tasa de Aprobación:</strong>
+                                                <i class="bx bx-help-circle text-muted ms-1" title="Porcentaje de tests estadísticos que pasaron exitosamente"></i>
+                                            </span>
+                                            <span class="text-primary fw-bold">{{ ks_validation.reliability_report.pass_rate|default:0|floatformat:1 }}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="recommendation-section">
+                                <h6 class="text-success mb-3">
+                                    <i class="bx bx-lightbulb me-2"></i>Recomendación del Sistema
+                                </h6>
+                                <div class="recommendation-box p-3 bg-light rounded mb-3">
+                                    <p class="mb-0">{{ ks_validation.reliability_report.overall_recommendation|default:"Sin recomendaciones disponibles." }}</p>
+                                </div>
+                                
+                                {% if ks_validation.reliability_report.tests_summary %}
+                                <div class="tests-summary">
+                                    <h6 class="mb-3">
+                                        <i class="bx bx-clipboard-check me-2"></i>Resumen de Validaciones
+                                    </h6>
+                                    <div class="summary-grid">
+                                        <div class="summary-item">
+                                            <div class="summary-icon text-success">
+                                                <i class="bx bx-check-circle"></i>
+                                            </div>
+                                            <div class="summary-content">
+                                                <div class="summary-value">{{ ks_validation.reliability_report.tests_summary.successful_validations|default:0 }}</div>
+                                                <div class="summary-label">Tests Exitosos</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="summary-item">
+                                            <div class="summary-icon text-info">
+                                                <i class="bx bx-list-ul"></i>
+                                            </div>
+                                            <div class="summary-content">
+                                                <div class="summary-value">{{ ks_validation.reliability_report.tests_summary.total_conducted|default:0 }}</div>
+                                                <div class="summary-label">Total Realizados</div>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if ks_validation.reliability_report.tests_summary.critical_issues > 0 %}
+                                        <div class="summary-item">
+                                            <div class="summary-icon text-danger">
+                                                <i class="bx bx-error"></i>
+                                            </div>
+                                            <div class="summary-content">
+                                                <div class="summary-value">{{ ks_validation.reliability_report.tests_summary.critical_issues }}</div>
+                                                <div class="summary-label">Issues Críticos</div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Sección de Gráficos Detallados con Explicaciones -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3">
+                <i class="bx bx-bar-chart me-2"></i>
+                Análisis Detallado de Distribuciones
+            </h5>
+            <p class="text-muted mb-4">
+                Los siguientes gráficos muestran cómo nuestros datos simulados se comparan con las distribuciones estadísticas esperadas.
+                Esto nos ayuda a verificar que el modelo está funcionando correctamente.
+            </p>
+        </div>
+        
+        <!-- Gráfico de Distribuciones con explicación detallada -->
+        {% if ks_validation.ks_charts.demand_distribution %}
+        <div class="col-12 mb-4">
+            <div class="chart-container enhanced-chart">
+                <div class="chart-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="chart-title mb-0">
+                            <i class="bx bx-stats me-2"></i>
+                            Comparación: Datos Simulados vs Distribución Teórica
+                        </h6>
+                        <div class="chart-actions">
+                            <button class="btn btn-outline-info btn-sm me-2" type="button" data-bs-toggle="collapse" data-bs-target="#distributionExplanation" aria-expanded="false">
+                                <i class="bx bx-help-circle me-1"></i>¿Cómo leer este gráfico?
+                            </button>
+                            <div class="chart-controls">
+                                <div class="chart-control-btn" onclick="downloadChart('{{ ks_validation.ks_charts.demand_distribution }}', 'validacion-distribuciones.png')" title="Descargar">
+                                    <i class="bx bx-download"></i>
+                                </div>
+                                <div class="chart-control-btn" onclick="openFullscreen('{{ ks_validation.ks_charts.demand_distribution }}', 'Validación de Distribuciones')" title="Pantalla completa">
+                                    <i class="bx bx-fullscreen"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="collapse mt-3" id="distributionExplanation">
+                        <div class="explanation-box p-3 bg-light rounded">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="bx bx-chart-line me-2"></i>¿Qué estamos viendo?</h6>
+                                    <ul class="small">
+                                        <li><strong>Línea azul:</strong> Distribución teórica que esperamos según nuestro modelo</li>
+                                        <li><strong>Histograma/puntos:</strong> Datos reales generados por la simulación</li>
+                                        <li><strong>Área sombreada:</strong> Rango de valores aceptables</li>
+                                    </ul>
+                                    
+                                    <h6 class="mt-3"><i class="bx bx-check-circle me-2"></i>¿Qué significa un buen ajuste?</h6>
+                                    <ul class="small">
+                                        <li>Los puntos siguen aproximadamente la línea teórica</li>
+                                        <li>No hay desviaciones grandes o sistemáticas</li>
+                                        <li>La forma general coincide con lo esperado</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="bx bx-error-circle me-2"></i>Señales de alerta:</h6>
+                                    <ul class="small text-warning">
+                                        <li>Puntos consistentemente por encima o debajo de la línea</li>
+                                        <li>Formas muy diferentes (ej: curva vs recta)</li>
+                                        <li>Valores extremos inesperados</li>
+                                    </ul>
+                                    
+                                    <div class="interpretation-tip mt-3 p-2 bg-info bg-opacity-25 rounded">
+                                        <h6 class="small text-info mb-1">💡 Tip de Interpretación:</h6>
+                                        <small>
+                                            Si el p-value > 0.05, significa que NO podemos rechazar que los datos siguen la distribución esperada 
+                                            (esto es bueno). Si p-value ≤ 0.05, hay evidencia de que algo no coincide con nuestro modelo.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-content">
+                    <img src="data:image/png;base64,{{ ks_validation.ks_charts.demand_distribution }}" 
+                        class="chart-image" 
+                        alt="Validación de Distribuciones"
+                        loading="lazy">
+                </div>
+                <div class="chart-footer">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <small class="text-muted">
+                                <i class="bx bx-info-circle me-1"></i>
+                                Este gráfico compara nuestros datos simulados contra la distribución teórica esperada. 
+                                Una buena coincidencia valida que nuestro modelo está funcionando correctamente.
+                            </small>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <small class="text-success">
+                                <i class="bx bx-check me-1"></i>
+                                P-values > 0.05 = Buen ajuste
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Intervalos de Confianza con explicación -->
+        {% if ks_validation.ks_charts.confidence_intervals %}
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container enhanced-chart">
+                <div class="chart-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="chart-title mb-0">
+                            <i class="bx bx-error-alt me-2"></i>
+                            Intervalos de Confianza
+                        </h6>
+                        <div class="chart-actions">
+                            <button class="btn btn-outline-info btn-sm me-2" type="button" data-bs-toggle="collapse" data-bs-target="#confidenceExplanation" aria-expanded="false">
+                                <i class="bx bx-help-circle me-1"></i>Explicación
+                            </button>
+                            <div class="chart-controls">
+                                <div class="chart-control-btn" onclick="downloadChart('{{ ks_validation.ks_charts.confidence_intervals }}', 'intervalos-confianza.png')" title="Descargar">
+                                    <i class="bx bx-download"></i>
+                                </div>
+                                <div class="chart-control-btn" onclick="openFullscreen('{{ ks_validation.ks_charts.confidence_intervals }}', 'Intervalos de Confianza')" title="Pantalla completa">
+                                    <i class="bx bx-fullscreen"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="collapse mt-3" id="confidenceExplanation">
+                        <div class="explanation-box p-3 bg-light rounded">
+                            <h6><i class="bx bx-target me-2"></i>¿Qué son los Intervalos de Confianza?</h6>
+                            <p class="small mb-2">
+                                Los intervalos de confianza nos dicen el rango donde esperamos que estén los valores reales el 95% de las veces.
+                                Es como decir "estamos 95% seguros de que el valor real está entre X e Y".
+                            </p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong class="small">En este gráfico:</strong>
+                                    <ul class="small">
+                                        <li>Línea central = Valor promedio esperado</li>
+                                        <li>Área sombreada = Rango de confianza del 95%</li>
+                                        <li>Puntos = Valores observados en la simulación</li>
+                                    </ul>
+                                </div>
+                                <div class="col-6">
+                                    <strong class="small">Interpretación:</strong>
+                                    <ul class="small">
+                                        <li>Puntos dentro del área = ✓ Modelo funcionando bien</li>
+                                        <li>Puntos fuera del área = ⚠️ Posible problema</li>
+                                        <li>Área estrecha = Mayor precisión</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-content">
+                    <img src="data:image/png;base64,{{ ks_validation.ks_charts.confidence_intervals }}" 
+                        class="chart-image" 
+                        alt="Intervalos de Confianza"
+                        loading="lazy">
+                </div>
+                <div class="chart-footer">
+                    <small class="text-muted">
+                        <i class="bx bx-shield me-1"></i>
+                        95% de confianza: Estamos seguros de que los valores reales estarán en estos rangos 19 de cada 20 veces.
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Estabilidad Temporal con explicación -->
+        {% if ks_validation.ks_charts.temporal_stability %}
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container enhanced-chart">
+                <div class="chart-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="chart-title mb-0">
+                            <i class="bx bx-time me-2"></i>
+                            Estabilidad Temporal
+                        </h6>
+                        <div class="chart-actions">
+                            <button class="btn btn-outline-info btn-sm me-2" type="button" data-bs-toggle="collapse" data-bs-target="#stabilityExplanation" aria-expanded="false">
+                                <i class="bx bx-help-circle me-1"></i>Explicación
+                            </button>
+                            <div class="chart-controls">
+                                <div class="chart-control-btn" onclick="downloadChart('{{ ks_validation.ks_charts.temporal_stability }}', 'estabilidad-temporal.png')" title="Descargar">
+                                    <i class="bx bx-download"></i>
+                                </div>
+                                <div class="chart-control-btn" onclick="openFullscreen('{{ ks_validation.ks_charts.temporal_stability }}', 'Estabilidad Temporal')" title="Pantalla completa">
+                                    <i class="bx bx-fullscreen"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="collapse mt-3" id="stabilityExplanation">
+                        <div class="explanation-box p-3 bg-light rounded">
+                            <h6><i class="bx bx-trending-up me-2"></i>¿Por qué es importante la Estabilidad Temporal?</h6>
+                            <p class="small mb-2">
+                                Un buen modelo debe ser consistente en el tiempo. Si las distribuciones cambian drásticamente 
+                                entre períodos, podría indicar problemas en el modelo o cambios en las condiciones del sistema.
+                            </p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong class="small">Señales positivas:</strong>
+                                    <ul class="small">
+                                        <li>Distribuciones similares entre períodos</li>
+                                        <li>Variaciones graduales y explicables</li>
+                                        <li>Tendencias coherentes con la realidad</li>
+                                    </ul>
+                                </div>
+                                <div class="col-6">
+                                    <strong class="small">Señales de alerta:</strong>
+                                    <ul class="small text-warning">
+                                        <li>Cambios abruptos inexplicables</li>
+                                        <li>Patrones erráticos sin lógica</li>
+                                        <li>Drift excesivo en los parámetros</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-content">
+                    <img src="data:image/png;base64,{{ ks_validation.ks_charts.temporal_stability }}" 
+                        class="chart-image" 
+                        alt="Estabilidad Temporal"
+                        loading="lazy">
+                </div>
+                <div class="chart-footer">
+                    <small class="text-muted">
+                        <i class="bx bx-time-five me-1"></i>
+                        Analiza la consistencia del modelo a través del tiempo para detectar posibles problemas o cambios sistemáticos.
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tabla de Resultados KS Mejorada -->
+    {% if ks_validation.ks_tests %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card enhanced-card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bx bx-table me-2"></i>
+                            Resultados Detallados por Variable
+                        </h5>
+                        <button class="btn btn-outline-info btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#tableExplanation" aria-expanded="false">
+                            <i class="bx bx-help-circle me-1"></i>¿Cómo leer esta tabla?
+                        </button>
+                    </div>
+                    
+                    <div class="collapse mt-3" id="tableExplanation">
+                        <div class="explanation-box p-3 bg-light rounded">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6><i class="bx bx-table me-2"></i>Columnas de la Tabla:</h6>
+                                    <ul class="small">
+                                        <li><strong>Variable:</strong> Qué estamos analizando (demanda, costos, etc.)</li>
+                                        <li><strong>Distribución:</strong> Tipo de distribución estadística esperada</li>
+                                        <li><strong>Estadístico KS:</strong> Medida de diferencia (menor = mejor)</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6><i class="bx bx-info-circle me-2"></i>Interpretación del P-value:</h6>
+                                    <ul class="small">
+                                        <li><strong>> 0.05:</strong> ✅ Los datos siguen la distribución esperada</li>
+                                        <li><strong>0.01-0.05:</strong> ⚠️ Diferencia marginal, revisar</li>
+                                        <li><strong>< 0.01:</strong> ❌ Los datos NO siguen la distribución</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6><i class="bx bx-check-circle me-2"></i>Estados:</h6>
+                                    <ul class="small">
+                                        <li><strong>Pasa:</strong> Test aprobado, todo bien</li>
+                                        <li><strong>Falla:</strong> Test falló, necesita atención</li>
+                                        <li><strong>Tamaño muestra:</strong> Cantidad de datos analizados</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover enhanced-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>
+                                        Variable/Componente
+                                        <i class="bx bx-help-circle text-muted ms-1" title="Qué variable estamos analizando"></i>
+                                    </th>
+                                    <th>
+                                        Distribución Esperada
+                                        <i class="bx bx-help-circle text-muted ms-1" title="Tipo de distribución estadística que esperamos"></i>
+                                    </th>
+                                    <th>
+                                        Estadístico KS
+                                        <i class="bx bx-help-circle text-muted ms-1" title="Medida de diferencia: valores menores indican mejor ajuste"></i>
+                                    </th>
+                                    <th>
+                                        P-value
+                                        <i class="bx bx-help-circle text-muted ms-1" title="Probabilidad: >0.05 es bueno, <0.05 indica problema"></i>
+                                    </th>
+                                    <th>
+                                        Tamaño Muestra
+                                        <i class="bx bx-help-circle text-muted ms-1" title="Cantidad de datos analizados"></i>
+                                    </th>
+                                    <th>
+                                        Estado
+                                        <i class="bx bx-help-circle text-muted ms-1" title="Resultado del test estadístico"></i>
+                                    </th>
+                                    <th>
+                                        Interpretación
+                                        <i class="bx bx-help-circle text-muted ms-1" title="Explicación en lenguaje simple"></i>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for test_name, test_result in ks_validation.ks_tests.items %}
+                                {% if test_name == 'demand' %}
+                                <tr class="table-primary enhanced-row" data-importance="high">
+                                    <td>
+                                        <div class="variable-info">
+                                            <strong class="text-primary">
+                                                <i class="bx bx-trending-up me-1"></i>Demanda
+                                            </strong>
+                                            <br><small class="text-muted">Componente principal del modelo</small>
+                                            <div class="variable-importance mt-1">
+                                                <span class="badge bg-primary">Crítico</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if test_result.best_fit_distribution %}
+                                            <span class="badge bg-info">{{ test_result.best_fit_distribution|title }}</span>
+                                            <br><small class="text-muted">Mejor ajuste encontrado</small>
+                                        {% else %}
+                                            <span class="text-muted">Múltiples distribuciones evaluadas</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="statistic-value">
+                                            {% if test_result.distributions_tested %}
+                                                {% for dist_name, dist_info in test_result.distributions_tested.items %}
+                                                    {% if dist_name == test_result.best_fit_distribution %}
+                                                        <span class="fw-bold">{{ dist_info.statistic|floatformat:4 }}</span>
+                                                        <br><small class="text-muted">Mejor resultado</small>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="p-value-display">
+                                            <span class="fw-bold {% if test_result.best_p_value > 0.05 %}text-success{% elif test_result.best_p_value > 0.01 %}text-warning{% else %}text-danger{% endif %}">
+                                                {{ test_result.best_p_value|floatformat:4 }}
+                                            </span>
+                                            <br>
+                                            <small class="{% if test_result.best_p_value > 0.05 %}text-success{% elif test_result.best_p_value > 0.01 %}text-warning{% else %}text-danger{% endif %}">
+                                                {% if test_result.best_p_value > 0.05 %}
+                                                    ✅ Excelente
+                                                {% elif test_result.best_p_value > 0.01 %}
+                                                    ⚠️ Aceptable
+                                                {% else %}
+                                                    ❌ Problemático
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">{{ test_result.sample_size|default:0 }}</span>
+                                        <br><small class="text-muted">datos analizados</small>
+                                    </td>
+                                    <td>
+                                        {% if test_result.overall_passes %}
+                                            <span class="badge bg-success">
+                                                <i class="bx bx-check"></i> Aprobado
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                <i class="bx bx-x"></i> Falló
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="interpretation-text">
+                                            {% if test_result.overall_passes %}
+                                                <small class="text-success">
+                                                    <i class="bx bx-check-circle me-1"></i>
+                                                    La demanda simulada sigue correctamente la distribución esperada. Las proyecciones son confiables.
+                                                </small>
+                                            {% else %}
+                                                <small class="text-warning">
+                                                    <i class="bx bx-error-circle me-1"></i>
+                                                    La demanda simulada no se ajusta perfectamente al modelo. Revisar parámetros o datos de entrada.
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr class="enhanced-row" data-importance="medium">
+                                    <td>
+                                        <div class="variable-info">
+                                            <strong>{{ test_result.variable|default:test_name|title }}</strong>
+                                            <br><small class="text-muted">Variable del sistema</small>
+                                            <div class="variable-importance mt-1">
+                                                <span class="badge bg-secondary">Secundario</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ test_result.expected_distribution|default:"Normal"|title }}</span>
+                                        <br><small class="text-muted">Distribución asumida</small>
+                                    </td>
+                                    <td>
+                                        <div class="statistic-value">
+                                            <span class="fw-bold">{{ test_result.statistic|default:0|floatformat:4 }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="p-value-display">
+                                            <span class="fw-bold {% if test_result.p_value > 0.05 %}text-success{% elif test_result.p_value > 0.01 %}text-warning{% else %}text-danger{% endif %}">
+                                                {{ test_result.p_value|default:0|floatformat:4 }}
+                                            </span>
+                                            <br>
+                                            <small class="{% if test_result.p_value > 0.05 %}text-success{% elif test_result.p_value > 0.01 %}text-warning{% else %}text-danger{% endif %}">
+                                                {% if test_result.p_value > 0.05 %}
+                                                    ✅ Bueno
+                                                {% elif test_result.p_value > 0.01 %}
+                                                    ⚠️ Revisar
+                                                {% else %}
+                                                    ❌ Problema
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">{{ test_result.sample_size|default:0 }}</span>
+                                        <br><small class="text-muted">datos</small>
+                                    </td>
+                                    <td>
+                                        {% if test_result.passes_test %}
+                                            <span class="badge bg-success">
+                                                <i class="bx bx-check"></i> Aprobado
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning">
+                                                <i class="bx bx-error"></i> Atención
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="interpretation-text">
+                                            {% if test_result.passes_test %}
+                                                <small class="text-success">
+                                                    <i class="bx bx-check-circle me-1"></i>
+                                                    Variable se comporta según lo esperado. Sin problemas detectados.
+                                                </small>
+                                            {% else %}
+                                                <small class="text-info">
+                                                    <i class="bx bx-info-circle me-1"></i>
+                                                    Diferencias menores detectadas. Monitorear pero no crítico para el modelo principal.
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Intervalos de Confianza Detallados Mejorados -->
+    {% if ks_validation.confidence_intervals %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card enhanced-card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bx bx-error-alt me-2"></i>
+                            Rangos de Confianza para Proyecciones
+                        </h5>
+                        <button class="btn btn-outline-info btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#confidenceIntervalsExplanation" aria-expanded="false">
+                            <i class="bx bx-help-circle me-1"></i>¿Qué significan estos rangos?
+                        </button>
+                    </div>
+                    
+                    <div class="collapse mt-3" id="confidenceIntervalsExplanation">
+                        <div class="explanation-box p-3 bg-light rounded">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="bx bx-target me-2"></i>¿Para qué sirven estos rangos?</h6>
+                                    <p class="small mb-2">
+                                        Los intervalos de confianza nos dan el rango donde esperamos que estén los valores reales. 
+                                        Es como tener un "margen de error" científicamente calculado.
+                                    </p>
+                                    <ul class="small">
+                                        <li><strong>95% de confianza:</strong> En 19 de cada 20 casos, el valor real estará en este rango</li>
+                                        <li><strong>Valor central:</strong> Nuestra mejor estimación</li>
+                                        <li><strong>Margen de error:</strong> Qué tanto podríamos estar equivocados</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="bx bx-chart-line me-2"></i>¿Cómo usar esta información?</h6>
+                                    <ul class="small">
+                                        <li><strong>Planificación conservadora:</strong> Usar el límite inferior</li>
+                                        <li><strong>Planificación optimista:</strong> Usar el límite superior</li>
+                                        <li><strong>Planificación realista:</strong> Usar el valor central</li>
+                                        <li><strong>Gestión de riesgos:</strong> Considerar todo el rango</li>
+                                    </ul>
+                                    <div class="alert alert-info py-2 mt-2">
+                                        <small><i class="bx bx-lightbulb me-1"></i><strong>Tip:</strong> Rangos más estrechos indican mayor precisión en nuestras proyecciones.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Intervalos de Demanda Mejorados -->
+                        <div class="col-md-6">
+                            <h6 class="text-primary mb-3">
+                                <i class="bx bx-trending-up me-2"></i>Demanda Proyectada
+                            </h6>
+                            {% for interval_key, interval_data in ks_validation.confidence_intervals.items %}
+                                {% if 'demand' in interval_key %}
+                                <div class="confidence-interval-enhanced mb-4 p-3 border rounded">
+                                    <div class="interval-header d-flex justify-content-between align-items-center mb-3">
+                                        <div class="confidence-info">
+                                            <h6 class="mb-1">{{ interval_data.confidence_level|floatformat:0 }}% de Confianza</h6>
+                                            <small class="text-muted">Rango donde esperamos el valor real</small>
+                                        </div>
+                                        <div class="margin-error">
+                                            <span class="badge bg-info fs-6">± {{ interval_data.margin_error|floatformat:2 }}</span>
+                                            <br><small class="text-muted">Margen de error</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="interval-visualization">
+                                        <div class="confidence-range-display mb-3">
+                                            <div class="range-bar position-relative" style="height: 40px; background: linear-gradient(90deg, #e3f2fd 0%, #1976d2 50%, #e3f2fd 100%); border-radius: 20px;">
+                                                <div class="range-labels d-flex justify-content-between align-items-center h-100 px-3">
+                                                    <small class="fw-bold">{{ interval_data.lower_bound|floatformat:1 }}</small>
+                                                    <div class="text-center">
+                                                        <div class="fw-bold text-white">{{ interval_data.mean|floatformat:1 }} L/día</div>
+                                                        <small class="text-white">Valor esperado</small>
+                                                    </div>
+                                                    <small class="fw-bold">{{ interval_data.upper_bound|floatformat:1 }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="range-interpretation">
+                                            <div class="row text-center">
+                                                <div class="col-4">
+                                                    <div class="scenario-box p-2 bg-light rounded">
+                                                        <div class="scenario-value text-primary fw-bold">{{ interval_data.lower_bound|floatformat:1 }}</div>
+                                                        <small class="text-muted">Escenario Conservador</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="scenario-box p-2 bg-primary text-white rounded">
+                                                        <div class="scenario-value fw-bold">{{ interval_data.mean|floatformat:1 }}</div>
+                                                        <small>Escenario Esperado</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="scenario-box p-2 bg-light rounded">
+                                                        <div class="scenario-value text-success fw-bold">{{ interval_data.upper_bound|floatformat:1 }}</div>
+                                                        <small class="text-muted">Escenario Optimista</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="interpretation-text mt-3 p-2 bg-info bg-opacity-25 rounded">
+                                        <small>
+                                            <i class="bx bx-info-circle me-1"></i>
+                                            <strong>Interpretación:</strong> {{ interval_data.interpretation|default:"Estamos 95% seguros de que la demanda real estará entre estos valores." }}
+                                        </small>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Intervalos de Variables Clave Mejorados -->
+                        <div class="col-md-6">
+                            <h6 class="text-success mb-3">
+                                <i class="bx bx-calculator me-2"></i>Variables del Sistema (95% Confianza)
+                            </h6>
+                            <div class="variables-grid">
+                                {% for interval_key, interval_data in ks_validation.confidence_intervals.items %}
+                                    {% if 'demand' not in interval_key %}
+                                    <div class="variable-interval-enhanced mb-3 p-3 bg-light rounded">
+                                        <div class="variable-header d-flex justify-content-between align-items-center mb-2">
+                                            <div class="variable-name">
+                                                <strong>{{ interval_data.variable|default:interval_key|title }}</strong>
+                                                <br><small class="text-muted">Variable del modelo</small>
+                                            </div>
+                                            <div class="variable-value text-end">
+                                                <div class="fw-bold text-primary">{{ interval_data.mean|floatformat:2 }}</div>
+                                                <small class="text-muted">± {{ interval_data.margin_error|floatformat:2 }}</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mini-range-bar mb-2">
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                                            </div>
+                                            <div class="d-flex justify-content-between mt-1">
+                                                <small class="text-muted">{{ interval_data.lower_bound|floatformat:2 }}</small>
+                                                <small class="text-muted">{{ interval_data.upper_bound|floatformat:2 }}</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="variable-stats">
+                                            <small class="text-muted">
+                                                <i class="bx bx-data me-1"></i>
+                                                Basado en {{ interval_data.sample_size|default:"N/A" }} simulaciones
+                                            </small>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Mensaje mejorado si no hay validación KS -->
+    {% if not ks_validation.summary.total_tests %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info enhanced-empty-state">
+                <div class="text-center">
+                    <div class="empty-state-icon mb-3">
+                        <i class="bx bx-info-circle display-1 text-muted"></i>
+                    </div>
+                    <h5 class="mt-3">Validación Kolmogorov-Smirnov Pendiente</h5>
+                    <p class="mb-4 text-muted">
+                        Esta validación estadística se ejecutará automáticamente una vez que tengamos suficientes datos 
+                        de la simulación. Mientras tanto, puedes explorar otras secciones del análisis.
+                    </p>
+                    
+                    <div class="requirements-checklist">
+                        <h6 class="mb-3">
+                            <i class="bx bx-clipboard-check me-2"></i>Requisitos para la Validación:
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="requirement-item mb-2">
+                                    <i class="bx bx-check-circle text-muted me-2"></i>
+                                    <span class="text-muted">Mínimo 30 datos de demanda simulada</span>
+                                </div>
+                                <div class="requirement-item mb-2">
+                                    <i class="bx bx-check-circle text-muted me-2"></i>
+                                    <span class="text-muted">Variables endógenas calculadas</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="requirement-item mb-2">
+                                    <i class="bx bx-check-circle text-muted me-2"></i>
+                                    <span class="text-muted">Distribución de probabilidad definida</span>
+                                </div>
+                                <div class="requirement-item mb-2">
+                                    <i class="bx bx-check-circle text-muted me-2"></i>
+                                    <span class="text-muted">Simulación completada exitosamente</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="next-steps mt-4">
+                        <h6><i class="bx bx-play-circle me-2"></i>Próximos Pasos:</h6>
+                        <ol class="text-start small text-muted">
+                            <li>Completa la configuración de parámetros en la pestaña de Configuración</li>
+                            <li>Ejecuta la simulación desde la pestaña de Simulación</li>
+                            <li>Revisa los resultados en la pestaña de Resultados</li>
+                            <li>Regresa aquí para ver la validación estadística automática</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+</div>
+
+
+<script>
+// ==========================================
+// FUNCIONES MEJORADAS PARA VALIDACIÓN KS
+// ==========================================
+
+function initializeEnhancedKSValidationTab() {
+    """Inicializar funcionalidades mejoradas del tab KS con explicaciones"""
+    try {
+        console.log('Initializing enhanced KS Validation tab...');
+        
+        // Inicializar tooltips explicativos
+        initializeKSTooltipsEnhanced();
+        
+        // Configurar interacciones mejoradas
+        setupEnhancedKSInteractions();
+        
+        // Animar métricas con explicaciones
+        animateKSMetricsEnhanced();
+        
+        // Configurar sistema de ayuda contextual
+        setupContextualHelp();
+        
+        // Inicializar exportación mejorada
+        setupEnhancedKSExport();
+        
+        // Configurar accesibilidad
+        setupAccessibilityFeatures();
+        
+        console.log('Enhanced KS Validation tab initialized successfully');
+    } catch (error) {
+        console.error('Error initializing enhanced KS validation tab:', error);
+        showNotification('Error al inicializar la validación KS', 'error');
+    }
+}
+
+function initializeKSTooltipsEnhanced() {
+    """Tooltips explicativos mejorados para todas las métricas"""
+    const enhancedTooltips = {
+        '[data-metric="reliability-score"]': {
+            title: 'Score de Confiabilidad',
+            content: 'Puntuación general (0-100) que indica qué tan confiables son nuestras proyecciones. Basado en múltiples tests estadísticos.'
+        },
+        '[data-metric="ks-statistic"]': {
+            title: 'Estadístico Kolmogorov-Smirnov',
+            content: 'Mide la diferencia máxima entre los datos simulados y la distribución esperada. Valores menores (cercanos a 0) indican mejor ajuste.'
+        },
+        '[data-metric="p-value"]': {
+            title: 'P-value (Valor p)',
+            content: 'Probabilidad de obtener los datos observados si el modelo fuera correcto. >0.05 = bueno, <0.05 = posible problema.'
+        },
+        '[data-metric="confidence-interval"]': {
+            title: 'Intervalo de Confianza',
+            content: 'Rango donde esperamos que esté el valor real el 95% de las veces. Es nuestro "margen de error" científico.'
+        },
+        '.certification-badge': {
+            title: 'Estado de Certificación',
+            content: 'Indica si el modelo ha pasado todas las validaciones estadísticas necesarias para ser considerado confiable.'
+        },
+        '.variable-importance': {
+            title: 'Importancia de la Variable',
+            content: 'Indica qué tan crítica es esta variable para la precisión general del modelo.'
+        }
+    };
+    
+    Object.entries(enhancedTooltips).forEach(([selector, tooltip]) => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(element => {
+            // Crear tooltip personalizado mejorado
+            element.addEventListener('mouseenter', function(e) {
+                showEnhancedTooltip(e.target, tooltip.title, tooltip.content);
+            });
+            
+            element.addEventListener('mouseleave', function() {
+                hideEnhancedTooltip();
+            });
+        });
+    });
+}
+
+function showEnhancedTooltip(element, title, content) {
+    """Mostrar tooltip personalizado con explicación detallada"""
+    // Remover tooltip existente
+    hideEnhancedTooltip();
+    
+    const tooltip = document.createElement('div');
+    tooltip.className = 'enhanced-tooltip';
+    tooltip.innerHTML = `
+        <div class="tooltip-header">
+            <h6 class="mb-1">${title}</h6>
+        </div>
+        <div class="tooltip-content">
+            <p class="mb-0 small">${content}</p>
+        </div>
+    `;
+    
+    // Estilos del tooltip
+    tooltip.style.cssText = `
+        position: absolute;
+        background: linear-gradient(135deg, #333 0%, #555 100%);
+        color: white;
+        padding: 12px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 9999;
+        max-width: 300px;
+        font-size: 13px;
+        line-height: 1.4;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.2s ease;
+    `;
+    
+    document.body.appendChild(tooltip);
+    
+    // Posicionar tooltip
+    const rect = element.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    
+    let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+    let top = rect.top - tooltipRect.height - 10;
+    
+    // Ajustar si se sale de la pantalla
+    if (left < 10) left = 10;
+    if (left + tooltipRect.width > window.innerWidth - 10) {
+        left = window.innerWidth - tooltipRect.width - 10;
+    }
+    if (top < 10) {
+        top = rect.bottom + 10;
+    }
+    
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+    
+    // Animar entrada
+    setTimeout(() => {
+        tooltip.style.opacity = '1';
+        tooltip.style.transform = 'translateY(0)';
+    }, 10);
+}
+
+function hideEnhancedTooltip() {
+    """Ocultar tooltip personalizado"""
+    const existing = document.querySelector('.enhanced-tooltip');
+    if (existing) {
+        existing.style.opacity = '0';
+        existing.style.transform = 'translateY(10px)';
+        setTimeout(() => existing.remove(), 200);
+    }
+}
+
+function setupEnhancedKSInteractions() {
+    """Configurar interacciones mejoradas con explicaciones contextuales"""
+    
+    // Resaltar filas de tabla con información adicional
+    const tableRows = document.querySelectorAll('.enhanced-row');
+    tableRows.forEach(row => {
+        row.addEventListener('click', function() {
+            showRowDetails(this);
+        });
+        
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+            this.style.borderLeft = '6px solid #007bff';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+            this.style.borderLeft = this.dataset.importance === 'high' ? '4px solid #007bff' : '4px solid #6c757d';
+        });
+    });
+    
+    // Interacciones con intervalos de confianza
+    const confidenceIntervals = document.querySelectorAll('.confidence-interval-enhanced');
+    confidenceIntervals.forEach(interval => {
+        interval.addEventListener('click', function() {
+            showConfidenceIntervalExplanation(this);
+        });
+    });
+    
+    // Interacciones con gráficos mejoradas
+    const chartContainers = document.querySelectorAll('.enhanced-chart');
+    chartContainers.forEach(chart => {
+        chart.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px)';
+            this.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.2)';
+        });
+        
+        chart.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        });
+    });
+}
+
+function showRowDetails(row) {
+    """Mostrar detalles expandidos de una fila de test"""
+    const variable = row.querySelector('.variable-info strong')?.textContent || 'Variable';
+    const pValue = row.querySelector('.p-value-display .fw-bold')?.textContent || 'N/A';
+    const status = row.querySelector('.badge')?.textContent || 'N/A';
+    const interpretation = row.querySelector('.interpretation-text')?.textContent || 'Sin interpretación disponible';
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bx bx-chart-bar me-2"></i>
+                        Detalles de Validación: ${variable}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="bx bx-info-circle me-2"></i>Resultados del Test</h6>
+                            <div class="info-card p-3 bg-light rounded mb-3">
+                                <div class="info-item mb-2">
+                                    <strong>P-value:</strong> <span class="text-primary">${pValue}</span>
+                                </div>
+                                <div class="info-item mb-2">
+                                    <strong>Estado:</strong> <span class="text-success">${status}</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Variable:</strong> ${variable}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="bx bx-lightbulb me-2"></i>¿Qué significa esto?</h6>
+                            <div class="explanation-card p-3 bg-info bg-opacity-25 rounded">
+                                <p class="mb-2">${interpretation}</p>
+                                <div class="interpretation-guide">
+                                    <h6 class="small">Guía rápida:</h6>
+                                    <ul class="small">
+                                        <li><strong>P-value > 0.05:</strong> ✅ Los datos siguen el patrón esperado</li>
+                                        <li><strong>P-value 0.01-0.05:</strong> ⚠️ Diferencia marginal, monitorear</li>
+                                        <li><strong>P-value < 0.01:</strong> ❌ Posible problema en el modelo</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="exportVariableDetails('${variable}')">
+                        <i class="bx bx-download me-1"></i>Exportar Detalles
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+    
+    // Limpiar modal al cerrar
+    modal.addEventListener('hidden.bs.modal', () => {
+        modal.remove();
+    });
+}
+
+function showConfidenceIntervalExplanation(intervalElement) {
+    """Mostrar explicación detallada de un intervalo de confianza"""
+    const confidenceLevel = intervalElement.querySelector('.confidence-info h6')?.textContent || '95% de Confianza';
+    const meanValue = intervalElement.querySelector('.scenario-value')?.textContent || 'N/A';
+    
+    const explanationModal = document.createElement('div');
+    explanationModal.className = 'modal fade';
+    explanationModal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="bx bx-target me-2"></i>
+                        Entendiendo los Intervalos de Confianza
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="explanation-content">
+                        <h6><i class="bx bx-help-circle me-2"></i>¿Qué significa ${confidenceLevel}?</h6>
+                        <p class="mb-3">
+                            Significa que si repitiéramos este análisis 100 veces, en 95 de esas veces 
+                            el valor real estaría dentro del rango que mostramos.
+                        </p>
+                        
+                        <h6><i class="bx bx-chart-line me-2"></i>¿Cómo usar esta información?</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="usage-scenario p-2 bg-light rounded mb-2">
+                                    <strong class="text-primary">Para Planificación:</strong>
+                                    <p class="small mb-0">Usa el valor central (${meanValue}) como tu mejor estimación.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="usage-scenario p-2 bg-light rounded mb-2">
+                                    <strong class="text-warning">Para Gestión de Riesgos:</strong>
+                                    <p class="small mb-0">Considera todo el rango para prepararte para diferentes escenarios.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="practical-example mt-3 p-3 bg-success bg-opacity-25 rounded">
+                            <h6 class="text-success"><i class="bx bx-lightbulb me-2"></i>Ejemplo Práctico:</h6>
+                            <p class="small mb-0">
+                                Si estás planificando capacidad, usa el límite superior para asegurar que puedes 
+                                manejar la demanda. Si estás calculando costos mínimos, usa el límite inferior.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(explanationModal);
+    const bsModal = new bootstrap.Modal(explanationModal);
+    bsModal.show();
+    
+    explanationModal.addEventListener('hidden.bs.modal', () => {
+        explanationModal.remove();
+    });
+}
+
+function animateKSMetricsEnhanced() {
+    """Animaciones mejoradas con explicaciones progresivas"""
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const element = entry.target;
+                
+                // Animar métricas numéricas
+                if (element.classList.contains('metric-value')) {
+                    animateMetricValue(element);
+                }
+                
+                // Animar barras de progreso
+                if (element.classList.contains('progress-bar')) {
+                    animateProgressBar(element);
+                }
+                
+                // Animar cards de confianza
+                if (element.classList.contains('confidence-interval-enhanced')) {
+                    animateConfidenceInterval(element);
+                }
+                
+                observer.unobserve(element);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+    
+    // Observar elementos animables
+    document.querySelectorAll('.metric-value, .progress-bar, .confidence-interval-enhanced').forEach(el => {
+        observer.observe(el);
+    });
+}
+
+function animateMetricValue(element) {
+    """Animar valor numérico con efecto de conteo"""
+    const target = parseFloat(element.dataset.target || element.textContent.replace(/[^\d.]/g, ''));
+    if (isNaN(target)) return;
+    
+    const duration = 2000;
+    const start = 0;
+    const increment = target / (duration / 16);
+    let current = start;
+    
+    const counter = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+            current = target;
+            clearInterval(counter);
+        }
+        
+        // Formatear según el contenido original
+        if (element.textContent.includes('%')) {
+            element.textContent = current.toFixed(1) + '%';
+        } else if (target < 1) {
+            element.textContent = current.toFixed(3);
+        } else {
+            element.textContent = Math.round(current);
+        }
+    }, 16);
+}
+
+function animateProgressBar(element) {
+    """Animar barra de progreso con explicación"""
+    const targetWidth = element.dataset.animatedValue || element.style.width || '0%';
+    const numericValue = parseFloat(targetWidth);
+    
+    element.style.width = '0%';
+    element.style.transition = 'width 2s cubic-bezier(0.4, 0, 0.2, 1)';
+    
+    setTimeout(() => {
+        element.style.width = targetWidth;
+        
+        // Agregar indicador de calidad
+        setTimeout(() => {
+            addQualityIndicator(element, numericValue);
+        }, 2000);
+    }, 100);
+}
+
+function addQualityIndicator(progressBar, value) {
+    """Agregar indicador visual de calidad"""
+    const indicator = document.createElement('span');
+    indicator.className = 'quality-indicator';
+    indicator.style.cssText = `
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+    `;
+    
+    if (value >= 80) {
+        indicator.innerHTML = '<i class="bx bx-check"></i> Excelente';
+    } else if (value >= 60) {
+        indicator.innerHTML = '<i class="bx bx-error"></i> Bueno';
+    } else {
+        indicator.innerHTML = '<i class="bx bx-x"></i> Mejorar';
+    }
+    
+    progressBar.style.position = 'relative';
+    progressBar.appendChild(indicator);
+}
+
+function animateConfidenceInterval(element) {
+    """Animar intervalo de confianza con efectos visuales"""
+    const rangeBar = element.querySelector('.range-bar');
+    if (rangeBar) {
+        rangeBar.style.opacity = '0';
+        rangeBar.style.transform = 'scaleX(0)';
+        rangeBar.style.transition = 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+        
+        setTimeout(() => {
+            rangeBar.style.opacity = '1';
+            rangeBar.style.transform = 'scaleX(1)';
+        }, 200);
+    }
+    
+    // Animar valores de escenarios
+    const scenarioBoxes = element.querySelectorAll('.scenario-box');
+    scenarioBoxes.forEach((box, index) => {
+        box.style.opacity = '0';
+        box.style.transform = 'translateY(20px)';
+        box.style.transition = 'all 0.5s ease';
+        
+        setTimeout(() => {
+            box.style.opacity = '1';
+            box.style.transform = 'translateY(0)';
+        }, 500 + (index * 200));
+    });
+}
+
+function setupContextualHelp() {
+    """Configurar sistema de ayuda contextual"""
+    // Crear botón de ayuda flotante
+    const helpButton = document.createElement('div');
+    helpButton.className = 'floating-help-btn';
+    helpButton.innerHTML = '<i class="bx bx-help-circle"></i>';
+    helpButton.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        z-index: 1000;
+        transition: all 0.3s ease;
+        font-size: 20px;
+    `;
+    
+    helpButton.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.1)';
+        this.style.boxShadow = '0 6px 16px rgba(0, 123, 255, 0.4)';
+    });
+    
+    helpButton.addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1)';
+        this.style.boxShadow = '0 4px 12px rgba(0, 123, 255, 0.3)';
+    });
+    
+    helpButton.addEventListener('click', showContextualHelp);
+    
+    document.body.appendChild(helpButton);
+}
+
+function showContextualHelp() {
+    """Mostrar ayuda contextual completa"""
+    const helpModal = document.createElement('div');
+    helpModal.className = 'modal fade';
+    helpModal.innerHTML = `
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bx bx-help-circle me-2"></i>
+                        Guía Completa: Validación Kolmogorov-Smirnov
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="help-content">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="help-section mb-4">
+                                    <h6 class="text-primary"><i class="bx bx-book me-2"></i>Conceptos Básicos</h6>
+                                    <div class="help-item mb-2">
+                                        <strong>¿Qué es KS?</strong>
+                                        <p class="small">Test estadístico que verifica si nuestros datos siguen las distribuciones esperadas.</p>
+                                    </div>
+                                    <div class="help-item mb-2">
+                                        <strong>¿Por qué importa?</strong>
+                                        <p class="small">Garantiza que nuestras proyecciones son matemáticamente válidas.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="help-section mb-4">
+                                    <h6 class="text-success"><i class="bx bx-chart-bar me-2"></i>Interpretación</h6>
+                                    <div class="help-item mb-2">
+                                        <strong>P-values:</strong>
+                                        <ul class="small">
+                                            <li>>0.05 = ✅ Excelente</li>
+                                            <li>0.01-0.05 = ⚠️ Aceptable</li>
+                                            <li><0.01 = ❌ Problema</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="help-section mb-4">
+                                    <h6 class="text-warning"><i class="bx bx-lightbulb me-2"></i>Acciones Recomendadas</h6>
+                                    <div class="help-item mb-2">
+                                        <strong>Si todo está verde:</strong>
+                                        <p class="small">✅ Puedes confiar en las proyecciones para tomar decisiones.</p>
+                                    </div>
+                                    <div class="help-item mb-2">
+                                        <strong>Si hay amarillos:</strong>
+                                        <p class="small">⚠️ Monitorea de cerca, pero el modelo es usable.</p>
+                                    </div>
+                                    <div class="help-item mb-2">
+                                        <strong>Si hay rojos:</strong>
+                                        <p class="small">❌ Revisa los datos de entrada o parámetros del modelo.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="advanced-help mt-4">
+                            <h6 class="text-info"><i class="bx bx-cog me-2"></i>Funcionalidades Avanzadas</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="feature-explanation p-3 bg-light rounded">
+                                        <h6 class="small">Intervalos de Confianza</h6>
+                                        <p class="small mb-2">Te muestran el rango donde esperas que estén los valores reales:</p>
+                                        <ul class="small">
+                                            <li><strong>Valor central:</strong> Tu mejor estimación</li>
+                                            <li><strong>Rango completo:</strong> Para gestión de riesgos</li>
+                                            <li><strong>95% confianza:</strong> Probabilidad de acierto</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="feature-explanation p-3 bg-light rounded">
+                                        <h6 class="small">Estabilidad Temporal</h6>
+                                        <p class="small mb-2">Verifica que el modelo sea consistente en el tiempo:</p>
+                                        <ul class="small">
+                                            <li><strong>Distribuciones estables:</strong> Modelo confiable</li>
+                                            <li><strong>Cambios graduales:</strong> Evolución normal</li>
+                                            <li><strong>Cambios abruptos:</strong> Posible problema</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="practical-tips mt-4 p-3 bg-success bg-opacity-25 rounded">
+                            <h6 class="text-success"><i class="bx bx-target me-2"></i>Tips Prácticos</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="small">
+                                        <li>Revisa primero la demanda (variable más importante)</li>
+                                        <li>Un p-value de 0.03 no es automáticamente malo</li>
+                                        <li>Considera el contexto del negocio al interpretar</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="small">
+                                        <li>Los intervalos estrechos = mayor precisión</li>
+                                        <li>Exporta los datos para análisis adicional</li>
+                                        <li>Comparte certificados con tu equipo</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar Guía</button>
+                    <button type="button" class="btn btn-primary" onclick="downloadHelpGuide()">
+                        <i class="bx bx-download me-1"></i>Descargar Guía PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(helpModal);
+    const bsModal = new bootstrap.Modal(helpModal);
+    bsModal.show();
+    
+    helpModal.addEventListener('hidden.bs.modal', () => {
+        helpModal.remove();
+    });
+}
+
+function setupEnhancedKSExport() {
+    """Configurar funciones de exportación mejoradas"""
+    
+    // Exportar reporte ejecutivo
+    window.exportExecutiveKSReport = function() {
+        try {
+            const executiveData = extractExecutiveKSData();
+            generateExecutiveReport(executiveData);
+            showNotification('Reporte ejecutivo generado exitosamente', 'success');
+        } catch (error) {
+            console.error('Error exporting executive report:', error);
+            showNotification('Error al generar reporte ejecutivo', 'error');
+        }
+    };
+    
+    // Exportar datos técnicos completos
+    window.exportTechnicalKSData = function() {
+        try {
+            const technicalData = extractTechnicalKSData();
+            generateTechnicalCSV(technicalData);
+            showNotification('Datos técnicos exportados exitosamente', 'success');
+        } catch (error) {
+            console.error('Error exporting technical data:', error);
+            showNotification('Error al exportar datos técnicos', 'error');
+        }
+    };
+}
+
+function extractExecutiveKSData() {
+    """Extraer datos para reporte ejecutivo"""
+    return {
+        summary: {
+            overall_status: document.querySelector('[data-overall-validity]')?.textContent === 'true' ? 'APPROVED' : 'REVIEW_NEEDED',
+            reliability_score: document.querySelector('[data-reliability-score]')?.textContent || '0',
+            certification_status: document.querySelector('[data-certification-status]')?.textContent || 'PENDING',
+            confidence_level: '95%'
+        },
+        key_findings: extractKeyFindings(),
+        recommendations: extractRecommendations(),
+        risk_assessment: extractRiskAssessment(),
+        next_steps: generateNextSteps(),
+        generated_at: new Date().toISOString()
+    };
+}
+
+function extractKeyFindings() {
+    """Extraer hallazgos clave para el reporte"""
+    const findings = [];
+    
+    // Analizar demanda principal
+    const demandRow = document.querySelector('[data-importance="high"]');
+    if (demandRow) {
+        const pValue = demandRow.querySelector('.p-value-display .fw-bold')?.textContent || '0';
+        const status = demandRow.querySelector('.badge')?.textContent || 'Unknown';
+        
+        findings.push({
+            type: 'critical',
+            component: 'Demanda Principal',
+            finding: `Test estadístico ${status.toLowerCase()} con p-value de ${pValue}`,
+            impact: parseFloat(pValue) > 0.05 ? 'Positivo' : 'Requiere atención'
+        });
+    }
+    
+    // Analizar variables secundarias
+    const secondaryRows = document.querySelectorAll('[data-importance="medium"]');
+    let passedSecondary = 0;
+    secondaryRows.forEach(row => {
+        const status = row.querySelector('.badge')?.textContent || '';
+        if (status.includes('Aprobado')) passedSecondary++;
+    });
+    
+    if (secondaryRows.length > 0) {
+        findings.push({
+            type: 'secondary',
+            component: 'Variables del Sistema',
+            finding: `${passedSecondary} de ${secondaryRows.length} variables pasaron la validación`,
+            impact: passedSecondary === secondaryRows.length ? 'Positivo' : 'Mixto'
+        });
+    }
+    
+    return findings;
+}
+
+function extractRecommendations() {
+    """Extraer recomendaciones del sistema"""
+    const recommendations = [];
+    const systemRecommendation = document.querySelector('.recommendation-box p')?.textContent;
+    
+    if (systemRecommendation) {
+        recommendations.push({
+            priority: 'high',
+            category: 'Sistema',
+            recommendation: systemRecommendation
+        });
+    }
+    
+    // Generar recomendaciones basadas en métricas
+    const reliabilityScore = parseFloat(document.querySelector('[data-reliability-score]')?.textContent || '0');
+    
+    if (reliabilityScore >= 80) {
+        recommendations.push({
+            priority: 'low',
+            category: 'Operacional',
+            recommendation: 'El modelo muestra excelente confiabilidad. Proceder con implementación completa.'
+        });
+    } else if (reliabilityScore >= 60) {
+        recommendations.push({
+            priority: 'medium',
+            category: 'Operacional',
+            recommendation: 'Confiabilidad aceptable. Monitorear métricas clave y validar resultados periódicamente.'
+        });
+    } else {
+        recommendations.push({
+            priority: 'high',
+            category: 'Técnica',
+            recommendation: 'Revisar parámetros del modelo y calidad de datos de entrada antes de implementar.'
+        });
+    }
+    
+    return recommendations;
+}
+
+function extractRiskAssessment() {
+    """Evaluar riesgos basados en la validación"""
+    const risks = [];
+    const criticalFailures = parseInt(document.querySelector('[data-critical-failures]')?.textContent || '0');
+    const reliabilityScore = parseFloat(document.querySelector('[data-reliability-score]')?.textContent || '0');
+    
+    if (criticalFailures > 0) {
+        risks.push({
+            level: 'high',
+            category: 'Validación Estadística',
+            description: `${criticalFailures} test(s) crítico(s) fallaron`,
+            mitigation: 'Revisar y corregir parámetros del modelo antes de uso en producción'
+        });
+    }
+    
+    if (reliabilityScore < 60) {
+        risks.push({
+            level: 'medium',
+            category: 'Confiabilidad del Modelo',
+            description: 'Score de confiabilidad por debajo del umbral recomendado',
+            mitigation: 'Incrementar tamaño de muestra o ajustar distribuciones estadísticas'
+        });
+    }
+    
+    if (risks.length === 0) {
+        risks.push({
+            level: 'low',
+            category: 'General',
+            description: 'No se identificaron riesgos significativos',
+            mitigation: 'Continuar con monitoreo estándar'
+        });
+    }
+    
+    return risks;
+}
+
+function generateNextSteps() {
+    """Generar pasos siguientes recomendados"""
+    const steps = [];
+    const overallValid = document.querySelector('[data-overall-validity]')?.textContent === 'true';
+    
+    if (overallValid) {
+        steps.push('Implementar el modelo en producción con monitoreo continuo');
+        steps.push('Establecer alertas automáticas para métricas clave');
+        steps.push('Programar revisiones de validación periódicas (mensual/trimestral)');
+        steps.push('Documentar y compartir resultados con stakeholders');
+    } else {
+        steps.push('Revisar y ajustar parámetros del modelo basado en fallos identificados');
+        steps.push('Incrementar tamaño de muestra si es posible');
+        steps.push('Re-ejecutar validación después de ajustes');
+        steps.push('Considerar modelos alternativos si problemas persisten');
+    }
+    
+    return steps;
+}
+
+function generateExecutiveReport(data) {
+    """Generar reporte ejecutivo en PDF"""
+    try {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+        let yPos = 30;
+        
+        // Header
+        pdf.setFontSize(20);
+        pdf.setTextColor(0, 123, 255);
+        pdf.text('Reporte Ejecutivo - Validación Estadística', 20, yPos);
+        yPos += 20;
+        
+        // Status general
+        pdf.setFontSize(16);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Estado General del Modelo', 20, yPos);
+        yPos += 10;
+        
+        pdf.setFontSize(12);
+        pdf.text(`Estado: ${data.summary.overall_status}`, 30, yPos);
+        yPos += 8;
+        pdf.text(`Score de Confiabilidad: ${data.summary.reliability_score}/100`, 30, yPos);
+        yPos += 8;
+        pdf.text(`Certificación: ${data.summary.certification_status}`, 30, yPos);
+        yPos += 15;
+        
+        // Hallazgos clave
+        pdf.setFontSize(16);
+        pdf.text('Hallazgos Clave', 20, yPos);
+        yPos += 10;
+        
+        data.key_findings.forEach((finding, index) => {
+            pdf.setFontSize(11);
+            const lines = pdf.splitTextToSize(`${index + 1}. ${finding.component}: ${finding.finding}`, 170);
+            pdf.text(lines, 30, yPos);
+            yPos += lines.length * 6 + 3;
+        });
+        
+        yPos += 10;
+        
+        // Recomendaciones
+        pdf.setFontSize(16);
+        pdf.text('Recomendaciones', 20, yPos);
+        yPos += 10;
+        
+        data.recommendations.forEach((rec, index) => {
+            if (yPos > 250) {
+                pdf.addPage();
+                yPos = 30;
+            }
+            
+            pdf.setFontSize(11);
+            const lines = pdf.splitTextToSize(`${index + 1}. [${rec.priority.toUpperCase()}] ${rec.recommendation}`, 170);
+            pdf.text(lines, 30, yPos);
+            yPos += lines.length * 6 + 3;
+        });
+        
+        // Footer
+        pdf.setFontSize(8);
+        pdf.setTextColor(128, 128, 128);
+        pdf.text(`Generado: ${new Date().toLocaleString()}`, 20, 280);
+        
+        pdf.save(`reporte_ejecutivo_validacion_ks_${new Date().getTime()}.pdf`);
+        
+    } catch (error) {
+        console.error('Error generating executive report:', error);
+        throw error;
+    }
+}
+
+function setupAccessibilityFeatures() {
+    """Configurar características de accesibilidad"""
+    
+    // Navegación por teclado
+    document.addEventListener('keydown', function(e) {
+        if (e.altKey && e.key === 'h') {
+            showContextualHelp();
+        }
+        if (e.altKey && e.key === 'e') {
+            if (typeof exportExecutiveKSReport === 'function') {
+                exportExecutiveKSReport();
+            }
+        }
+    });
+    
+    // Mejora de contraste para elementos interactivos
+    const interactiveElements = document.querySelectorAll('.enhanced-row, .confidence-interval-enhanced, .metric-card');
+    interactiveElements.forEach(element => {
+        element.setAttribute('tabindex', '0');
+        element.setAttribute('role', 'button');
+        
+        element.addEventListener('focus', function() {
+            this.style.outline = '2px solid #007bff';
+            this.style.outlineOffset = '2px';
+        });
+        
+        element.addEventListener('blur', function() {
+            this.style.outline = 'none';
+        });
+        
+        element.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    });
+    
+    // Agregar aria-labels descriptivos
+    const charts = document.querySelectorAll('.chart-image');
+    charts.forEach(chart => {
+        const alt = chart.getAttribute('alt');
+        chart.setAttribute('aria-label', `Gráfico: ${alt}. Presiona Enter para ver en pantalla completa`);
+    });
+}
+
+function showNotification(message, type = 'info', duration = 5000) {
+    """Mostrar notificación mejorada con accesibilidad"""
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type} notification-enhanced`;
+    notification.setAttribute('role', 'alert');
+    notification.setAttribute('aria-live', 'polite');
+    
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bx ${type === 'success' ? 'bx-check-circle' : type === 'error' ? 'bx-error-circle' : 'bx-info-circle'} me-2"></i>
+            <span>${message}</span>
+            <button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        border-radius: 8px;
+        animation: slideInRight 0.3s ease;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    if (duration > 0) {
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, duration);
+    }
+}
+
+// Eventos principales para el tab mejorado
+document.addEventListener('shown.bs.tab', function(e) {
+    if (e.target.getAttribute('aria-controls') === 'ks-validation') {
+        setTimeout(initializeEnhancedKSValidationTab, 100);
+    }
+});
+
+// Exportar funciones globales mejoradas
+window.initializeEnhancedKSValidationTab = initializeEnhancedKSValidationTab;
+window.showRowDetails = showRowDetails;
+window.showConfidenceIntervalExplanation = showConfidenceIntervalExplanation;
+window.showContextualHelp = showContextualHelp;
+window.exportExecutiveKSReport = exportExecutiveKSReport;
+window.exportTechnicalKSData = exportTechnicalKSData;
+window.showNotification = showNotification;
+
+// Agregar estilos de animación
+const animationStyles = document.createElement('style');
+animationStyles.textContent = `
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutRight {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+.notification-enhanced {
+    transform: translateX(0);
+}
+`;
+document.head.appendChild(animationStyles);
+
+console.log('Enhanced KS Validation partial loaded successfully');
+</script>

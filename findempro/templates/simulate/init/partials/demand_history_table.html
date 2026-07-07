@@ -1,0 +1,1032 @@
+<!-- Historical Demand Table -->
+{% load static %}
+{% if demand_history %}
+<div class="demand-history-section mt-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0">
+            <i class="bx bx-line-chart me-2 text-info"></i>
+            Demanda Histórica Analizada
+        </h5>
+        <div class="demand-actions">
+            <button class="btn btn-sm btn-outline-info" onclick="exportDemandData()" title="Exportar datos">
+                <i class="bx bx-download"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="toggleDemandView()" title="Cambiar vista">
+                <i class="bx bx-grid-alt" id="viewToggleIcon"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Statistics Summary -->
+    {% if demand_mean %}
+    <div class="demand-stats-card mb-3">
+        <div class="row g-3">
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="stat-icon bg-primary-subtle">
+                        <i class="bx bx-calculator text-primary"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ demand_mean|floatformat:"1" }}</div>
+                        <div class="stat-label">Media (L)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="stat-icon bg-success-subtle">
+                        <i class="bx bx-trending-up text-success"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ demand_history|length }}</div>
+                        <div class="stat-label">Registros</div>
+                    </div>
+                </div>
+            </div>
+            {% if demand_stats %}
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="stat-icon bg-info-subtle">
+                        <i class="bx bx-scatter-chart text-info"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ demand_stats.std|floatformat:"1" }}</div>
+                        <div class="stat-label">Desv. Est.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <div class="stat-icon bg-warning-subtle">
+                        <i class="bx bx-target-lock text-warning"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value">{{ demand_stats.cv|floatformat:"2" }}</div>
+                        <div class="stat-label">Coef. Var.</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Data Quality Indicator -->
+    <div class="data-quality-indicator mb-3">
+        {% if demand_history|length >= 30 %}
+            <div class="alert alert-success d-flex align-items-center">
+                <i class="bx bx-check-circle me-2"></i>
+                <div class="flex-grow-1">
+                    <strong>Calidad de datos: Excelente</strong>
+                    <small class="d-block">{{ demand_history|length }} registros disponibles (mínimo recomendado: 30)</small>
+                </div>
+                <span class="badge bg-success">{{ demand_history|length }}/30</span>
+            </div>
+        {% elif demand_history|length >= 20 %}
+            <div class="alert alert-warning d-flex align-items-center">
+                <i class="bx bx-error-circle me-2"></i>
+                <div class="flex-grow-1">
+                    <strong>Calidad de datos: Aceptable</strong>
+                    <small class="d-block">{{ demand_history|length }} registros disponibles (recomendado: 30+)</small>
+                </div>
+                <span class="badge bg-warning">{{ demand_history|length }}/30</span>
+            </div>
+        {% else %}
+            <div class="alert alert-danger d-flex align-items-center">
+                <i class="bx bx-x-circle me-2"></i>
+                <div class="flex-grow-1">
+                    <strong>Calidad de datos: Insuficiente</strong>
+                    <small class="d-block">{{ demand_history|length }} registros (mínimo necesario: 20)</small>
+                </div>
+                <span class="badge bg-danger">{{ demand_history|length }}/20</span>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Table View -->
+    <div class="demand-table-container" id="tableView">
+        <div class="table-responsive" style="max-height: 400px;">
+            <table class="table table-sm table-hover demand-table">
+                <thead class="table-dark sticky-top">
+                    <tr>
+                        <th class="text-center" style="width: 15%;">
+                            <i class="bx bx-hash me-1"></i>Período
+                        </th>
+                        <th class="text-center" style="width: 25%;">
+                            <i class="bx bx-trending-up me-1"></i>Demanda (L)
+                        </th>
+                        <th class="text-center" style="width: 20%;">
+                            <i class="bx bx-transfer-alt me-1"></i>Variación
+                        </th>
+                        <th class="text-center" style="width: 20%;">
+                            <i class="bx bx-bar-chart-alt me-1"></i>Tendencia
+                        </th>
+                        <th class="text-center" style="width: 20%;">
+                            <i class="bx bx-stats me-1"></i>Z-Score
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for value in demand_history %}
+                    {% with period=forloop.counter %}
+                    <tr class="demand-row" data-period="{{ period }}" data-value="{{ value }}">
+                        <!-- Period -->
+                        <td class="text-center fw-semibold">
+                            <span class="period-number">{{ period }}</span>
+                        </td>
+                        
+                        <!-- Demand Value -->
+                        <td class="text-center">
+                            <span class="demand-value">{{ value|floatformat:"2" }}</span>
+                            <div class="demand-bar">
+                                <div class="demand-bar-fill" style="width: 0%"></div>
+                            </div>
+                        </td>
+                        
+                        <!-- Variation -->
+                        <td class="text-center">
+                            {% if not forloop.first %}
+                                {% with prev_index=forloop.counter0|add:"-1" %}
+                                    {% with prev_value=demand_history|slice:prev_index|slice:":1"|first %}
+                                        {% with variation=value|floatformat:"2"|add:0|floatformat:"2"|add:0 %}
+                                            {% with variation_pct=variation %}
+                                                <span class="badge variation-badge {% if variation >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                                    {% if variation >= 0 %}+{% endif %}{{ variation_pct|floatformat:"1" }}%
+                                                </span>
+                                            {% endwith %}
+                                        {% endwith %}
+                                    {% endwith %}
+                                {% endwith %}
+                            {% else %}
+                                <span class="badge bg-secondary">Base</span>
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Trend -->
+                        <td class="text-center">
+                            <div class="trend-indicator">
+                                {% if not forloop.first %}
+                                    {% with prev_index=forloop.counter0|add:"-1" %}
+                                        {% with prev_value=demand_history|slice:prev_index|slice:":1"|first %}
+                                            {% if value > prev_value %}
+                                                <i class="bx bx-trending-up text-success" title="Tendencia alcista"></i>
+                                            {% elif value < prev_value %}
+                                                <i class="bx bx-trending-down text-danger" title="Tendencia bajista"></i>
+                                            {% else %}
+                                                <i class="bx bx-minus text-warning" title="Sin cambio"></i>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% endwith %}
+                                {% else %}
+                                    <i class="bx bx-circle text-muted" title="Valor inicial"></i>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <!-- Z-Score -->
+                        <td class="text-center">
+                            <span class="z-score" data-value="{{ value }}">
+                                <span class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Calculando...</span>
+                                </span>
+                            </span>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Chart View (Alternative) -->
+    <div class="demand-chart-view d-none" id="chartView">
+        <div class="chart-container">
+            <canvas id="demandHistoryChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+    
+    <!-- Data Summary -->
+    <div class="data-summary mt-3">
+        <div class="row g-2">
+            <div class="col-md-6">
+                <small class="text-muted d-flex align-items-center">
+                    <i class="bx bx-info-circle me-1"></i>
+                    Datos ordenados cronológicamente del más antiguo al más reciente
+                </small>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <small class="text-muted">
+                    <i class="bx bx-time me-1"></i>
+                    Última actualización: {{ questionary_result_instance.date_created|date:"d/m/Y H:i" }}
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Data Actions -->
+    <div class="data-actions mt-3">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="showDataInsights()">
+                <i class="bx bx-bulb me-1"></i>
+                Insights
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-info" onclick="showStatistics()">
+                <i class="bx bx-calculator me-1"></i>
+                Estadísticas
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-success" onclick="validateData()">
+                <i class="bx bx-check-shield me-1"></i>
+                Validar
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+/* Demand History Table Styles */
+.demand-history-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.demand-actions .btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 4px;
+}
+
+/* Statistics Cards */
+.demand-stats-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+}
+
+.stat-box {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.stat-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #495057;
+    margin-bottom: 2px;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Data Quality Indicator */
+.data-quality-indicator .alert {
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+
+.data-quality-indicator .badge {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+}
+
+/* Table Styles */
+.demand-table-container {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+}
+
+.demand-table {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+}
+
+.demand-table th {
+    background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 12px 8px;
+    font-size: 0.8rem;
+}
+
+.demand-table td {
+    padding: 10px 8px;
+    border-color: #e9ecef;
+    vertical-align: middle;
+}
+
+.demand-row {
+    transition: all 0.2s ease;
+}
+
+.demand-row:hover {
+    background: rgba(33, 150, 243, 0.05);
+    transform: scale(1.01);
+}
+
+.period-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #2196f3, #1976d2);
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.demand-value {
+    font-weight: 600;
+    color: #495057;
+}
+
+.demand-bar {
+    width: 100%;
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+}
+
+.demand-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2196f3, #1976d2);
+    border-radius: 2px;
+    transition: width 1s ease;
+}
+
+.variation-badge {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.trend-indicator {
+    font-size: 1.2rem;
+}
+
+.z-score {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.z-score.normal {
+    color: #28a745;
+}
+
+.z-score.warning {
+    color: #ffc107;
+}
+
+.z-score.danger {
+    color: #dc3545;
+}
+
+/* Chart View */
+.chart-container {
+    position: relative;
+    height: 300px;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+}
+
+/* Data Actions */
+.data-actions .btn-group .btn {
+    border-radius: 6px;
+    margin-right: 4px;
+    transition: all 0.2s ease;
+}
+
+.data-actions .btn-group .btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .demand-history-section {
+        padding: 15px;
+    }
+    
+    .stat-box {
+        padding: 8px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .stat-icon {
+        margin-right: 0;
+        margin-bottom: 8px;
+        width: 32px;
+        height: 32px;
+    }
+    
+    .stat-value {
+        font-size: 1rem;
+    }
+    
+    .demand-table th,
+    .demand-table td {
+        padding: 8px 4px;
+        font-size: 0.75rem;
+    }
+    
+    .period-number {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+    }
+    
+    .variation-badge {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+    
+    .data-actions .btn-group {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 576px) {
+    .demand-stats-card .row {
+        gap: 8px;
+    }
+    
+    .stat-box {
+        margin-bottom: 8px;
+    }
+    
+    .demand-table {
+        font-size: 0.7rem;
+    }
+    
+    .chart-container {
+        height: 250px;
+        padding: 15px;
+    }
+}
+
+/* Loading states */
+.loading-cell {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+</style>
+
+<script>
+// Demand History Table Management
+class DemandHistoryTable {
+    constructor() {
+        this.demandData = [];
+        this.stats = null;
+        this.currentView = 'table';
+        this.chart = null;
+        
+        this.init();
+    }
+    
+    init() {
+        this.extractDemandData();
+        this.calculateStatistics();
+        this.renderDemandBars();
+        this.calculateZScores();
+        this.bindEvents();
+    }
+    
+    extractDemandData() {
+        const rows = document.querySelectorAll('.demand-row');
+        this.demandData = Array.from(rows).map(row => {
+            return {
+                period: parseInt(row.dataset.period),
+                value: parseFloat(row.dataset.value)
+            };
+        });
+    }
+    
+    calculateStatistics() {
+        if (this.demandData.length === 0) return;
+        
+        const values = this.demandData.map(d => d.value);
+        const mean = values.reduce((a, b) => a + b) / values.length;
+        const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2)) / values.length;
+        const stdDev = Math.sqrt(variance);
+        
+        this.stats = {
+            mean: mean,
+            stdDev: stdDev,
+            min: Math.min(...values),
+            max: Math.max(...values),
+            count: values.length
+        };
+    }
+    
+    renderDemandBars() {
+        if (!this.stats) return;
+        
+        const maxValue = this.stats.max;
+        const minValue = this.stats.min;
+        const range = maxValue - minValue;
+        
+        document.querySelectorAll('.demand-row').forEach(row => {
+            const value = parseFloat(row.dataset.value);
+            const percentage = range > 0 ? ((value - minValue) / range) * 100 : 50;
+            
+            const barFill = row.querySelector('.demand-bar-fill');
+            if (barFill) {
+                setTimeout(() => {
+                    barFill.style.width = percentage + '%';
+                }, 100 + (parseInt(row.dataset.period) * 50));
+            }
+        });
+    }
+    
+    calculateZScores() {
+        if (!this.stats || this.stats.stdDev === 0) return;
+        
+        document.querySelectorAll('.z-score').forEach(scoreElement => {
+            const value = parseFloat(scoreElement.dataset.value);
+            const zScore = (value - this.stats.mean) / this.stats.stdDev;
+            
+            setTimeout(() => {
+                scoreElement.innerHTML = zScore.toFixed(2);
+                
+                // Apply color coding
+                if (Math.abs(zScore) <= 1) {
+                    scoreElement.className = 'z-score normal';
+                } else if (Math.abs(zScore) <= 2) {
+                    scoreElement.className = 'z-score warning';
+                } else {
+                    scoreElement.className = 'z-score danger';
+                }
+            }, 200 + (Math.random() * 1000));
+        });
+    }
+    
+    bindEvents() {
+        // Global functions for template usage
+        window.exportDemandData = () => this.exportData();
+        window.toggleDemandView = () => this.toggleView();
+        window.showDataInsights = () => this.showInsights();
+        window.showStatistics = () => this.showStatistics();
+        window.validateData = () => this.validateData();
+    }
+    
+    exportData() {
+        const data = this.demandData.map(d => ({
+            'Período': d.period,
+            'Demanda (L)': d.value.toFixed(2),
+            'Z-Score': ((d.value - this.stats.mean) / this.stats.stdDev).toFixed(2)
+        }));
+        
+        this.downloadCSV(data, 'demanda_historica.csv');
+    }
+    
+    downloadCSV(data, filename) {
+        const headers = Object.keys(data[0]);
+        const csvContent = [
+            headers.join(','),
+            ...data.map(row => headers.map(h => row[h]).join(','))
+        ].join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+    }
+    
+    toggleView() {
+        const tableView = document.getElementById('tableView');
+        const chartView = document.getElementById('chartView');
+        const toggleIcon = document.getElementById('viewToggleIcon');
+        
+        if (this.currentView === 'table') {
+            tableView.classList.add('d-none');
+            chartView.classList.remove('d-none');
+            toggleIcon.className = 'bx bx-table';
+            this.renderChart();
+            this.currentView = 'chart';
+        } else {
+            chartView.classList.add('d-none');
+            tableView.classList.remove('d-none');
+            toggleIcon.className = 'bx bx-grid-alt';
+            this.currentView = 'table';
+        }
+    }
+    
+    renderChart() {
+        const canvas = document.getElementById('demandHistoryChart');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Destroy existing chart
+        if (this.chart) {
+            this.chart.destroy();
+        }
+        
+        const labels = this.demandData.map(d => `P${d.period}`);
+        const values = this.demandData.map(d => d.value);
+        
+        this.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Demanda Histórica',
+                    data: values,
+                    borderColor: '#2196f3',
+                    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#2196f3',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Tendencia de Demanda Histórica'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Demanda (L)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Período'
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                elements: {
+                    point: {
+                        hoverRadius: 8
+                    }
+                }
+            }
+        });
+    }
+    
+    showInsights() {
+        if (!this.stats) return;
+        
+        const insights = this.generateInsights();
+        const modal = this.createModal(
+            'Insights de Datos',
+            `
+            <div class="insights-content">
+                <h6 class="mb-3">Análisis Automático de Patrones</h6>
+                ${insights.map(insight => `
+                    <div class="insight-item mb-3 p-3 border-start border-3 ${insight.type === 'positive' ? 'border-success bg-success-subtle' : insight.type === 'warning' ? 'border-warning bg-warning-subtle' : 'border-info bg-info-subtle'}">
+                        <div class="d-flex align-items-start">
+                            <i class="bx ${insight.icon} me-2 mt-1 ${insight.type === 'positive' ? 'text-success' : insight.type === 'warning' ? 'text-warning' : 'text-info'}"></i>
+                            <div>
+                                <strong>${insight.title}</strong>
+                                <p class="mb-0 small">${insight.description}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            `
+        );
+        
+        this.showModal(modal);
+    }
+    
+    generateInsights() {
+        const insights = [];
+        const cv = this.stats.stdDev / this.stats.mean;
+        
+        // Coefficient of variation analysis
+        if (cv < 0.1) {
+            insights.push({
+                type: 'positive',
+                icon: 'bx-check-shield',
+                title: 'Demanda Muy Estable',
+                description: `La variabilidad es muy baja (CV: ${(cv * 100).toFixed(1)}%). Excelente para predicciones precisas.`
+            });
+        } else if (cv > 0.3) {
+            insights.push({
+                type: 'warning',
+                icon: 'bx-error-alt',
+                title: 'Alta Variabilidad',
+                description: `La demanda es muy variable (CV: ${(cv * 100).toFixed(1)}%). Considere factores estacionales.`
+            });
+        }
+        
+        // Trend analysis
+        const values = this.demandData.map(d => d.value);
+        const firstHalf = values.slice(0, Math.floor(values.length / 2));
+        const secondHalf = values.slice(Math.floor(values.length / 2));
+        const firstAvg = firstHalf.reduce((a, b) => a + b) / firstHalf.length;
+        const secondAvg = secondHalf.reduce((a, b) => a + b) / secondHalf.length;
+        const trendChange = ((secondAvg - firstAvg) / firstAvg) * 100;
+        
+        if (Math.abs(trendChange) > 10) {
+            insights.push({
+                type: 'info',
+                icon: 'bx-trending-up',
+                title: trendChange > 0 ? 'Tendencia Creciente' : 'Tendencia Decreciente',
+                description: `Se observa una ${trendChange > 0 ? 'subida' : 'bajada'} del ${Math.abs(trendChange).toFixed(1)}% en el período analizado.`
+            });
+        }
+        
+        // Outliers detection
+        const outliers = values.filter(v => Math.abs((v - this.stats.mean) / this.stats.stdDev) > 2);
+        if (outliers.length > 0) {
+            insights.push({
+                type: 'warning',
+                icon: 'bx-error-circle',
+                title: 'Valores Atípicos Detectados',
+                description: `Se encontraron ${outliers.length} valor(es) atípico(s). Revise si hay eventos especiales que expliquen estos picos.`
+            });
+        }
+        
+        return insights;
+    }
+    
+    showStatistics() {
+        if (!this.stats) return;
+        
+        const modal = this.createModal(
+            'Estadísticas Detalladas',
+            `
+            <div class="statistics-content">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="stat-card p-3 border rounded">
+                            <h6 class="text-primary">Medidas de Tendencia Central</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Media:</strong> ${this.stats.mean.toFixed(2)} L</li>
+                                <li><strong>Mediana:</strong> ${this.calculateMedian().toFixed(2)} L</li>
+                                <li><strong>Moda:</strong> ${this.calculateMode()}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-card p-3 border rounded">
+                            <h6 class="text-success">Medidas de Dispersión</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Desv. Estándar:</strong> ${this.stats.stdDev.toFixed(2)}</li>
+                                <li><strong>Varianza:</strong> ${(this.stats.stdDev ** 2).toFixed(2)}</li>
+                                <li><strong>Coef. Variación:</strong> ${((this.stats.stdDev / this.stats.mean) * 100).toFixed(1)}%</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-card p-3 border rounded">
+                            <h6 class="text-info">Valores Extremos</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Mínimo:</strong> ${this.stats.min.toFixed(2)} L</li>
+                                <li><strong>Máximo:</strong> ${this.stats.max.toFixed(2)} L</li>
+                                <li><strong>Rango:</strong> ${(this.stats.max - this.stats.min).toFixed(2)} L</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-card p-3 border rounded">
+                            <h6 class="text-warning">Información General</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>N° Observaciones:</strong> ${this.stats.count}</li>
+                                <li><strong>Suma Total:</strong> ${(this.stats.mean * this.stats.count).toFixed(2)} L</li>
+                                <li><strong>Promedio Móvil (3):</strong> ${this.calculateMovingAverage(3).toFixed(2)} L</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `
+        );
+        
+        this.showModal(modal);
+    }
+    
+    calculateMedian() {
+        const sorted = [...this.demandData.map(d => d.value)].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+    
+    calculateMode() {
+        const values = this.demandData.map(d => d.value.toFixed(1));
+        const frequency = {};
+        values.forEach(v => frequency[v] = (frequency[v] || 0) + 1);
+        
+        const maxFreq = Math.max(...Object.values(frequency));
+        const modes = Object.keys(frequency).filter(k => frequency[k] === maxFreq);
+        
+        if (modes.length === values.length) return 'No hay moda';
+        return modes.length === 1 ? `${modes[0]} L` : `Multimodal (${modes.join(', ')})`;
+    }
+    
+    calculateMovingAverage(periods) {
+        const values = this.demandData.map(d => d.value);
+        const lastValues = values.slice(-periods);
+        return lastValues.reduce((a, b) => a + b) / lastValues.length;
+    }
+    
+    validateData() {
+        const validation = {
+            issues: [],
+            warnings: [],
+            passed: []
+        };
+        
+        // Check minimum data points
+        if (this.demandData.length < 20) {
+            validation.issues.push('Datos insuficientes (mínimo recomendado: 20)');
+        } else {
+            validation.passed.push('Cantidad de datos adecuada');
+        }
+        
+        // Check for outliers
+        const outliers = this.demandData.filter(d => {
+            const zScore = Math.abs((d.value - this.stats.mean) / this.stats.stdDev);
+            return zScore > 3;
+        });
+        
+        if (outliers.length > 0) {
+            validation.warnings.push(`${outliers.length} valor(es) extremo(s) detectado(s)`);
+        } else {
+            validation.passed.push('No se detectaron valores extremos');
+        }
+        
+        // Check for negative values
+        const negatives = this.demandData.filter(d => d.value < 0);
+        if (negatives.length > 0) {
+            validation.issues.push('Se encontraron valores negativos');
+        } else {
+            validation.passed.push('Todos los valores son positivos');
+        }
+        
+        this.showValidationResults(validation);
+    }
+    
+    showValidationResults(validation) {
+        const modal = this.createModal(
+            'Validación de Datos',
+            `
+            <div class="validation-content">
+                ${validation.issues.length > 0 ? `
+                    <div class="validation-section mb-3">
+                        <h6 class="text-danger"><i class="bx bx-x-circle me-2"></i>Problemas Críticos</h6>
+                        <ul class="list-unstyled">
+                            ${validation.issues.map(issue => `
+                                <li class="text-danger mb-1">
+                                    <i class="bx bx-x me-2"></i>${issue}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                ${validation.warnings.length > 0 ? `
+                    <div class="validation-section mb-3">
+                        <h6 class="text-warning"><i class="bx bx-error me-2"></i>Advertencias</h6>
+                        <ul class="list-unstyled">
+                            ${validation.warnings.map(warning => `
+                                <li class="text-warning mb-1">
+                                    <i class="bx bx-error-circle me-2"></i>${warning}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                
+                <div class="validation-section">
+                    <h6 class="text-success"><i class="bx bx-check-circle me-2"></i>Validaciones Correctas</h6>
+                    <ul class="list-unstyled">
+                        ${validation.passed.map(pass => `
+                            <li class="text-success mb-1">
+                                <i class="bx bx-check me-2"></i>${pass}
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <strong>Calidad General:</strong> 
+                    ${validation.issues.length === 0 ? 
+                        (validation.warnings.length === 0 ? 'Excelente' : 'Buena') : 
+                        'Requiere atención'
+                    }
+                </div>
+            </div>
+            `
+        );
+        
+        this.showModal(modal);
+    }
+    
+    createModal(title, content) {
+        const modalId = 'demandModal' + Date.now();
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = modalId;
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${content}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        return modal;
+    }
+    
+    showModal(modal) {
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+        
+        modal.addEventListener('hidden.bs.modal', () => modal.remove());
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.querySelector('.demand-history-section')) {
+        new DemandHistoryTable();
+    }
+});
+</script>

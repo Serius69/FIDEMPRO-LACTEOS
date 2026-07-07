@@ -1,0 +1,776 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Dashboard - Sistema de Análisis{% endblock title %}
+
+{% block extra_css %}
+<style>
+/* ── Hero Section ─────────────────────────────────────────── */
+.hero-section {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    padding: 56px 48px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -8%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(0,212,200,0.07) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+.hero-section h1 {
+    font-family: var(--font-brand) !important;
+    color: var(--text-primary) !important;
+    letter-spacing: -0.03em;
+}
+
+.hero-section .lead {
+    color: var(--text-secondary) !important;
+    font-size: 15px !important;
+}
+
+/* ── Feature Cards ────────────────────────────────────────── */
+.feature-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 28px;
+    height: 100%;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: var(--product);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+}
+
+.feature-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+}
+
+.feature-card:hover::before { transform: translateX(0); }
+
+.feature-card h5 {
+    font-family: var(--font-brand) !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    margin-bottom: 8px;
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.feature-icon.primary { background: var(--product-bg);              color: var(--product); }
+.feature-icon.info    { background: rgba(0,180,216,0.12);           color: var(--info); }
+.feature-icon.warning { background: rgba(255,182,39,0.12);          color: var(--warning); }
+.feature-icon.danger  { background: rgba(255,59,80,0.12);           color: var(--danger); }
+
+/* ── Quick Action Cards ───────────────────────────────────── */
+.quick-action-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 24px;
+    text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    color: var(--text-primary);
+}
+
+.quick-action-card:hover {
+    border-color: var(--product-border);
+    box-shadow: var(--shadow-glow);
+}
+
+.quick-action-card i    { color: var(--product); }
+.quick-action-card h5   { font-family: var(--font-brand) !important; font-size: 15px !important; font-weight: 600 !important; color: var(--text-primary) !important; margin-top: 8px; }
+.quick-action-card p    { color: var(--text-secondary) !important; font-size: 12px !important; }
+
+/* ── KPI Cards ────────────────────────────────────────────── */
+.kpi-card {
+    transition: box-shadow 0.2s, transform 0.2s;
+    border-left: 2px solid transparent !important;
+}
+.kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.kpi-card--primary { border-left-color: var(--product) !important; }
+.kpi-card--success { border-left-color: var(--success) !important; }
+.kpi-card--info    { border-left-color: var(--info) !important; }
+
+.kpi-label {
+    font-family: var(--font-data);
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.kpi-value {
+    font-family: var(--font-data);
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.1;
+}
+
+.kpi-icon {
+    width: 48px; height: 48px;
+    border-radius: var(--r-md);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+}
+.kpi-icon--primary { background: var(--product-bg);           color: var(--product); }
+.kpi-icon--success { background: rgba(0,200,150,0.12);        color: var(--success); }
+.kpi-icon--info    { background: rgba(0,180,216,0.12);        color: var(--info); }
+
+/* ── Activity Feed ────────────────────────────────────────── */
+.activity-feed { max-height: 400px; overflow-y: auto; background: transparent; }
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn-executive {
+    background: var(--product);
+    color: #00211f;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--r-md);
+    font-family: var(--font-ui);
+    font-weight: 500;
+    transition: filter 0.15s;
+}
+.btn-executive:hover { filter: brightness(1.1); color: #00211f; }
+
+/* ── Misc ─────────────────────────────────────────────────── */
+.welcome-animation {
+    animation: fadeInUp 0.5s ease-out;
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.tutorial-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 9999; display: none;
+    backdrop-filter: blur(2px);
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Hero Section -->
+            <div class="row welcome-animation">
+                <div class="col-12">
+                    <div class="hero-section">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <h1 class="display-5 fw-bold mb-3">
+                                    Bienvenido{% if user.first_name %}, {{ user.first_name }}{% endif %}
+                                </h1>
+                                <p class="lead mb-4">
+                                    Tu centro de control para análisis de negocio y simulaciones avanzadas.
+                                    {% if not user.is_authenticated %}
+                                        Inicia sesión para acceder a todas las funcionalidades.
+                                    {% else %}
+                                        Explora las herramientas disponibles y optimiza tu negocio.
+                                    {% endif %}
+                                </p>
+                                {% if not user.is_authenticated %}
+                                    <div class="d-flex gap-3">
+                                        <a href="{% url 'account_login' %}" class="btn btn-light btn-lg">
+                                            <i class="ri-login-box-line me-2"></i>Iniciar Sesión
+                                        </a>
+                                        <a href="{% url 'account_signup' %}" class="btn btn-outline-light btn-lg">
+                                            <i class="ri-user-add-line me-2"></i>Registrarse
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <div class="d-flex gap-3">
+                                        <a href="{% url 'dashboard:dashboard.user' %}" class="btn btn-light btn-lg">
+                                            <i class="ri-dashboard-line me-2"></i>Ir al Dashboard
+                                        </a>
+                                        <button class="btn btn-outline-light btn-lg" onclick="startTutorial()">
+                                            <i class="ri-play-circle-line me-2"></i>Ver Tutorial
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-lg-4 text-center d-none d-lg-block">
+                                <img src="{% static 'images/dashboard-illustration.webp' %}" 
+                                     alt="Dashboard" class="img-fluid" style="max-height: 300px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if user.is_authenticated %}
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="mb-3">Acciones Rápidas</h4>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="quick-action-card" onclick="window.location.href='{% url 'simulate:simulate.show' %}'">
+                        <i class="ri-play-circle-line fs-1 mb-2"></i>
+                        <h5>Nueva Simulación</h5>
+                        <p class="mb-0 opacity-75">Ejecutar análisis</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="quick-action-card" onclick="window.location.href='{% url 'product:product.list' %}'">
+                        <i class="ri-shopping-bag-3-line fs-1 mb-2"></i>
+                        <h5>Gestionar Productos</h5>
+                        <p class="mb-0 opacity-75">Administrar catálogo</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="mb-3">Resumen General</h4>
+                </div>
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <div class="card kpi-card kpi-card--primary mb-0">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <p class="kpi-label">Negocios Activos</p>
+                                    <h3 class="kpi-value">{{ business_count|default:"0" }}</h3>
+                                </div>
+                                <div class="kpi-icon kpi-icon--primary ms-3">
+                                    <i class="ri-briefcase-4-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <div class="card kpi-card kpi-card--success mb-0">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <p class="kpi-label">Productos</p>
+                                    <h3 class="kpi-value">{{ products_count|default:"0" }}</h3>
+                                </div>
+                                <div class="kpi-icon kpi-icon--success ms-3">
+                                    <i class="ri-shopping-bag-3-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6 mb-3">
+                    <div class="card kpi-card kpi-card--info mb-0">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <p class="kpi-label">Simulaciones</p>
+                                    <h3 class="kpi-value">{{ simulations_count|default:"0" }}</h3>
+                                </div>
+                                <div class="kpi-icon kpi-icon--info ms-3">
+                                    <i class="ri-line-chart-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Features Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h4 class="mb-3">Características del Sistema</h4>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon primary">
+                            <i class="ri-line-chart-line"></i>
+                        </div>
+                        <h5>Análisis Predictivo</h5>
+                        <p class="text-muted">
+                            Utiliza algoritmos avanzados para predecir tendencias y comportamientos futuros de tu negocio.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon info">
+                            <i class="ri-dashboard-3-line"></i>
+                        </div>
+                        <h5>Dashboard Interactivo</h5>
+                        <p class="text-muted">
+                            Visualiza todos tus datos importantes con gráficos dinámicos e interactivos.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon warning">
+                            <i class="ri-file-excel-2-line"></i>
+                        </div>
+                        <h5>Exportación de Datos</h5>
+                        <p class="text-muted">
+                            Exporta tus análisis y reportes en múltiples formatos incluyendo Excel, PDF y CSV.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Feed & Getting Started -->
+            <div class="row">
+                {% if user.is_authenticated %}
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Actividad Reciente</h5>
+                            <a href="#" class="link-secondary" data-bs-toggle="modal" data-bs-target="#allActivitiesModal">Ver todo</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-feed">
+                                {% for activity in recent_activities|slice:":10" %}
+                                <div class="d-flex mb-3 pb-3 border-bottom">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-xs">
+                                            <span class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                <i class="ri-user-line"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1">{{ activity.action }}</h6>
+                                        <p class="text-muted mb-0">{{ activity.timestamp|timesince }} atrás</p>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-4">
+                                    <i class="ri-history-line fs-1 text-muted"></i>
+                                    <p class="text-muted mt-2">No hay actividad reciente</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal for All Activities -->
+                <div class="modal fade" id="allActivitiesModal" tabindex="-1" aria-labelledby="allActivitiesModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="allActivitiesModalLabel">Todas las Actividades</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="activity-feed">
+                                    {% for activity in recent_activities %}
+                                    <div class="d-flex mb-3 pb-3 border-bottom">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-xs">
+                                                <span class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                    <i class="ri-user-line"></i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">{{ activity.action }}</h6>
+                                            <p class="text-muted mb-0">{{ activity.timestamp|timesince }} atrás</p>
+                                        </div>
+                                    </div>
+                                    {% empty %}
+                                    <div class="text-center py-4">
+                                        <i class="ri-history-line fs-1 text-muted"></i>
+                                        <p class="text-muted mt-2">No hay actividades registradas</p>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="col-lg-{% if user.is_authenticated %}4{% else %}12{% endif %}">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                {% if user.is_authenticated %}Recursos Útiles{% else %}Comenzar{% endif %}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if not user.is_authenticated %}
+                            <div class="text-center py-4">
+                                <i class="ri-rocket-2-line fs-1 text-primary mb-3"></i>
+                                <h5>¡Comienza tu viaje de análisis!</h5>
+                                <p class="text-muted">
+                                    Regístrate ahora para acceder a todas las herramientas de análisis y simulación.
+                                </p>
+                                <a href="{% url 'account_signup' %}" class="btn btn-primary">
+                                    Crear Cuenta Gratis
+                                </a>
+                            </div>
+                            {% else %}
+                            <div class="list-group">
+                                <a href="{% url 'pages:pages.coming_soon' %}" class="list-group-item list-group-item-action">
+                                    <i class="ri-book-2-line me-2"></i> Guía de Usuario
+                                </a>
+                                <a href="{% url 'pages:pages.coming_soon' %}" class="list-group-item list-group-item-action">
+                                    <i class="ri-video-line me-2"></i> Video Tutoriales
+                                </a>
+                                <a href="{% url 'pages:pages.faqs' %}" class="list-group-item list-group-item-action">
+                                    <i class="ri-question-line me-2"></i> Preguntas Frecuentes
+                                </a>
+                                <a href="{% url 'pages:pages.coming_soon' %}" class="list-group-item list-group-item-action">
+                                    <i class="ri-customer-service-2-line me-2"></i> Soporte Técnico
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Configuración Rápida</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="me-3">
+                                    <h6 class="mb-1">Crear Elementos Predeterminados</h6>
+                                    <p class="text-muted small mb-0">
+                                        Crea los negocios, productos y variables esenciales para tus simulaciones.
+                                    </p>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm flex-shrink-0" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                    Crear Elementos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Redirigir a Configuración</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>¿Desea ir a la página para crear los elementos predeterminados necesarios para las simulaciones?</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <a href="{% url 'pages:pages.register_elements' %}" class="btn btn-primary">Ir a la página</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+
+<!-- Tutorial Overlay -->
+<div class="tutorial-overlay" id="tutorialOverlay"></div>
+
+<!-- Welcome Modal for New Users -->
+{% if show_welcome %}
+<div class="modal fade" id="welcomeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-body text-center p-5">
+                <div class="mb-4">
+                    <lord-icon src="https://cdn.lordicon.com/lupuorrc.json"
+                               trigger="loop"
+                               colors="primary:#0ab39c,secondary:#405189"
+                               style="width:120px;height:120px">
+                    </lord-icon>
+                </div>
+                <h3 class="mb-3">¡Bienvenido al Sistema de Dashboard!</h3>
+                <p class="text-muted mb-4">
+                    Estamos emocionados de tenerte aquí. Este sistema te ayudará a analizar y optimizar tu negocio 
+                    con herramientas avanzadas de simulación y visualización de datos.
+                </p>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="p-3">
+                            <i class="ri-dashboard-line fs-1 text-primary mb-2"></i>
+                            <h6>Dashboard Personalizado</h6>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3">
+                            <i class="ri-line-chart-line fs-1 text-success mb-2"></i>
+                            <h6>Análisis Avanzado</h6>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3">
+                            <i class="ri-file-chart-line fs-1 text-info mb-2"></i>
+                            <h6>Reportes Detallados</h6>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary btn-lg" data-bs-dismiss="modal">
+                    Comenzar a Explorar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock content %}
+
+{% block extra_js %}
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
+<script>
+// Show welcome modal for new users
+{% if show_welcome %}
+document.addEventListener('DOMContentLoaded', function() {
+    const welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'));
+    welcomeModal.show();
+});
+{% endif %}
+
+// Start Tutorial
+function startTutorial() {
+    const overlay = document.getElementById('tutorialOverlay');
+    overlay.style.display = 'block';
+    
+    // Tutorial steps
+    const steps = [
+        {
+            element: '.quick-action-card',
+            message: 'Usa estas acciones rápidas para acceder a las funciones principales'
+        },
+        {
+            element: '.stats-widget',
+            message: 'Aquí puedes ver un resumen de tus estadísticas principales'
+        },
+        {
+            element: '.feature-card',
+            message: 'Explora todas las características disponibles del sistema'
+        }
+    ];
+    
+    let currentStep = 0;
+    
+    function showStep(index) {
+        // Remove previous highlights
+        document.querySelectorAll('.tutorial-highlight').forEach(el => {
+            el.classList.remove('tutorial-highlight');
+        });
+        
+        if (index < steps.length) {
+            const step = steps[index];
+            const element = document.querySelector(step.element);
+            if (element) {
+                element.classList.add('tutorial-highlight');
+                
+                // Show tooltip
+                showTooltip(element, step.message);
+            }
+        } else {
+            // End tutorial
+            overlay.style.display = 'none';
+            Swal.fire({
+                icon: 'success',
+                title: '¡Tutorial Completado!',
+                text: 'Ahora estás listo para usar el sistema',
+                confirmButtonText: 'Genial'
+            });
+        }
+    }
+    
+    function showTooltip(element, message) {
+        // Create and show tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tutorial-tooltip';
+        tooltip.innerHTML = `
+            <p>${message}</p>
+            <button onclick="nextTutorialStep()" class="btn btn-sm btn-primary">Siguiente</button>
+        `;
+        
+        // Position tooltip
+        const rect = element.getBoundingClientRect();
+        tooltip.style.position = 'fixed';
+        tooltip.style.top = rect.bottom + 10 + 'px';
+        tooltip.style.left = rect.left + 'px';
+        tooltip.style.zIndex = '10001';
+        tooltip.style.background = 'white';
+        tooltip.style.padding = '15px';
+        tooltip.style.borderRadius = '10px';
+        tooltip.style.boxShadow = '0 5px 20px rgba(0,0,0,0.2)';
+        
+        document.body.appendChild(tooltip);
+        
+        window.nextTutorialStep = function() {
+            tooltip.remove();
+            currentStep++;
+            showStep(currentStep);
+        };
+    }
+    
+    // Start with first step
+    showStep(currentStep);
+    
+    // Close tutorial on overlay click
+    overlay.onclick = function() {
+        overlay.style.display = 'none';
+        document.querySelectorAll('.tutorial-highlight').forEach(el => {
+            el.classList.remove('tutorial-highlight');
+        });
+        document.querySelectorAll('.tutorial-tooltip').forEach(el => {
+            el.remove();
+        });
+    };
+}
+
+// Generate Report
+function generateReport() {
+    Swal.fire({
+        title: 'Generar Reporte',
+        text: 'Selecciona el tipo de reporte que deseas generar',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Reporte Completo',
+        cancelButtonText: 'Reporte Resumido',
+        showDenyButton: true,
+        denyButtonText: 'Personalizado'
+    }).then((result) => {
+        if (result.isConfirmed || result.isDenied || result.dismiss === Swal.DismissReason.cancel) {
+            // Show loading
+            Swal.fire({
+                title: 'Generando Reporte',
+                html: 'Por favor espera...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Simulate report generation
+            setTimeout(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Reporte Generado!',
+                    text: 'Tu reporte ha sido generado exitosamente',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            }, 2000);
+        }
+    });
+}
+
+// Quick Setup Form
+document.getElementById('quickSetupForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const btn = e.target.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Configurando...';
+    
+    // Submit form
+    fetch(e.target.action, {
+        method: 'POST',
+        body: new FormData(e.target)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Configuración Completada!',
+                text: 'Los elementos de demostración han sido creados',
+                confirmButtonText: 'Ir al Dashboard'
+            }).then(() => {
+                window.location.href = '{% url "dashboard:dashboard.user" %}';
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+});
+
+// Animate numbers on scroll
+const observerOptions = {
+    threshold: 0.5,
+    rootMargin: '0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const statsWidgets = entry.target.querySelectorAll('.stats-widget h3');
+            statsWidgets.forEach(widget => {
+                const target = parseInt(widget.textContent);
+                let current = 0;
+                const increment = target / 50;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        widget.textContent = target;
+                        clearInterval(timer);
+                    } else {
+                        widget.textContent = Math.floor(current);
+                    }
+                }, 30);
+            });
+            
+            observer.unobserve(entry.target);
+        }
+    });
+}, observerOptions);
+
+document.querySelectorAll('.row').forEach(row => {
+    if (row.querySelector('.stats-widget')) {
+        observer.observe(row);
+    }
+});
+</script>
+{% endblock extra_js %}

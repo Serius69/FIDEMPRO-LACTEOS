@@ -1,0 +1,592 @@
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-container">
+        <!-- Loading Animation -->
+        <div class="loading-animation">
+            <div class="loading-spinner"></div>
+            <div class="loading-pulse"></div>
+        </div>
+        
+        <!-- Loading Content -->
+        <div class="loading-content">
+            <h4 class="loading-title text-white mb-3">Procesando simulación...</h4>
+            <p class="loading-text text-white-50 mb-4">
+                Esto puede tomar algunos minutos dependiendo de la complejidad
+            </p>
+            
+            <!-- Progress Steps -->
+            <div class="loading-steps mb-4">
+                <div class="loading-step active" id="loadingStep1">
+                    <div class="step-icon">
+                        <i class="bx bx-check"></i>
+                    </div>
+                    <span class="step-text">Validando datos</span>
+                </div>
+                <div class="loading-step" id="loadingStep2">
+                    <div class="step-icon">
+                        <div class="step-spinner"></div>
+                    </div>
+                    <span class="step-text">Análisis estadístico</span>
+                </div>
+                <div class="loading-step" id="loadingStep3">
+                    <div class="step-icon">
+                        <i class="bx bx-time"></i>
+                    </div>
+                    <span class="step-text">Generando predicciones</span>
+                </div>
+                <div class="loading-step" id="loadingStep4">
+                    <div class="step-icon">
+                        <i class="bx bx-time"></i>
+                    </div>
+                    <span class="step-text">Creando reportes</span>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="progress loading-progress mb-3">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                     role="progressbar" style="width: 25%" 
+                     aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" 
+                     id="loadingProgressBar">
+                    <span class="progress-text">25%</span>
+                </div>
+            </div>
+            
+            <!-- Estimated Time -->
+            <div class="loading-time">
+                <small class="text-white-50">
+                    <i class="bx bx-time-five me-1"></i>
+                    Tiempo estimado restante: <span id="estimatedTime">3-5 minutos</span>
+                </small>
+            </div>
+            
+            <!-- Loading Tips -->
+            <div class="loading-tips mt-4">
+                <div class="tip-container">
+                    <div class="tip-item active" id="tip1">
+                        <i class="bx bx-bulb text-warning me-2"></i>
+                        <span>El sistema está analizando patrones en sus datos históricos</span>
+                    </div>
+                    <div class="tip-item" id="tip2">
+                        <i class="bx bx-chart text-info me-2"></i>
+                        <span>Se están aplicando pruebas estadísticas avanzadas</span>
+                    </div>
+                    <div class="tip-item" id="tip3">
+                        <i class="bx bx-trending-up text-success me-2"></i>
+                        <span>Generando predicciones basadas en distribuciones óptimas</span>
+                    </div>
+                    <div class="tip-item" id="tip4">
+                        <i class="bx bx-file-blank text-primary me-2"></i>
+                        <span>Preparando reportes detallados y visualizaciones</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cancel Option -->
+        <div class="loading-actions mt-4">
+            <button type="button" class="btn btn-outline-light btn-sm" id="cancelSimulationBtn">
+                <i class="bx bx-x me-1"></i>Cancelar Proceso
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Loading Overlay Styles */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, 
+        rgba(33, 150, 243, 0.9) 0%, 
+        rgba(25, 118, 210, 0.95) 50%, 
+        rgba(13, 71, 161, 0.9) 100%);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.loading-container {
+    text-align: center;
+    max-width: 500px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Loading Animation */
+.loading-animation {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.loading-spinner {
+    width: 80px;
+    height: 80px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top: 4px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+}
+
+.loading-pulse {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Loading Steps */
+.loading-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.loading-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.loading-step.active {
+    opacity: 1;
+}
+
+.loading-step.completed {
+    opacity: 1;
+}
+
+.step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.loading-step.active .step-icon {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.loading-step.completed .step-icon {
+    background: rgba(76, 175, 80, 0.8);
+}
+
+.step-text {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.step-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Progress Bar */
+.loading-progress {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.loading-progress .progress-bar {
+    background: linear-gradient(90deg, #4caf50, #81c784);
+    border-radius: 10px;
+    transition: width 1s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Loading Tips */
+.loading-tips {
+    max-height: 60px;
+    overflow: hidden;
+}
+
+.tip-container {
+    position: relative;
+}
+
+.tip-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.875rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s ease;
+    position: absolute;
+    width: 100%;
+    left: 0;
+}
+
+.tip-item.active {
+    opacity: 1;
+    transform: translateY(0);
+    position: relative;
+}
+
+/* Loading Actions */
+.loading-actions {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 20px;
+}
+
+.loading-actions .btn {
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.loading-actions .btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+/* Animations */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.3;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .loading-container {
+        margin: 20px;
+        padding: 30px 20px;
+        max-width: none;
+    }
+    
+    .loading-steps {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .loading-step {
+        flex-direction: row;
+        justify-content: flex-start;
+        text-align: left;
+    }
+    
+    .step-icon {
+        margin-right: 12px;
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+    
+    .step-text {
+        text-align: left;
+        flex-grow: 1;
+    }
+    
+    .loading-spinner {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .loading-pulse {
+        width: 90px;
+        height: 90px;
+    }
+}
+
+@media (max-width: 480px) {
+    .loading-container {
+        padding: 25px 15px;
+    }
+    
+    .loading-title {
+        font-size: 1.25rem;
+    }
+    
+    .loading-text {
+        font-size: 0.875rem;
+    }
+    
+    .tip-item {
+        font-size: 0.8rem;
+    }
+}
+</style>
+
+<script>
+// Loading Overlay Functionality
+class LoadingManager {
+    constructor() {
+        this.currentStep = 1;
+        this.currentTip = 1;
+        this.totalSteps = 4;
+        this.totalTips = 4;
+        this.progress = 25;
+        this.startTime = null;
+        this.estimatedDuration = 300000; // 5 minutes in milliseconds
+        
+        this.init();
+    }
+    
+    init() {
+        // Initialize tip rotation
+        this.startTipRotation();
+        
+        // Setup cancel button
+        const cancelBtn = document.getElementById('cancelSimulationBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => this.handleCancel());
+        }
+    }
+    
+    show(message = 'Procesando simulación...') {
+        this.startTime = Date.now();
+        const overlay = document.getElementById('loadingOverlay');
+        const title = document.querySelector('.loading-title');
+        
+        if (overlay) {
+            overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        if (title) {
+            title.textContent = message;
+        }
+        
+        this.startProgressSimulation();
+        this.updateEstimatedTime();
+    }
+    
+    hide() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        
+        this.reset();
+    }
+    
+    startProgressSimulation() {
+        const interval = setInterval(() => {
+            if (this.progress >= 100) {
+                clearInterval(interval);
+                return;
+            }
+            
+            this.updateProgress();
+            this.updateSteps();
+            this.updateEstimatedTime();
+        }, 2000);
+    }
+    
+    updateProgress() {
+        this.progress = Math.min(this.progress + Math.random() * 15 + 5, 95);
+        
+        const progressBar = document.getElementById('loadingProgressBar');
+        const progressText = progressBar?.querySelector('.progress-text');
+        
+        if (progressBar) {
+            progressBar.style.width = this.progress + '%';
+            progressBar.setAttribute('aria-valuenow', this.progress);
+        }
+        
+        if (progressText) {
+            progressText.textContent = Math.round(this.progress) + '%';
+        }
+        
+        // Update steps based on progress
+        if (this.progress > 25 && this.currentStep < 2) {
+            this.advanceStep(2);
+        } else if (this.progress > 50 && this.currentStep < 3) {
+            this.advanceStep(3);
+        } else if (this.progress > 75 && this.currentStep < 4) {
+            this.advanceStep(4);
+        }
+    }
+    
+    advanceStep(stepNumber) {
+        // Mark previous step as completed
+        if (this.currentStep > 0) {
+            const prevStep = document.getElementById(`loadingStep${this.currentStep}`);
+            if (prevStep) {
+                prevStep.classList.remove('active');
+                prevStep.classList.add('completed');
+                
+                const icon = prevStep.querySelector('.step-icon');
+                if (icon) {
+                    icon.innerHTML = '<i class="bx bx-check"></i>';
+                }
+            }
+        }
+        
+        // Activate current step
+        const currentStep = document.getElementById(`loadingStep${stepNumber}`);
+        if (currentStep) {
+            currentStep.classList.add('active');
+            
+            const icon = currentStep.querySelector('.step-icon');
+            if (icon && stepNumber < this.totalSteps) {
+                icon.innerHTML = '<div class="step-spinner"></div>';
+            }
+        }
+        
+        this.currentStep = stepNumber;
+    }
+    
+    updateSteps() {
+        // This method can be expanded for more complex step logic
+    }
+    
+    startTipRotation() {
+        setInterval(() => {
+            this.rotateTips();
+        }, 4000);
+    }
+    
+    rotateTips() {
+        const currentTipEl = document.getElementById(`tip${this.currentTip}`);
+        if (currentTipEl) {
+            currentTipEl.classList.remove('active');
+        }
+        
+        this.currentTip = (this.currentTip % this.totalTips) + 1;
+        
+        const nextTipEl = document.getElementById(`tip${this.currentTip}`);
+        if (nextTipEl) {
+            nextTipEl.classList.add('active');
+        }
+    }
+    
+    updateEstimatedTime() {
+        if (!this.startTime) return;
+        
+        const elapsed = Date.now() - this.startTime;
+        const progressRatio = this.progress / 100;
+        const estimatedTotal = elapsed / progressRatio;
+        const remaining = Math.max(0, estimatedTotal - elapsed);
+        
+        const minutes = Math.ceil(remaining / 60000);
+        const timeText = minutes <= 1 ? 'menos de 1 minuto' : `${minutes} minutos`;
+        
+        const timeElement = document.getElementById('estimatedTime');
+        if (timeElement) {
+            timeElement.textContent = timeText;
+        }
+    }
+    
+    handleCancel() {
+        if (confirm('¿Está seguro de que desea cancelar la simulación en curso?')) {
+            // Send cancel request to server
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: 'cancel=true'
+            }).then(() => {
+                this.hide();
+                window.location.reload();
+            }).catch((error) => {
+                console.error('Error canceling simulation:', error);
+                this.hide();
+            });
+        }
+    }
+    
+    reset() {
+        this.currentStep = 1;
+        this.currentTip = 1;
+        this.progress = 25;
+        this.startTime = null;
+        
+        // Reset all steps
+        for (let i = 1; i <= this.totalSteps; i++) {
+            const step = document.getElementById(`loadingStep${i}`);
+            if (step) {
+                step.classList.remove('active', 'completed');
+                if (i === 1) {
+                    step.classList.add('active');
+                }
+            }
+        }
+        
+        // Reset progress bar
+        const progressBar = document.getElementById('loadingProgressBar');
+        if (progressBar) {
+            progressBar.style.width = '25%';
+        }
+    }
+}
+
+// Initialize loading manager
+const loadingManager = new LoadingManager();
+
+// Export for global use
+window.LoadingManager = LoadingManager;
+window.loadingManager = loadingManager;
+</script>

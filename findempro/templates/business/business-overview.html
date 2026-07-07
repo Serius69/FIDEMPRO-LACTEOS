@@ -1,0 +1,229 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{{ business.name }} - Detalles{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'libs/gridjs/dist/theme/mermaid.min.css' %}">
+<link rel="stylesheet" href="{% static 'libs/swiper/swiper-bundle.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/business-overview.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            {% block pagetitle %}
+            {% include "partials/page-title.html" with pagetitle="Negocio" title=business.name %}
+            {% endblock pagetitle %}
+
+            <div class="business-overview">
+                <!-- Business Profile Sidebar -->
+                <div class="business-profile">
+                    <div class="profile-card">
+                        <div class="profile-header">
+                            <div class="business-avatar">
+                                <img src="{{ business.get_photo_url }}" 
+                                     alt="{{ business.name }}"
+                                     class="business-image" />
+                            </div>
+                            
+                            <div class="business-info">
+                                <h1 class="business-name">{{ business.name }}</h1>
+                                <p class="business-date">Desde {{ business.date_created|date:"d M, Y" }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="business-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Propietario</span>
+                                <span class="detail-value">{{ business.owner_name }}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <span class="detail-label">Tipo de negocio</span>
+                                <span class="detail-value">{{ business.get_type_display }}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <span class="detail-label">Descripción</span>
+                                <span class="detail-value">
+                                    {% if business.description %}
+                                        {{ business.description }}
+                                    {% else %}
+                                        Sin descripción
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <span class="detail-label">Ubicación</span>
+                                <span class="detail-value">{{ business.location }}</span>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <span class="detail-label">Total productos</span>
+                                <span class="detail-value">{{ num_products }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-actions">
+                            <a href="{% url 'business:business.list' %}" class="btn btn-outline-primary">
+                                <i class="ri-arrow-left-line me-1"></i>Volver a la lista
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Section -->
+                <div class="products-section">
+                    <div class="products-card">
+                        <div class="products-header">
+                            <h2 class="products-title">Productos</h2>
+                            <a href="{% url 'product:product.create' %}" class="btn btn-success">
+                                <i class="ri-add-line me-1"></i>Agregar producto
+                            </a>
+                        </div>
+                        
+                        <div class="products-content">
+                            {% if products %}
+                                <div class="products-table-wrapper">
+                                    <table class="products-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Imagen</th>
+                                                <th>Producto</th>
+                                                <th>Tipo</th>
+                                                <th>Fecha creada</th>
+                                                <th>Estado</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for product in products %}
+                                            <tr class="product-row" data-product-id="{{ product.id }}">
+                                                <td class="product-image-cell">
+                                                    <img src="{{ product.get_photo_url }}"
+                                                         alt="{{ product.name }}" 
+                                                         class="product-image" />
+                                                </td>
+                                                <td class="product-name-cell">
+                                                    <h6 class="product-name">{{ product.name }}</h6>
+                                                </td>
+                                                <td class="product-type-cell">
+                                                    {{ product.get_type_display|default:product.type }}
+                                                </td>
+                                                <td class="product-date-cell">
+                                                    {{ product.date_created|date:"d M, Y" }}
+                                                </td>
+                                                <td class="product-status-cell">
+                                                    {% if product.is_active %}
+                                                        <span class="status-badge status-active">Activo</span>
+                                                    {% else %}
+                                                        <span class="status-badge status-inactive">Inactivo</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="product-actions-cell">
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-sm btn-light dropdown-toggle" 
+                                                                type="button" 
+                                                                data-bs-toggle="dropdown"
+                                                                aria-label="Acciones para {{ product.name }}">
+                                                            <i class="ri-more-2-fill"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                            <li>
+                                                                <a class="dropdown-item edit-product" 
+                                                                   href="#"
+                                                                   data-product-id="{{ product.id }}">
+                                                                    <i class="ri-pencil-fill me-2"></i>Editar
+                                                                </a>
+                                                            </li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li>
+                                                                <                                                                <a class="dropdown-item delete-product text-danger" 
+                                                                   href="#"
+                                                                   data-product-id="{{ product.id }}">
+                                                                    <i class="ri-delete-bin-fill me-2"></i>Eliminar
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Pagination -->
+                                {% if products.has_other_pages %}
+                                <nav class="products-pagination">
+                                    <ul class="pagination">
+                                        {% if products.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ products.previous_page_number }}">
+                                                    <i class="ri-arrow-left-s-line"></i>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                        
+                                        {% for num in products.paginator.page_range %}
+                                            {% if products.number == num %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ num }}</span>
+                                                </li>
+                                            {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if products.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ products.next_page_number }}">
+                                                    <i class="ri-arrow-right-s-line"></i>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                                {% endif %}
+                            {% else %}
+                                <div class="empty-products">
+                                    <lord-icon 
+                                        src="https://cdn.lordicon.com/msoeawqm.json" 
+                                        trigger="loop"
+                                        colors="primary:#405189,secondary:#0ab39c"
+                                        style="width:75px;height:75px">
+                                    </lord-icon>
+                                    <h5>No hay productos registrados</h5>
+                                    <p>Aún no has agregado productos a este negocio.</p>
+                                    <a href="{% url 'product:product.create' %}" class="btn btn-success">
+                                        <i class="ri-add-line me-1"></i>Agregar primer producto
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+
+<!-- Product Modals -->
+{% include "product/product-modal.html" %}
+{% endblock content %}
+
+{% block extra_js %}
+<script src="{% static 'libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+<script src="{% static 'libs/gridjs/dist/gridjs.umd.js' %}"></script>
+<script src="{% static 'libs/swiper/swiper-bundle.min.js' %}"></script>
+<script src="{% static 'js/business/business-overview.js' %}"></script>
+{% endblock extra_js %}

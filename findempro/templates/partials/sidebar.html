@@ -1,0 +1,192 @@
+{% load static %}
+
+{% block sidebar %}
+<!-- ========== App Menu ========== -->
+<div class="app-menu navbar-menu">
+    <!-- LOGO -->
+    <div class="navbar-brand-box">
+        {% include "components/_logo.html" %}
+        <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover" aria-label="Colapsar menú">
+            <i class="ri-record-circle-line" style="color: var(--text-muted);"></i>
+        </button>
+    </div>
+
+    <div id="scrollbar">
+        <div class="container-fluid">
+            <div id="two-column-menu">
+            </div>
+            <ul class="navbar-nav" id="navbar-nav">
+                <li class="menu-title"><span data-key="t-menu">Menu</span></li>
+
+                <!-- Dashboard Menu -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{% url 'dashboard:index' %}">
+                        <i class="las la-home"></i> <span data-key="t-home"> Inicio</span>
+                    </a>
+                </li>
+                
+                {% if user.is_authenticated %}
+                <!-- Dashboards Menu -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarDashboards" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarDashboards">
+                        <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Panel</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarDashboards">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'dashboard:dashboard.user' %}" class="nav-link" data-key="t-decision-support"> Apoyo a las decisiones</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <!-- Businesses Menu -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarBusiness" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarBusiness">
+                        <i class="las la-industry"></i><span data-key="t-pymes">Negocios</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarBusiness">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                 <a href="{% url 'business:business.list' %}" class="nav-link" data-key="t-list">Lista</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <!-- Products Menu -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarProducts" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarProducts">
+                        <i class="ri-layout-3-line"></i> <span data-key="t-products">Productos</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarProducts">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'product:product.list'%}" class="nav-link" data-key="t-list">Lista</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <!-- Variables Menu -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarVariables" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarVariables">
+                        <i class="ri-file-list-3-line"></i> <span data-key="t-variables">Variables</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarVariables">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'variable:variable.list' %}" class="nav-link" data-key="t-list">Lista</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <!-- Questionaries Menu -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarQuestionary" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarQuestionary">
+                        <i class="las la-chart-line"></i> <span data-key="t-simulate">Cuestionarios</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarQuestionary">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'questionary:questionary.main' %}" class="nav-link" data-key="t-questionary">Registrar datos mediante cuestionario</a>
+                            </li> 
+                            <li class="nav-item">
+                                <a href="{% url 'questionary:questionary.list' %}" class="nav-link" data-key="t-questionary">Lista</a>
+                            </li> 
+                        </ul>
+                    </div>
+                </li>
+                <!-- Simulate Menu -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarSimulate" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarSimulate">
+                        <i class="las la-chart-line"></i> <span data-key="t-simulate">Simulaciones</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarSimulate">
+                        <ul class="nav nav-sm flex-column">
+                            
+                            <li class="nav-item">
+                                <a href="{% url 'simulate:simulate.show' %}" class="nav-link" data-key="t-simulate-init">Realizar Simulacion con datos registrados</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'simulate:simulate.list' %}" class="nav-link" data-key="t-simulate-list">Lista de simulaciones</a>
+                            </li>                            
+                        </ul>
+                    </div>
+                </li>
+                {% if user.is_staff %}
+                <!-- Admin Menu -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarAdmin" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarAdmin">
+                        <i class="las la-leaf"></i> <span data-key="t-administrator">Administrador</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarAdmin">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'user:user.list' %}" class="nav-link" data-key="t-user-list">Lista de usuarios</a>
+                            </li>                             
+                        </ul>
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'dashboard:dashboard.admin' %}" class="nav-link" data-key="t-dashboard-admin"> Administrador del tablero</a>
+                            </li>                             
+                        </ul>
+                    </div> 
+                </li>
+                <!-- FinanceRecomendation Menu -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarAdmin" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarAdmin">
+                        <i class="las la-directions"></i> <span data-key="t-financial-decision">Recomendaciones Financieras</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarAdmin">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'finance:finance.list' %}" class="nav-link" data-key="t-list">Lista</a>
+                            </li>                             
+                        </ul>
+                    </div> 
+                </li>
+                {% endif %}
+                {% comment %} <!-- Reports Menu -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarReport" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarReport">
+                        <i class="las la-chart-pie"></i> <span data-key="t-reports">Informes</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarReport">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'report:report.list' %}" class="nav-link" data-key="t-list">Lista</a>
+                            </li>                             
+                        </ul>
+                    </div> 
+                </li> {% endcomment %}
+                {% comment %} <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarReport" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="sidebarReport">
+                        <i class="las la-chart-pie"></i> <span data-key="t-reports">Documentacion</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarReport">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="{% url 'documentation:demand' %}" class="nav-link" data-key="t-list">Como funciona el generador de demanda</a>
+                            </li>                             
+                        </ul>
+                    </div> 
+                </li>  {% endcomment %}
+                {% endif %}
+            </ul>
+        </div>
+        <!-- Sidebar -->
+    </div>
+    <div class="sidebar-background"></div>
+</div>
+<!-- Left Sidebar End -->
+<!-- Vertical Overlay-->
+<div class="vertical-overlay"></div>
+{% endblock sidebar %}

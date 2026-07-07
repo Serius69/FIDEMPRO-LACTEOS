@@ -1,0 +1,22 @@
+<!-- Validation Recommendations Component -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h5 class="alert-heading">
+                <i class="bx bx-bulb me-2"></i>
+                Recomendaciones basadas en la Validación
+            </h5>
+            <hr>
+            <div class="row">
+                {% for recommendation in validation_recommendations %}
+                <div class="col-md-6 mb-2">
+                    <div class="d-flex align-items-start">
+                        <i class="bx bx-check-circle text-info me-2 mt-1"></i>
+                        <p class="mb-0">{{ recommendation }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>

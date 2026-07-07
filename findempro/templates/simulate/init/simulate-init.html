@@ -1,0 +1,106 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Configuración de Simulación{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/joint.css' %}"> 
+<link rel="stylesheet" href="{% static 'libs/dropzone/dist/dropzone.css'%}" type="text/css" />
+<link rel="stylesheet" href="{% static 'libs/filepond/dist/filepond.min.css'%}" type="text/css" />
+<link rel="stylesheet" href="{% static 'libs/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css'%}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" integrity="sha512-Xr6mUq4Wt5T7Bw6FQPhZcY6wPo6nqmFTfZyU+7xFCTk3mAFLqvcgdbBj+Pf+v+KqDkIXwXQxCVeLwBl+KZ8k4g==" crossorigin="anonymous" />
+<link rel="stylesheet" href="{% static 'css/simulate-init.css' %}">
+{% endblock extra_css %}
+    
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            {% block pagetitle %}
+            {% include "partials/page-title.html" with pagetitle="Simulación" title="Configuración" %}
+            {% endblock pagetitle %}
+
+            <!-- Tutorial Overlay -->
+            {% include 'simulate/init/partials/tutorial_overlay.html' %}
+
+            <!-- Help Icon -->
+            <div class="help-icon" onclick="SimulationTutorial.start()" title="Ayuda" aria-label="Ayuda interactiva">
+                <i class="bx bx-help-circle"></i>
+            </div>
+
+            <!-- Header Section -->
+            {% include 'simulate/init/partials/header_section.html' %}
+
+            <!-- Loading Overlay -->
+            {% include 'simulate/init/partials/loading_overlay.html' %}
+
+            <!-- Error/Success Messages -->
+            <div id="messageContainer" class="message-container"></div>
+
+            <!-- Main Configuration Section -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card simulation-card">
+                        <div class="card-header">
+                            <h4 class="card-title mb-0">
+                                <i class="bx bx-cog me-2"></i>
+                                Parámetros de Simulación
+                            </h4>
+                            <p class="text-muted mt-2">Configure los parámetros necesarios para ejecutar la simulación</p>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Configuration Form -->
+                                <div class="col-lg-6">
+                                    {% if not started %}
+                                        {% include 'simulate/init/partials/configuration_form.html' %}
+                                        {% include 'simulate/init/partials/demand_history_table.html' %}
+                                    {% endif %}
+                                </div>
+
+                                <!-- Model Summary -->
+                                <div class="col-lg-6">
+                                    {% if questionary_result_instance %}
+                                        {% include 'simulate/init/partials/model_summary.html' %}
+                                    {% else %}
+                                        {% include 'simulate/init/partials/pending_configuration.html' %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Areas Section -->
+            {% if areas %}
+                {% include 'simulate/init/partials/areas_section.html' %}
+            {% endif %}
+
+            <!-- Cancel Simulation -->
+            {% if started %}
+                {% include 'simulate/init/partials/simulation_progress.html' %}
+            {% endif %}
+
+        </div>
+    </div>
+
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>       
+<script src="{% static 'js/pages/joint.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+<script src="{% static 'libs/dropzone/dist/dropzone-min.js'%}"></script>
+<script src="{% static 'js/simulate/simulation-core.js' %}"></script>
+<script src="{% static 'js/simulate/simulation-tutorial.js' %}"></script>
+<script src="{% static 'js/simulate/simulation-forms.js' %}"></script>
+<script src="{% static 'js/simulate/simulation-charts.js' %}"></script>
+<script src="{% static 'js/simulate/simulation-utils.js' %}"></script>
+{% endblock extra_js %}

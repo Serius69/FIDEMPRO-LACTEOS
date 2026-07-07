@@ -1,0 +1,59 @@
+<!-- Operations Tab Charts -->
+<div class="row">
+    <!-- Costos Operativos -->
+    <div class="col-md-6 mb-4">
+        {% with chart_icon="bx-package" chart_title="Costos Operativos" chart_data=image_data_5 chart_filename="costos-operativos.png" chart_alt="Costos operativos" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    
+    <!-- Producción vs Ventas -->
+    <div class="col-md-6 mb-4">
+        {% with chart_icon="bx-box" chart_title="Producción vs Ventas" chart_data=image_data_6 chart_filename="produccion-ventas.png" chart_alt="Producción vs Ventas" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    
+    <!-- Costos Promedio -->
+    <div class="col-12 mb-4">
+        {% with chart_icon="bx-dollar-circle" chart_title="Costos Promedio" chart_data=image_data_7 chart_filename="costos-promedio.png" chart_alt="Costos promedio" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    
+    <!-- Recursos Humanos -->
+    {% if image_data_9 %}
+    <div class="col-md-6">
+        {% with chart_icon="bx-group" chart_title="Análisis de Recursos Humanos" chart_data=image_data_9 chart_filename="recursos-humanos.png" chart_alt="Análisis de Recursos Humanos" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    {% endif %}
+    
+    <!-- Estructura de Costos -->
+    {% if image_data_10 %}
+    <div class="col-md-6">
+        {% with chart_icon="bx-pie-chart-alt" chart_title="Estructura de Costos" chart_data=image_data_10 chart_filename="estructura-costos.png" chart_alt="Estructura de Costos" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    {% endif %}
+    
+    <!-- Precio vs Ventas -->
+    {% if image_data_11 %}
+    <div class="col-md-6">
+        {% with chart_icon="bx-scatter-chart" chart_title="Correlación Precio vs Ventas" chart_data=image_data_11 chart_filename="precio-ventas.png" chart_alt="Correlación Precio vs Ventas" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    {% endif %}
+    
+    <!-- Indicadores Financieros -->
+    {% if image_data_12 %}
+    <div class="col-md-6">
+        {% with chart_icon="bx-bar-chart-alt" chart_title="Indicadores Financieros Clave" chart_data=image_data_12 chart_filename="indicadores-financieros.png" chart_alt="Indicadores Financieros" %}
+            {% include "components/charts/chart-template.html" %}
+        {% endwith %}
+    </div>
+    {% endif %}
+</div>

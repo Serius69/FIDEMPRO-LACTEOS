@@ -1,0 +1,582 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Crear Reporte de Simulación{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/create-simulation-report.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Loading Overlay -->
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading-content">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">Procesando simulación...</p>
+                </div>
+            </div>
+
+            <!-- Page Header -->
+            <div class="page-header-section">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="page-title-box">
+                            <h4 class="page-title">Crear Reporte de Simulación</h4>
+                            <div class="breadcrumb-wrapper">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item">
+                                        <a href="{% url 'report:report.list' %}">Reportes</a>
+                                    </li>
+                                    <li class="breadcrumb-item active">Nueva Simulación</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header Section -->
+            <div class="simulation-form-header">
+                <div class="header-content">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="header-title">📈 Nueva Simulación Financiera</h2>
+                            <p class="header-subtitle">Configure los parámetros para generar un reporte de simulación detallado con análisis avanzado</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <i class="header-icon ri-line-chart-line"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="progress-section">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="formProgress"></div>
+                        </div>
+                        <small class="progress-label">Progreso del formulario</small>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" id="simulationForm" novalidate>
+                {% csrf_token %}
+                
+                <div class="form-layout">
+                    <!-- Left Column - Parameters -->
+                    <div class="form-left-column">
+                        
+                        <!-- Product Selection -->
+                        <div class="form-section" data-section="product">
+                            <div class="section-header">
+                                <div class="section-icon-wrapper">
+                                    <div class="section-icon bg-primary-subtle text-primary">
+                                        <i class="ri-product-hunt-line"></i>
+                                    </div>
+                                </div>
+                                <div class="section-title-wrapper">
+                                    <h5 class="section-title">Selección de Producto</h5>
+                                    <small class="section-subtitle">Elija el producto para la simulación</small>
+                                </div>
+                                <div class="validation-indicator" id="productValidation"></div>
+                            </div>
+                            
+                            <div class="section-content">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="field-group">
+                                            <label for="{{ form.product.id_for_label }}" class="field-label">
+                                                {% if form.product.label %}{{ form.product.label }}{% else %}Producto{% endif %} <span class="required-asterisk">*</span>
+                                                <i class="ri-information-line help-tooltip" 
+                                                   title="{% if form.product.help_text %}{{ form.product.help_text }}{% else %}Seleccione el producto a analizar{% endif %}"></i>
+                                            </label>
+                                            {{ form.product }}
+                                            <div class="error-message" id="productError">
+                                                {% if form.product.errors %}{{ form.product.errors.0 }}{% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="field-group">
+                                            <label for="{{ form.tipo_simulacion.id_for_label }}" class="field-label">
+                                                {% if form.tipo_simulacion.label %}{{ form.tipo_simulacion.label }}{% else %}Tipo de Simulación{% endif %}
+                                                <i class="ri-information-line help-tooltip" 
+                                                   title="Seleccione el tipo de análisis que desea realizar"></i>
+                                            </label>
+                                            {{ form.tipo_simulacion }}
+                                            <div class="error-message" id="tipoError">
+                                                {% if form.tipo_simulacion.errors %}{{ form.tipo_simulacion.errors.0 }}{% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Product Cards Display -->
+                                <div class="product-cards-container" id="productCards">
+                                    <div class="row">
+                                        {% for product in products %}
+                                            <div class="col-md-6 mb-2">
+                                                <div class="product-card" data-product-id="{{ product.id }}" onclick="selectProduct({{ product.id }})">
+                                                    <div class="product-card-content">
+                                                        <div class="product-icon">
+                                                            <div class="avatar-xs">
+                                                                <span class="avatar-title rounded bg-primary-subtle text-primary">
+                                                                    <i class="ri-product-hunt-line"></i>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="product-info">
+                                                            <h6 class="product-name">
+                                                                {% if product.name %}{{ product.name }}{% else %}Producto sin nombre{% endif %}
+                                                            </h6>
+                                                            <small class="product-id">ID: {{ product.id }}</small>
+                                                            {% if product.description %}
+                                                                <p class="product-description">{{ product.description|truncatechars:50 }}</p>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% empty %}
+                                            <div class="col-12">
+                                                <div class="empty-products-alert">
+                                                    <div class="alert alert-warning">
+                                                        <i class="ri-alert-line me-2"></i>
+                                                        No hay productos disponibles. 
+                                                        <a href="#" class="alert-link">Crear nuevo producto</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Market Parameters -->
+                        <div class="form-section" data-section="market">
+                            <div class="section-header">
+                                <div class="section-icon-wrapper">
+                                    <div class="section-icon bg-success-subtle text-success">
+                                        <i class="ri-line-chart-line"></i>
+                                    </div>
+                                </div>
+                                <div class="section-title-wrapper">
+                                    <h5 class="section-title">Parámetros de Mercado</h5>
+                                    <small class="section-subtitle">Configure la demanda y proyecciones de crecimiento</small>
+                                </div>
+                                <div class="validation-indicator" id="marketValidation"></div>
+                            </div>
+                            
+                            <div class="section-content">
+                                <div class="parameter-group">
+                                    <h6 class="parameter-group-title">
+                                        <i class="ri-trending-up-line me-2"></i>
+                                        Demanda y Crecimiento
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="field-group">
+                                                <label for="{{ form.demanda_inicial.id_for_label }}" class="field-label">
+                                                    {% if form.demanda_inicial.label %}{{ form.demanda_inicial.label }}{% else %}Demanda Inicial{% endif %} <span class="required-asterisk">*</span>
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.demanda_inicial.help_text %}{{ form.demanda_inicial.help_text }}{% else %}Cantidad inicial de demanda esperada{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    {{ form.demanda_inicial }}
+                                                    <span class="input-group-text">unidades/mes</span>
+                                                </div>
+                                                <div class="error-message" id="demandaError">
+                                                    {% if form.demanda_inicial.errors %}{{ form.demanda_inicial.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="field-group">
+                                                <label for="{{ form.tasa_crecimiento.id_for_label }}" class="field-label">
+                                                    {% if form.tasa_crecimiento.label %}{{ form.tasa_crecimiento.label }}{% else %}Tasa de Crecimiento{% endif %}
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.tasa_crecimiento.help_text %}{{ form.tasa_crecimiento.help_text }}{% else %}Porcentaje de crecimiento mensual esperado{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    {{ form.tasa_crecimiento }}
+                                                    <span class="input-group-text">% mensual</span>
+                                                </div>
+                                                <div class="error-message" id="crecimientoError">
+                                                    {% if form.tasa_crecimiento.errors %}{{ form.tasa_crecimiento.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="field-group">
+                                                <label for="{{ form.horizonte.id_for_label }}" class="field-label">
+                                                    {% if form.horizonte.label %}{{ form.horizonte.label }}{% else %}Horizonte de Tiempo{% endif %} <span class="required-asterisk">*</span>
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.horizonte.help_text %}{{ form.horizonte.help_text }}{% else %}Período de análisis en meses{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    {{ form.horizonte }}
+                                                    <span class="input-group-text">meses</span>
+                                                </div>
+                                                <div class="error-message" id="horizonteError">
+                                                    {% if form.horizonte.errors %}{{ form.horizonte.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financial Parameters -->
+                        <div class="form-section" data-section="financial">
+                            <div class="section-header">
+                                <div class="section-icon-wrapper">
+                                    <div class="section-icon bg-warning-subtle text-warning">
+                                        <i class="ri-money-dollar-circle-line"></i>
+                                    </div>
+                                </div>
+                                <div class="section-title-wrapper">
+                                    <h5 class="section-title">Parámetros Financieros</h5>
+                                    <small class="section-subtitle">Defina precios, costos e inversiones</small>
+                                </div>
+                                <div class="validation-indicator" id="financialValidation"></div>
+                            </div>
+                            
+                            <div class="section-content">
+                                <div class="parameter-group">
+                                    <h6 class="parameter-group-title">
+                                        <i class="ri-price-tag-3-line me-2"></i>
+                                        Precios y Costos
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="field-group">
+                                                <label for="{{ form.precio_unitario.id_for_label }}" class="field-label">
+                                                    {% if form.precio_unitario.label %}{{ form.precio_unitario.label }}{% else %}Precio Unitario{% endif %} <span class="required-asterisk">*</span>
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.precio_unitario.help_text %}{{ form.precio_unitario.help_text }}{% else %}Precio de venta por unidad{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    {{ form.precio_unitario }}
+                                                </div>
+                                                <div class="error-message" id="precioError">
+                                                    {% if form.precio_unitario.errors %}{{ form.precio_unitario.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="field-group">
+                                                <label for="{{ form.costo_unitario.id_for_label }}" class="field-label">
+                                                    {% if form.costo_unitario.label %}{{ form.costo_unitario.label }}{% else %}Costo Unitario{% endif %} <span class="required-asterisk">*</span>
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.costo_unitario.help_text %}{{ form.costo_unitario.help_text }}{% else %}Costo de producción por unidad{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    {{ form.costo_unitario }}
+                                                </div>
+                                                <div class="error-message" id="costoError">
+                                                    {% if form.costo_unitario.errors %}{{ form.costo_unitario.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Margin Indicator -->
+                                    <div class="margin-info-container">
+                                        <div class="alert alert-info margin-info" id="marginInfo">
+                                            <small>
+                                                <strong>Margen Unitario:</strong> <span id="marginValue">$0.00</span> | 
+                                                <strong>Margen %:</strong> <span id="marginPercent">0%</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="parameter-group">
+                                    <h6 class="parameter-group-title">
+                                        <i class="ri-wallet-3-line me-2"></i>
+                                        Gastos e Inversión
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="field-group">
+                                                <label for="{{ form.gastos_fijos.id_for_label }}" class="field-label">
+                                                    {% if form.gastos_fijos.label %}{{ form.gastos_fijos.label }}{% else %}Gastos Fijos{% endif %}
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.gastos_fijos.help_text %}{{ form.gastos_fijos.help_text }}{% else %}Gastos fijos mensuales{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    {{ form.gastos_fijos }}
+                                                    <span class="input-group-text">/mes</span>
+                                                </div>
+                                                <div class="error-message" id="gastosError">
+                                                    {% if form.gastos_fijos.errors %}{{ form.gastos_fijos.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="field-group">
+                                                <label for="{{ form.inversion_inicial.id_for_label }}" class="field-label">
+                                                    {% if form.inversion_inicial.label %}{{ form.inversion_inicial.label }}{% else %}Inversión Inicial{% endif %}
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="{% if form.inversion_inicial.help_text %}{{ form.inversion_inicial.help_text }}{% else %}Inversión requerida para iniciar{% endif %}"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    {{ form.inversion_inicial }}
+                                                </div>
+                                                <div class="error-message" id="inversionError">
+                                                    {% if form.inversion_inicial.errors %}{{ form.inversion_inicial.errors.0 }}{% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Options -->
+                        <div class="form-section" data-section="advanced">
+                            <div class="section-header">
+                                <div class="section-icon-wrapper">
+                                    <div class="section-icon bg-info-subtle text-info">
+                                        <i class="ri-settings-3-line"></i>
+                                    </div>
+                                </div>
+                                <div class="section-title-wrapper">
+                                    <h5 class="section-title">Opciones Avanzadas</h5>
+                                    <small class="section-subtitle">Configuraciones adicionales y análisis</small>
+                                </div>
+                                <button type="button" class="btn btn-outline-info btn-sm" id="toggleAdvanced">
+                                    <i class="ri-arrow-down-s-line me-1"></i>
+                                    Mostrar
+                                </button>
+                            </div>
+                            
+                            <div class="advanced-options" id="advancedOptions">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch mb-3">
+                                            {{ form.incluir_graficas }}
+                                            <label class="form-check-label field-label" for="{{ form.incluir_graficas.id_for_label }}">
+                                                {% if form.incluir_graficas.label %}{{ form.incluir_graficas.label }}{% else %}Incluir Gráficas{% endif %}
+                                            </label>
+                                            <div class="form-text">
+                                                {% if form.incluir_graficas.help_text %}{{ form.incluir_graficas.help_text }}{% else %}Generar gráficas en el reporte{% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch mb-3">
+                                            {{ form.incluir_analisis_sensibilidad }}
+                                            <label class="form-check-label field-label" for="{{ form.incluir_analisis_sensibilidad.id_for_label }}">
+                                                {% if form.incluir_analisis_sensibilidad.label %}{{ form.incluir_analisis_sensibilidad.label }}{% else %}Análisis de Sensibilidad{% endif %}
+                                            </label>
+                                            <div class="form-text">
+                                                {% if form.incluir_analisis_sensibilidad.help_text %}{{ form.incluir_analisis_sensibilidad.help_text }}{% else %}Incluir análisis de sensibilidad{% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Additional Advanced Parameters -->
+                                <div class="parameter-group">
+                                    <h6 class="parameter-group-title">
+                                        <i class="ri-calculator-line me-2"></i>
+                                        Parámetros Adicionales
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="field-group">
+                                                <label class="field-label">
+                                                    Tasa de Descuento
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="Tasa utilizada para calcular el VAN"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" id="tasaDescuento" 
+                                                           value="12" min="0" max="100" step="0.1">
+                                                    <span class="input-group-text">% anual</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="field-group">
+                                                <label class="field-label">
+                                                    Inflación Esperada
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="Tasa de inflación anual esperada"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" id="inflacion" 
+                                                           value="5" min="0" max="50" step="0.1">
+                                                    <span class="input-group-text">% anual</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="field-group">
+                                                <label class="field-label">
+                                                    Impuestos
+                                                    <i class="ri-information-line help-tooltip" 
+                                                       title="Tasa de impuestos sobre utilidades"></i>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" id="impuestos" 
+                                                           value="30" min="0" max="100" step="0.1">
+                                                    <span class="input-group-text">%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Preview and Actions -->
+                    <div class="form-right-column">
+                        <!-- Live Preview -->
+                        <div class="preview-section">
+                            <div class="section-header">
+                                <div class="section-icon-wrapper">
+                                    <div class="section-icon bg-primary-subtle text-primary">
+                                        <i class="ri-eye-line"></i>
+                                    </div>
+                                </div>
+                                <div class="section-title-wrapper">
+                                    <h5 class="section-title">Vista Previa en Tiempo Real</h5>
+                                    <small class="section-subtitle">Resultados calculados automáticamente</small>
+                                </div>
+                            </div>
+                            
+                            <div class="preview-content">
+                                <h6 class="preview-content-title">
+                                    <i class="ri-calculator-line me-2"></i>
+                                    Métricas Principales
+                                </h6>
+                                
+                                <div class="preview-metrics" id="previewContent">
+                                    <div class="preview-metric neutral" id="marginMetric">
+                                        <div class="metric-content">
+                                            <small class="metric-label">Margen por Unidad:</small>
+                                            <span class="metric-value" id="preview-margin">$0.00</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="preview-metric neutral" id="breakEvenMetric">
+                                        <div class="metric-content">
+                                            <small class="metric-label">Punto de Equilibrio:</small>
+                                            <span class="metric-value" id="preview-break-even">0 unidades</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="preview-metric neutral" id="roiMetric">
+                                        <div class="metric-content">
+                                            <small class="metric-label">ROI Mensual:</small>
+                                            <span class="metric-value" id="preview-roi">0.00%</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="preview-metric neutral" id="profitMetric">
+                                        <div class="metric-content">
+                                            <small class="metric-label">Utilidad Neta (Mes 1):</small>
+                                            <span class="metric-value" id="preview-profit">$0.00</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="preview-metric neutral" id="paybackMetric">
+                                        <div class="metric-content">
+                                            <small class="metric-label">Período de Recuperación:</small>
+                                            <span class="metric-value" id="preview-payback">∞ meses</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Risk Assessment -->
+                                <div class="risk-assessment">
+                                    <h6 class="risk-title">
+                                        <i class="ri-shield-check-line me-2"></i>
+                                        Evaluación de Riesgo
+                                    </h6>
+                                    <div class="risk-bar-container">
+                                        <div class="risk-progress">
+                                            <div class="risk-progress-bar" id="riskBar"></div>
+                                        </div>
+                                        <span class="risk-level" id="riskLevel">Medio</span>
+                                    </div>
+                                    <small class="risk-description" id="riskDescription">Evaluando parámetros...</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="actions-section">
+                            <h5 class="actions-title">
+                                <i class="ri-play-circle-line text-warning me-2"></i>
+                                Ejecutar Simulación
+                            </h5>
+                            <div class="actions-grid">
+                                <button type="submit" class="btn btn-primary btn-lg submit-btn" id="submitBtn">
+                                    <i class="ri-rocket-line me-2"></i>
+                                    <span id="submitText">Generar Simulación</span>
+                                </button>
+                                <a href="{% url 'report:report.list' %}" class="btn btn-outline-secondary">
+                                    <i class="ri-arrow-left-line me-2"></i>
+                                    Volver a Lista
+                                </a>
+                                <button type="button" class="btn btn-outline-info" id="validateForm">
+                                    <i class="ri-check-line me-2"></i>
+                                    Validar Parámetros
+                                </button>
+                                <button type="button" class="btn btn-outline-warning" id="resetForm">
+                                    <i class="ri-refresh-line me-2"></i>
+                                    Restaurar Valores
+                                </button>
+                            </div>
+                            
+                            <!-- Form Validation Summary -->
+                            <div class="validation-summary">
+                                <div class="success-message" id="validationSuccess">
+                                    <i class="ri-check-circle-line me-2"></i>
+                                    <span id="successText">Formulario válido</span>
+                                </div>
+                                <div class="error-message" id="validationErrors">
+                                    <i class="ri-error-warning-line me-2"></i>
+                                    <div id="errorList"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Global Errors -->
+                {% if form.non_field_errors %}
+                    <div class="global-errors-section">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="alert alert-danger">
+                                    <h6><i class="ri-error-warning-line me-2"></i>Errores en el formulario:</h6>
+                                    {% for error in form.non_field_errors %}
+                                        <p class="mb-0">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/create-simulation-report.js' %}"></script>
+{% endblock %}

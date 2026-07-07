@@ -1,0 +1,635 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}Lista de Reportes{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/report-list.css' %}">
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            
+            <!-- Page Title -->
+            {% block pagetitle %}
+                {% include "partials/page-title.html" with pagetitle="Reportes" title="Lista de Reportes" %}
+            {% endblock pagetitle %}
+
+            <!-- Enhanced Header Section -->
+            <div class="report-header-section">
+                <div class="header-content">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="header-title">📊 Centro de Reportes</h2>
+                            <p class="header-subtitle">Gestiona, analiza y comparte todos tus reportes de simulación financiera</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="header-stats">
+                                <div class="stat-label">Total de reportes</div>
+                                <div class="stat-value">
+                                    {% if total_reports %}{{ total_reports }}{% else %}0{% endif %}
+                                </div>
+                                <div class="stat-sub">
+                                    Último: {% if reports.0.date_created %}{{ reports.0.date_created|date:"d/m/Y" }}{% else %}No disponible{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary-subtle text-primary">
+                        <i class="ri-file-text-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value text-primary">
+                            {% if total_reports %}{{ total_reports }}{% else %}0{% endif %}
+                        </div>
+                        <div class="stat-label">Total Reportes</div>
+                        {% if stats.recent_reports %}
+                            <div class="stat-change positive">
+                                <i class="ri-arrow-up-line me-1"></i>
+                                +{{ stats.recent_reports }} esta semana
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bg-success-subtle text-success">
+                        <i class="ri-check-circle-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value text-success">
+                            {% if stats.active_reports %}{{ stats.active_reports }}{% else %}0{% endif %}
+                        </div>
+                        <div class="stat-label">Reportes Activos</div>
+                        <div class="stat-change">
+                            {% if stats.active_reports %}{{ stats.active_reports }}{% else %}0{% endif %} de 
+                            {% if total_reports %}{{ total_reports }}{% else %}0{% endif %} activos
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bg-info-subtle text-info">
+                        <i class="ri-time-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value text-info">
+                            {% if reports.paginator.count %}{{ reports.paginator.count }}{% else %}0{% endif %}
+                        </div>
+                        <div class="stat-label">En esta Vista</div>
+                        <div class="stat-change">
+                            Página {% if reports.number %}{{ reports.number }}{% else %}1{% endif %} de 
+                            {% if reports.paginator.num_pages %}{{ reports.paginator.num_pages }}{% else %}1{% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning-subtle text-warning">
+                        <i class="ri-line-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value text-warning">
+                            {% if stats.top_products %}{{ stats.top_products|length }}{% else %}0{% endif %}
+                        </div>
+                        <div class="stat-label">Productos Analizados</div>
+                        {% if stats.top_products.0 %}
+                            <div class="stat-change">
+                                Más usado: {{ stats.top_products.0.fk_product__name|truncatechars:15 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Filters Section -->
+            <div class="filters-section no-print">
+                <div class="row align-items-end">
+                    <div class="col-md-6">
+                        <div class="filter-group">
+                            <label class="form-label filter-label">
+                                <i class="ri-search-line me-2"></i>Buscar Reportes
+                            </label>
+                            <div class="search-bar">
+                                <form method="GET" id="searchForm">
+                                    <i class="ri-search-line search-icon"></i>
+                                    <input 
+                                        type="text" 
+                                        class="form-control search-input" 
+                                        placeholder="Buscar por título, producto, contenido..." 
+                                        name="search" 
+                                        value="{% if search_query %}{{ search_query }}{% endif %}"
+                                        id="searchInput"
+                                        autocomplete="off"
+                                    >
+                                    <!-- Hidden fields to preserve other filters -->
+                                    <input type="hidden" name="type" value="{% if filter_type %}{{ filter_type }}{% endif %}">
+                                    <input type="hidden" name="status" value="{% if filter_status %}{{ filter_status }}{% endif %}">
+                                    <input type="hidden" name="sort" value="{% if sort_by %}{{ sort_by }}{% endif %}">
+                                </form>
+                                <div class="search-suggestions" id="searchSuggestions"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="filter-group">
+                                    <label class="form-label filter-label">Tipo</label>
+                                    <select class="form-select" name="type" id="typeFilter">
+                                        <option value="">Todos los tipos</option>
+                                        <option value="simulation" {% if filter_type == 'simulation' %}selected{% endif %}>Simulación</option>
+                                        <option value="analysis" {% if filter_type == 'analysis' %}selected{% endif %}>Análisis</option>
+                                        <option value="general" {% if filter_type == 'general' %}selected{% endif %}>General</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="filter-group">
+                                    <label class="form-label filter-label">Estado</label>
+                                    <select class="form-select" name="status" id="statusFilter">
+                                        <option value="">Todos</option>
+                                        <option value="active" {% if filter_status == 'active' %}selected{% endif %}>Activos</option>
+                                        <option value="inactive" {% if filter_status == 'inactive' %}selected{% endif %}>Inactivos</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="filter-group">
+                                    <label class="form-label filter-label">Ordenar</label>
+                                    <select class="form-select" name="sort" id="sortFilter">
+                                        <option value="-date_created" {% if sort_by == '-date_created' %}selected{% endif %}>Más recientes</option>
+                                        <option value="date_created" {% if sort_by == 'date_created' %}selected{% endif %}>Más antiguos</option>
+                                        <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Título A-Z</option>
+                                        <option value="-title" {% if sort_by == '-title' %}selected{% endif %}>Título Z-A</option>
+                                        <option value="-last_updated" {% if sort_by == '-last_updated' %}selected{% endif %}>Actualizados</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Filters -->
+                <div class="quick-filters">
+                    <span class="quick-filters-label">Filtros rápidos:</span>
+                    <a href="?status=active" class="quick-filter {% if filter_status == 'active' %}active{% endif %}">
+                        <i class="ri-check-circle-line me-1"></i>Activos
+                    </a>
+                    <a href="?type=simulation" class="quick-filter {% if filter_type == 'simulation' %}active{% endif %}">
+                        <i class="ri-line-chart-line me-1"></i>Simulaciones
+                    </a>
+                    <a href="?sort=-date_created" class="quick-filter {% if sort_by == '-date_created' %}active{% endif %}">
+                        <i class="ri-time-line me-1"></i>Recientes
+                    </a>
+                    <a href="?" class="quick-filter {% if not search_query and not filter_type and not filter_status %}active{% endif %}">
+                        <i class="ri-refresh-line me-1"></i>Limpiar filtros
+                    </a>
+                </div>
+            </div>
+
+            <!-- Bulk Actions -->
+            <div class="bulk-actions" id="bulkActions">
+                <div class="bulk-actions-content">
+                    <div class="bulk-actions-left">
+                        <strong><span id="selectedCount">0</span> reportes seleccionados</strong>
+                    </div>
+                    <div class="bulk-actions-right">
+                        <button class="bulk-action-btn" onclick="bulkAction('activate')">
+                            <i class="ri-check-circle-line me-1"></i>Activar
+                        </button>
+                        <button class="bulk-action-btn" onclick="bulkAction('deactivate')">
+                            <i class="ri-close-circle-line me-1"></i>Desactivar
+                        </button>
+                        <button class="bulk-action-btn" onclick="bulkExport()">
+                            <i class="ri-download-line me-1"></i>Exportar
+                        </button>
+                        <button class="bulk-action-btn danger" onclick="bulkAction('delete')">
+                            <i class="ri-delete-bin-line me-1"></i>Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Card -->
+            <div class="main-card">
+                <div class="card-header-enhanced">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h4 class="card-title">
+                                <i class="ri-file-list-3-line me-2 text-primary"></i>
+                                Lista de Reportes
+                            </h4>
+                            <small class="card-subtitle">
+                                {% if search_query %}
+                                    {% if reports.paginator.count %}{{ reports.paginator.count }}{% else %}0{% endif %} 
+                                    resultado{% if reports.paginator.count != 1 %}s{% endif %} para "{{ search_query }}"
+                                {% else %}
+                                    {% if reports.paginator.count %}{{ reports.paginator.count }}{% else %}0{% endif %} 
+                                    reporte{% if reports.paginator.count != 1 %}s{% endif %} encontrado{% if reports.paginator.count != 1 %}s{% endif %}
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card-actions">
+                                <!-- View Toggle -->
+                                <div class="view-toggle">
+                                    <button class="view-toggle-btn active" data-view="table">
+                                        <i class="ri-list-check"></i>
+                                    </button>
+                                    <button class="view-toggle-btn" data-view="grid">
+                                        <i class="ri-grid-line"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Export Dropdown -->
+                                <div class="export-dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" onclick="toggleExportMenu()">
+                                        <i class="ri-download-line me-1"></i>Exportar
+                                    </button>
+                                    <div class="export-menu" id="exportMenu">
+                                        <a href="?format=csv" class="export-menu-item">
+                                            <i class="ri-file-text-line me-2"></i>CSV
+                                        </a>
+                                        <a href="?format=excel" class="export-menu-item">
+                                            <i class="ri-file-excel-line me-2"></i>Excel
+                                        </a>
+                                        <a href="#" onclick="printReports()" class="export-menu-item">
+                                            <i class="ri-printer-line me-2"></i>Imprimir
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <a href="{% url 'report:report.create' %}" class="btn btn-primary">
+                                    <i class="ri-add-line me-1"></i>Nuevo Reporte
+                                </a>
+                                <a href="{% url 'report:simulation.create' %}" class="btn btn-success">
+                                    <i class="ri-line-chart-line me-1"></i>Nueva Simulación
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table View -->
+                <div class="table-view active" id="tableView">
+                    <div class="table-responsive">
+                        <table class="table table-enhanced">
+                            <thead>
+                                <tr>
+                                    <th class="border-0 select-column">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAll">
+                                        </div>
+                                    </th>
+                                    <th class="border-0 sortable" data-sort="title">Reporte</th>
+                                    <th class="border-0 sortable" data-sort="product">Producto</th>
+                                    <th class="border-0 sortable" data-sort="type">Tipo</th>
+                                    <th class="border-0 sortable" data-sort="date_created">Fecha</th>
+                                    <th class="border-0 sortable" data-sort="status">Estado</th>
+                                    <th class="border-0 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in reports %}
+                                    <tr data-report-id="{{ report.id }}">
+                                        <td>
+                                            <div class="form-check">
+                                                <input class="form-check-input report-checkbox" type="checkbox" value="{{ report.id }}">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="report-card">
+                                                <div class="report-avatar bg-primary-subtle text-primary">
+                                                    <i class="ri-file-text-line"></i>
+                                                </div>
+                                                <div class="report-content">
+                                                    <div class="report-title">
+                                                        <a href="{% url 'report:report.detail' report.pk %}" class="text-decoration-none">
+                                                            {% if report.title %}{{ report.title }}{% else %}Reporte sin título{% endif %}
+                                                        </a>
+                                                    </div>
+                                                    <div class="report-summary">
+                                                        {% if report.content_summary %}{{ report.content_summary }}{% else %}Sin descripción disponible{% endif %}
+                                                    </div>
+                                                    <div class="report-badges">
+                                                        {% if report.is_recent %}
+                                                            <span class="report-badge badge-new">Nuevo</span>
+                                                        {% endif %}
+                                                        {% if report.fk_product %}
+                                                            <span class="report-badge badge-product">{{ report.fk_product.name|truncatechars:20 }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if report.fk_product %}
+                                                <div class="product-info">
+                                                    <div class="avatar-xs me-2">
+                                                        <span class="avatar-title rounded bg-info-subtle text-info">
+                                                            <i class="ri-product-hunt-line"></i>
+                                                        </span>
+                                                    </div>
+                                                    <div class="product-details">
+                                                        <div class="product-name">{{ report.fk_product.name }}</div>
+                                                        <small class="product-id">ID: {{ report.fk_product.id }}</small>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">Sin producto</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="report-badge badge-type">
+                                                {% if report.get_report_type_display %}{{ report.get_report_type_display }}{% else %}General{% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="date-info">
+                                                <div class="date-main">
+                                                    {% if report.date_created %}{{ report.date_created|date:"d/m/Y" }}{% else %}No disponible{% endif %}
+                                                </div>
+                                                <small class="date-time">
+                                                    {% if report.date_created %}{{ report.date_created|date:"H:i" }}{% else %}--:--{% endif %}
+                                                </small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="report-badge {% if report.is_active %}badge-status-active{% else %}badge-status-inactive{% endif %}">
+                                                <i class="ri-{% if report.is_active %}check{% else %}close{% endif %}-circle-line me-1"></i>
+                                                {% if report.is_active %}Activo{% else %}Inactivo{% endif %}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="action-buttons">
+                                                <a href="{% url 'report:report.detail' report.pk %}" 
+                                                   class="action-btn view" 
+                                                   title="Ver detalles">
+                                                    <i class="ri-eye-line"></i>
+                                                </a>
+                                                <a href="{% url 'report:report.update' report.pk %}" 
+                                                   class="action-btn edit" 
+                                                   title="Editar">
+                                                    <i class="ri-edit-line"></i>
+                                                </a>
+                                                <button type="button"
+                                                        class="action-btn download pdf-gen-btn"
+                                                        title="Generar y descargar PDF"
+                                                        data-report-id="{{ report.pk }}"
+                                                        onclick="requestPdf({{ report.pk }}, this)">
+                                                    <i class="ri-file-pdf-line"></i>
+                                                </button>
+                                                <button type="button" 
+                                                        class="action-btn toggle" 
+                                                        data-id="{{ report.pk }}" 
+                                                        title="Cambiar estado"
+                                                        onclick="toggleStatus({{ report.pk }})">
+                                                    <i class="ri-toggle-line"></i>
+                                                </button>
+                                                <a href="{% url 'report:report.delete' report.pk %}" 
+                                                   class="action-btn delete" 
+                                                   title="Eliminar"
+                                                   onclick="return confirm('¿Está seguro de eliminar este reporte?')">
+                                                    <i class="ri-delete-bin-line"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="7">
+                                            <div class="empty-state">
+                                                <div class="empty-state-icon">
+                                                    <i class="ri-file-search-line"></i>
+                                                </div>
+                                                <h5>No hay reportes disponibles</h5>
+                                                <p class="mb-3">
+                                                    {% if search_query %}
+                                                        No se encontraron reportes que coincidan con "{{ search_query }}"
+                                                    {% else %}
+                                                        Aún no has creado ningún reporte.
+                                                    {% endif %}
+                                                </p>
+                                                <div class="empty-state-actions">
+                                                    <a href="{% url 'report:report.create' %}" class="btn btn-primary">
+                                                        <i class="ri-add-line me-1"></i>Crear Primer Reporte
+                                                    </a>
+                                                    <a href="{% url 'report:simulation.create' %}" class="btn btn-success">
+                                                        <i class="ri-line-chart-line me-1"></i>Crear Simulación
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Grid View -->
+                <div class="grid-view" id="gridView">
+                    {% for report in reports %}
+                        <div class="report-grid-card">
+                            <div class="grid-card-header">
+                                <div class="report-avatar bg-primary-subtle text-primary">
+                                    <i class="ri-file-text-line"></i>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input report-checkbox" type="checkbox" value="{{ report.id }}">
+                                </div>
+                            </div>
+                            
+                            <h6 class="grid-card-title">
+                                <a href="{% url 'report:report.detail' report.pk %}" class="text-decoration-none">
+                                    {% if report.title %}{{ report.title }}{% else %}Reporte sin título{% endif %}
+                                </a>
+                            </h6>
+                            
+                            <p class="grid-card-summary">
+                                {% if report.content_summary %}{{ report.content_summary }}{% else %}Sin descripción disponible{% endif %}
+                            </p>
+                            
+                            <div class="grid-card-badges">
+                                {% if report.is_recent %}
+                                    <span class="report-badge badge-new">Nuevo</span>
+                                {% endif %}
+                                {% if report.fk_product %}
+                                    <span class="report-badge badge-product">{{ report.fk_product.name|truncatechars:15 }}</span>
+                                {% endif %}
+                                <span class="report-badge badge-type">
+                                    {% if report.get_report_type_display %}{{ report.get_report_type_display }}{% else %}General{% endif %}
+                                </span>
+                                <span class="report-badge {% if report.is_active %}badge-status-active{% else %}badge-status-inactive{% endif %}">
+                                    {% if report.is_active %}Activo{% else %}Inactivo{% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="grid-card-footer">
+                                <small class="grid-card-date">
+                                    {% if report.date_created %}{{ report.date_created|date:"d/m/Y H:i" }}{% else %}No disponible{% endif %}
+                                </small>
+                                <div class="action-buttons">
+                                    <a href="{% url 'report:report.detail' report.pk %}" class="action-btn view" title="Ver">
+                                        <i class="ri-eye-line"></i>
+                                    </a>
+                                    <a href="{% url 'report:report.update' report.pk %}" class="action-btn edit" title="Editar">
+                                        <i class="ri-edit-line"></i>
+                                    </a>
+                                    <button type="button"
+                                            class="action-btn download pdf-gen-btn"
+                                            title="Generar y descargar PDF"
+                                            data-report-id="{{ report.pk }}"
+                                            onclick="requestPdf({{ report.pk }}, this)">
+                                        <i class="ri-file-pdf-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Enhanced Pagination -->
+                {% if reports.has_other_pages %}
+                    <div class="pagination-enhanced">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="pagination-info">
+                                    <span class="pagination-text">
+                                        Mostrando 
+                                        {% if reports.start_index %}{{ reports.start_index }}{% else %}1{% endif %}-{% if reports.end_index %}{{ reports.end_index }}{% else %}{{ reports.paginator.count }}{% endif %} 
+                                        de {% if reports.paginator.count %}{{ reports.paginator.count }}{% else %}0{% endif %} reportes
+                                    </span>
+                                    <select class="form-select form-select-sm page-size-select" onchange="changePageSize(this.value)">
+                                        <option value="10" {% if current_page_size == 10 %}selected{% endif %}>10 por página</option>
+                                        <option value="25" {% if current_page_size == 25 %}selected{% endif %}>25 por página</option>
+                                        <option value="50" {% if current_page_size == 50 %}selected{% endif %}>50 por página</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <nav aria-label="Paginación de reportes">
+                                    <ul class="pagination justify-content-end mb-0">
+                                        {% if reports.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ reports.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if filter_type %}&type={{ filter_type }}{% endif %}{% if filter_status %}&status={{ filter_status }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                                                    <i class="ri-skip-forward-line"></i>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="spinner-border mb-3" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="loading-text">Procesando acción...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/report-list.js' %}"></script>
+<script>
+// ── FASE 3.5 — Async PDF generation with polling ──────────────────────────
+function requestPdf(reportId, btn) {
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+    fetch(`/report/pdf/${reportId}/`, {
+        method: 'GET',
+        headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Accept': 'application/json' },
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.task_id) {
+            showNotification('Generando PDF, espere...', 'info');
+            pollPdfStatus(reportId, data.task_id, btn, origHtml, 0);
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            showNotification('Error al iniciar generación de PDF', 'danger');
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+        showNotification('Error de conexión', 'danger');
+    });
+}
+
+function pollPdfStatus(reportId, taskId, btn, origHtml, attempt) {
+    if (attempt > 30) {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+        showNotification('PDF tardó demasiado, intente nuevamente', 'warning');
+        return;
+    }
+    setTimeout(() => {
+        fetch(`/report/pdf/status/${reportId}/`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.state === 'SUCCESS' && data.download_url) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ri-download-2-line"></i>';
+                btn.title = 'PDF listo — click para descargar';
+                btn.onclick = () => { window.location.href = data.download_url; };
+                showNotification('PDF generado. Click en el ícono para descargar.', 'success');
+            } else if (data.state === 'FAILURE') {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                showNotification('Error generando PDF: ' + (data.message || ''), 'danger');
+            } else {
+                pollPdfStatus(reportId, taskId, btn, origHtml, attempt + 1);
+            }
+        })
+        .catch(() => pollPdfStatus(reportId, taskId, btn, origHtml, attempt + 1));
+    }, 2000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        document.cookie.split(';').forEach(cookie => {
+            const c = cookie.trim();
+            if (c.startsWith(name + '=')) cookieValue = decodeURIComponent(c.slice(name.length + 1));
+        });
+    }
+    return cookieValue;
+}
+
+function showNotification(msg, type) {
+    const el = document.createElement('div');
+    el.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    el.style.cssText = 'top:20px;right:20px;z-index:9999;min-width:280px;';
+    el.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 6000);
+}
+</script>
+{% endblock extra_js %}

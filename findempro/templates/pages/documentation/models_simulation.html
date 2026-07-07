@@ -1,0 +1,678 @@
+<!-- templates/documentacion/modelos_simulacion.html -->
+{% extends 'documentacion/base.html' %}
+{% load static %}
+
+{% block title %}Modelos de Simulación - FINDEMPRO LÁCTEOS{% endblock %}
+
+{% block extra_css %}
+<style>
+    .architecture-diagram {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 15px;
+        padding: 30px;
+        margin: 30px 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .process-box {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin: 15px 0;
+        font-weight: bold;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease;
+    }
+    
+    .process-box:hover {
+        transform: translateY(-5px);
+    }
+    
+    .arrow-down {
+        text-align: center;
+        font-size: 2em;
+        color: #667eea;
+        margin: 10px 0;
+    }
+    
+    .module-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border-left: 5px solid #27ae60;
+        transition: all 0.3s ease;
+    }
+    
+    .module-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+    
+    .factor-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin: 25px 0;
+    }
+    
+    .factor-card {
+        background: linear-gradient(135deg, #a8edea, #fed6e3);
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        border: 2px solid #ff6b6b;
+    }
+    
+    .performance-metric {
+        background: #28a745;
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        margin: 10px 0;
+    }
+    
+    .metric-value {
+        font-size: 2em;
+        font-weight: bold;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="bg-success text-white p-4 rounded">
+                <h1 class="display-5">⚙️ Modelos de Simulación de Demanda</h1>
+                <p class="lead">Arquitectura completa del sistema de generación de modelos estocásticos para productos lácteos en FINDEMPRO</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pregunta Principal -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-warning border-0 shadow" style="background: linear-gradient(135deg, #fff3cd, #ffeaa7);">
+                <h4 class="alert-heading">❓ Pregunta de Investigación</h4>
+                <p class="mb-0 fs-5"><strong>¿Cómo se generan los modelos de simulación con respecto a la demanda en FINDEMPRO LÁCTEOS?</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Arquitectura del Sistema -->
+    <div class="row">
+        <div class="col-12">
+            <h2>🏗️ Arquitectura del Sistema de Simulación</h2>
+            
+            <div class="architecture-diagram">
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="process-box">📊 Datos Históricos</div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="process-box">🔍 Análisis Estadístico</div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="process-box">📈 Identificación Distribución</div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="process-box">⚙️ Generación Modelo</div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="process-box">✅ Validación</div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="process-box">🚀 Producción</div>
+                    </div>
+                </div>
+                
+                <div class="arrow-down">↓ ↓ ↓ ↓ ↓ ↓</div>
+                
+                <div class="text-center">
+                    <h4>Sistema Integrado de Simulación de Demanda para Productos Lácteos</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Módulos del Sistema -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="module-card">
+                <h4>📥 Módulo de Captura de Datos</h4>
+                <p>Recopila automáticamente datos de ventas, inventarios y factores externos específicos de productos lácteos.</p>
+                
+                <h6>Características:</h6>
+                <ul>
+                    <li>Integración con sistema de ventas en tiempo real</li>
+                    <li>Captura de factores estacionales</li>
+                    <li>Registro de datos de temperatura ambiente</li>
+                    <li>Detección automática de promociones y eventos</li>
+                </ul>
+                
+                <div class="bg-dark text-light p-3 rounded mt-3">
+<pre><code>def capturar_demanda_lacteos(producto, fecha_inicio, fecha_fin):
+    datos = {
+        'ventas': obtener_ventas(producto, fecha_inicio, fecha_fin),
+        'temperatura': obtener_temperatura_ambiente(fecha_inicio, fecha_fin),
+        'promociones': obtener_promociones_activas(producto, fecha_inicio, fecha_fin),
+        'festividades': obtener_festividades(fecha_inicio, fecha_fin),
+        'stock_disponible': obtener_inventario_historico(producto)
+    }
+    return procesar_datos_lacteos(datos)</code></pre>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="module-card">
+                <h4>🧠 Motor de Análisis Estadístico</h4>
+                <p>Procesa los datos históricos aplicando técnicas estadísticas avanzadas específicas para productos lácteos.</p>
+                
+                <h6>Funcionalidades:</h6>
+                <ul>
+                    <li>Análisis de tendencias y estacionalidad</li>
+                    <li>Detección de outliers y datos anómalos</li>
+                    <li>Correlación con factores externos</li>
+                    <li>Segmentación por categoría de producto</li>
+                </ul>
+                
+                <div class="bg-dark text-light p-3 rounded mt-3">
+<pre><code>class MotorAnalisisLacteos:
+    def analizar_demanda(self, datos_producto):
+        # Análisis específico por categoría
+        categoria = self.clasificar_producto(datos_producto.producto)
+        
+        if categoria == 'perecedero_diario':
+            return self.analisis_perecedero(datos_producto)
+        elif categoria == 'semi_perecedero':
+            return self.analisis_semi_perecedero(datos_producto)
+        
+        return self.analisis_general(datos_producto)</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="module-card">
+                <h4>🎲 Generador de Modelos Estocásticos</h4>
+                <p>Crea modelos de simulación basados en las distribuciones identificadas, optimizados para cada tipo de producto lácteo.</p>
+                
+                <h6>Tipos de Modelos:</h6>
+                <ul>
+                    <li><strong>Modelos Normales:</strong> Para leche fresca y productos básicos</li>
+                    <li><strong>Modelos Log-Normales:</strong> Para yogurt y postres</li>
+                    <li><strong>Modelos Gamma:</strong> Para quesos y productos especiales</li>
+                    <li><strong>Modelos Híbridos:</strong> Para productos estacionales</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="module-card">
+                <h4>🎯 Simulador de Escenarios</h4>
+                <p>Ejecuta simulaciones Monte Carlo considerando múltiples factores específicos del negocio lácteo.</p>
+                
+                <h6>Escenarios Simulados:</h6>
+                <ul>
+                    <li>Demanda normal vs picos estacionales</li>
+                    <li>Efectos de promociones y descuentos</li>
+                    <li>Impacto de cambios de temperatura</li>
+                    <li>Variaciones por días de la semana</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Factores Específicos de Lácteos -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2>🥛 Factores Específicos Considerados para Productos Lácteos</h2>
+            
+            <div class="factor-grid">
+                <div class="factor-card">
+                    <h5>🌡️ Temperatura Ambiente</h5>
+                    <p>Impacta directamente en la demanda de productos como helados y bebidas frías</p>
+                    <strong>Factor: 0.8 - 1.5</strong>
+                </div>
+                
+                <div class="factor-card">
+                    <h5>📅 Estacionalidad</h5>
+                    <p>Variaciones por época del año, especialmente en productos estacionales</p>
+                    <strong>Factor: 0.6 - 2.0</strong>
+                </div>
+                
+                <div class="factor-card">
+                    <h5>⏰ Perecibilidad</h5>
+                    <p>Días restantes hasta fecha de vencimiento afectan la demanda</p>
+                    <strong>Factor: 0.3 - 1.0</strong>
+                </div>
+                
+                <div class="factor-card">
+                    <h5>🎉 Eventos Especiales</h5>
+                    <p>Fiestas y celebraciones incrementan demanda de productos específicos</p>
+                    <strong>Factor: 1.2 - 3.0</strong>
+                </div>
+                
+                <div class="factor-card">
+                    <h5>🏫 Período Escolar</h5>
+                    <p>Afecta productos como leche escolar y loncheras</p>
+                    <strong>Factor: 0.7 - 1.3</strong>
+                </div>
+                
+                <div class="factor-card">
+                    <h5>💰 Promociones</h5>
+                    <p>Descuentos y ofertas especiales modifican patrones de compra</p>
+                    <strong>Factor: 1.1 - 2.5</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Implementación Técnica -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2>💻 Implementación Técnica del Generador</h2>
+            
+            <div class="bg-dark text-light p-4 rounded">
+<pre><code class="language-python">
+class GeneradorModelosLacteos:
+    def __init__(self):
+        self.factores_lacteos = {
+            'temperatura': FactorTemperatura(),
+            'estacionalidad': FactorEstacionalidad(),
+            'perecibilidad': FactorPerecibilidad(),
+            'eventos': FactorEventosEspeciales(),
+            'promociones': FactorPromociones()
+        }
+    
+    def generar_modelo_producto(self, producto_lacteo, datos_historicos):
+        """Genera modelo específico para producto lácteo"""
+        
+        # 1. Clasificar producto y obtener características
+        categoria = self.clasificar_producto_lacteo(producto_lacteo)
+        caracteristicas = self.obtener_caracteristicas_categoria(categoria)
+        
+        # 2. Seleccionar distribución base
+        distribucion_base = self.seleccionar_distribucion_base(
+            datos_historicos, caracteristicas
+        )
+        
+        # 3. Estimar parámetros iniciales
+        parametros_base = self.estimar_parametros(datos_historicos, distribucion_base)
+        
+        # 4. Crear generador con factores específicos
+        generador = self.crear_generador_con_factores(
+            distribucion_base, parametros_base, producto_lacteo
+        )
+        
+        # 5. Validar modelo generado
+        modelo_validado = self.validar_modelo_lacteos(
+            generador, datos_historicos, categoria
+        )
+        
+        return modelo_validado
+    
+    def crear_generador_con_factores(self, distribucion, parametros, producto):
+        """Crea generador que considera factores específicos de lácteos"""
+        
+        def generador_lacteos(fecha_simulacion=None, condiciones_especiales=None):
+            # Generar valor base de la distribución
+            valor_base = self.generar_valor_distribucion(distribucion, parametros)
+            
+            # Aplicar factores específicos de lácteos
+            factor_total = 1.0
+            
+            # Factor temperatura (para productos sensibles al clima)
+            if producto.categoria in ['helados', 'bebidas_frias']:
+                factor_total *= self.factores_lacteos['temperatura'].calcular(
+                    fecha_simulacion
+                )
+            
+            # Factor estacionalidad
+            factor_total *= self.factores_lacteos['estacionalidad'].calcular(
+                producto, fecha_simulacion
+            )
+            
+            # Factor perecibilidad (días hasta vencimiento)
+            if hasattr(producto, 'vida_util_dias') and producto.vida_util_dias <= 7:
+                factor_total *= self.factores_lacteos['perecibilidad'].calcular(
+                    producto
+                )
+            
+            # Factor eventos especiales
+            if condiciones_especiales and 'evento' in condiciones_especiales:
+                factor_total *= self.factores_lacteos['eventos'].calcular(
+                    condiciones_especiales['evento'], producto
+                )
+            
+            # Factor promociones activas
+            if condiciones_especiales and 'promocion' in condiciones_especiales:
+                factor_total *= self.factores_lacteos['promociones'].calcular(
+                    condiciones_especiales['promocion']
+                )
+            
+            # Aplicar factor total y asegurar valor no negativo
+            demanda_final = max(0, valor_base * factor_total)
+            
+            return {
+                'demanda': demanda_final,
+                'valor_base': valor_base,
+                'factor_aplicado': factor_total,
+                'factores_detalle': {
+                    'temperatura': self.factores_lacteos['temperatura'].ultimo_factor,
+                    'estacionalidad': self.factores_lacteos['estacionalidad'].ultimo_factor,
+                    'perecibilidad': self.factores_lacteos['perecibilidad'].ultimo_factor
+                }
+            }
+        
+        return generador_lacteos
+    
+    def simular_periodo_completo(self, producto, dias=30, escenarios=1000):
+        """Simula demanda para un período completo"""
+        
+        modelo = self.obtener_modelo_activo(producto)
+        resultados_simulacion = []
+        
+        for escenario in range(escenarios):
+            demanda_periodo = []
+            fecha_actual = datetime.now().date()
+            
+            for dia in range(dias):
+                fecha_simulacion = fecha_actual + timedelta(days=dia)
+                
+                # Obtener condiciones especiales para el día
+                condiciones = self.obtener_condiciones_dia(fecha_simulacion, producto)
+                
+                # Generar demanda para el día
+                resultado_dia = modelo.generar_demanda(fecha_simulacion, condiciones)
+                demanda_periodo.append(resultado_dia)
+            
+            resultados_simulacion.append(demanda_periodo)
+        
+        return self.analizar_resultados_simulacion(resultados_simulacion)
+
+class FactorTemperatura:
+    def calcular(self, fecha):
+        """Calcula factor basado en temperatura ambiente"""
+        temperatura = self.obtener_temperatura_historica(fecha)
+        
+        # Factor lineal: mayor temperatura = mayor demanda de productos fríos
+        if temperatura < 15:
+            factor = 0.8
+        elif temperatura < 25:
+            factor = 1.0
+        elif temperatura < 35:
+            factor = 1.3
+        else:
+            factor = 1.5
+        
+        self.ultimo_factor = factor
+        return factor
+
+class FactorEstacionalidad:
+    def __init__(self):
+        self.patrones_estacionales = {
+            'helados': {
+                'verano': 2.0, 'otoño': 1.2, 'invierno': 0.6, 'primavera': 1.4
+            },
+            'quesos_especiales': {
+                'navidad': 2.5, 'año_nuevo': 2.0, 'normal': 1.0
+            },
+            'leche_escolar': {
+                'periodo_escolar': 1.3, 'vacaciones': 0.7
+            }
+        }
+    
+    def calcular(self, producto, fecha):
+        """Calcula factor estacional específico por producto"""
+        categoria = producto.categoria
+        
+        if categoria in self.patrones_estacionales:
+            estacion = self.determinar_estacion_o_periodo(fecha)
+            factor = self.patrones_estacionales[categoria].get(estacion, 1.0)
+        else:
+            factor = 1.0
+        
+        self.ultimo_factor = factor
+        return factor
+</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas de Rendimiento -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2>📊 Métricas de Rendimiento del Sistema</h2>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="performance-metric">
+                <span class="metric-value">{{ metricas_rendimiento.precision_promedio }}%</span>
+                <span>Precisión Promedio</span>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="performance-metric" style="background: #17a2b8;">
+                <span class="metric-value">{{ metricas_rendimiento.tiempo_generacion }}ms</span>
+                <span>Tiempo Generación</span>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="performance-metric" style="background: #28a745;">
+                <span class="metric-value">{{ metricas_rendimiento.modelos_activos }}</span>
+                <span>Modelos Activos</span>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6">
+            <div class="performance-metric" style="background: #ffc107; color: #212529;">
+                <span class="metric-value">{{ metricas_rendimiento.simulaciones_dia }}</span>
+                <span>Simulaciones/Día</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Herramientas Interactivas -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="bg-light p-4 rounded">
+                <h3>🛠️ Herramientas de Simulación</h3>
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'documentacion:generar_modelo' %}" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-plus"></i> Generar Nuevo Modelo
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary w-100 mb-2" onclick="ejecutarSimulacion()">
+                            <i class="fas fa-play"></i> Ejecutar Simulación
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'documentacion:resultados_simulacion' 1 %}" class="btn btn-info w-100 mb-2">
+                            <i class="fas fa-chart-line"></i> Ver Resultados
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-warning w-100 mb-2" onclick="exportarModelo()">
+                            <i class="fas fa-download"></i> Exportar Modelo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modelos Disponibles -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>📋 Modelos Disponibles</h3>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-success">
+                        <tr>
+                            <th>ID</th>
+                            <th>Producto</th>
+                            <th>Distribución</th>
+                            <th>Precisión</th>
+                            <th>Estado</th>
+                            <th>Última Validación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for modelo in modelos_disponibles %}
+                        <tr>
+                            <td><code>{{ modelo.id }}</code></td>
+                            <td>{{ modelo.producto.nombre }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ modelo.get_tipo_distribucion_display }}</span>
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ modelo.precision_porcentaje }}%">
+                                        {{ modelo.precision_porcentaje }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if modelo.activo %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ modelo.fecha_ultima_validacion|date:"d/m/Y" }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                            onclick="verDetalles({{ modelo.id }})">
+                                        Ver
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-success" 
+                                            onclick="ejecutarValidacion({{ modelo.id }})">
+                                        Validar
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function ejecutarSimulacion() {
+    // Mostrar modal de configuración de simulación
+    const modal = new bootstrap.Modal(document.getElementById('simulacionModal'));
+    modal.show();
+}
+
+function exportarModelo() {
+    // Implementar exportación de modelo
+    alert('Exportando configuración del modelo...');
+}
+
+function verDetalles(modeloId) {
+    // Redirigir a vista de detalles
+    window.location.href = `/documentacion/simulacion/resultados/${modeloId}/`;
+}
+
+function ejecutarValidacion(modeloId) {
+    // Ejecutar validación del modelo
+    fetch(`/documentacion/validacion/ejecutar/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            'modelo_id': modeloId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Validación ejecutada exitosamente');
+            location.reload();
+        } else {
+            alert('Error en validación: ' + data.error);
+        }
+    });
+}
+</script>
+
+<!-- Modal para Configuración de Simulación -->
+<div class="modal fade" id="simulacionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Configurar Simulación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="simulacionForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Producto</label>
+                            <select class="form-select" name="producto_id" required>
+                                <option value="">Seleccionar producto...</option>
+                                {% for modelo in modelos_disponibles %}
+                                <option value="{{ modelo.producto.id }}">{{ modelo.producto.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Días a Simular</label>
+                            <input type="number" class="form-control" name="dias" value="30" min="1" max="365">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Número de Escenarios</label>
+                            <input type="number" class="form-control" name="escenarios" value="1000" min="100" max="10000">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Incluir Factores Especiales</label>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="incluir_temperatura" checked>
+                                <label class="form-check-label">Temperatura</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="incluir_estacionalidad" checked>
+                                <label class="form-check-label">Estacionalidad</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="ejecutarSimulacionConfigurada()">
+                    Ejecutar Simulación
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

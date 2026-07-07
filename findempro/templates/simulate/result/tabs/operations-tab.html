@@ -1,0 +1,2893 @@
+<style>
+
+    /* ==========================================
+  OPERATIONS TAB - CSS STYLES
+  ========================================== */
+
+/* Variables CSS para colores y espaciado */
+:root {
+   --primary-color: #4a6ba7;
+   --secondary-color: #6c757d;
+   --success-color: #5a9367;
+   --warning-color: #b8860b;
+   --danger-color: #a85757;
+   --info-color: #5b9bd5;
+   
+   --bg-primary: #f8f9fa;
+   --bg-secondary: #ffffff;
+   --bg-light: #fcfcfc;
+   --bg-accent: #f1f3f4;
+   
+   --text-primary: #212529;
+   --text-secondary: #495057;
+   --text-muted: #6c757d;
+   
+   --border-color: #dee2e6;
+   --border-radius: 8px;
+   --box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+   --box-shadow-hover: 0 4px 8px rgba(0,0,0,0.15);
+   
+   --spacing-xs: 0.25rem;
+   --spacing-sm: 0.5rem;
+   --spacing-md: 1rem;
+   --spacing-lg: 1.5rem;
+   --spacing-xl: 2rem;
+}
+
+/* Contenedor principal del tab de operaciones */
+#operations {
+   background-color: var(--bg-primary);
+   color: var(--text-primary);
+   padding: var(--spacing-lg);
+}
+
+/* Header operativo */
+.alert-info {
+   background-color: var(--bg-secondary);
+   border: 1px solid #b8d4f0;
+   border-radius: var(--border-radius);
+   color: var(--text-primary);
+   box-shadow: var(--box-shadow);
+}
+
+.alert-icon {
+   width: 48px;
+   height: 48px;
+   background-color: var(--info-color);
+   border-radius: 50%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   color: white;
+   font-size: 1.5rem;
+}
+
+.alert-heading {
+   color: var(--text-primary);
+   font-weight: 600;
+   margin-bottom: var(--spacing-xs);
+}
+
+/* Métricas de resumen */
+.summary-metric {
+   background-color: var(--bg-secondary);
+   padding: var(--spacing-md);
+   border-radius: var(--border-radius);
+   border: 1px solid var(--border-color);
+   text-align: center;
+   transition: transform 0.2s ease;
+}
+
+.summary-metric:hover {
+   transform: translateY(-2px);
+   box-shadow: var(--box-shadow-hover);
+}
+
+.metric-label {
+   font-size: 0.875rem;
+   color: var(--text-muted);
+   margin-bottom: var(--spacing-xs);
+   font-weight: 500;
+}
+
+.metric-value {
+   font-size: 1.5rem;
+   font-weight: 700;
+   color: var(--text-primary);
+   margin-bottom: var(--spacing-xs);
+}
+
+.metric-unit {
+   font-size: 0.875rem;
+   color: var(--text-secondary);
+   font-weight: 400;
+}
+
+/* KPI Cards */
+.kpi-card {
+   background-color: var(--bg-secondary);
+   border: 1px solid var(--border-color);
+   border-radius: var(--border-radius);
+   padding: var(--spacing-lg);
+   height: 100%;
+   transition: all 0.3s ease;
+   box-shadow: var(--box-shadow);
+}
+
+.kpi-card:hover {
+   box-shadow: var(--box-shadow-hover);
+}
+
+.kpi-card.kpi-primary {
+   border-left: 4px solid var(--primary-color);
+}
+
+.kpi-card.kpi-success {
+   border-left: 4px solid var(--success-color);
+}
+
+.kpi-card.kpi-warning {
+   border-left: 4px solid var(--warning-color);
+}
+
+.kpi-card.kpi-danger {
+   border-left: 4px solid var(--danger-color);
+}
+
+.kpi-header {
+   display: flex;
+   align-items: flex-start;
+   margin-bottom: var(--spacing-md);
+}
+
+.kpi-icon {
+   width: 40px;
+   height: 40px;
+   border-radius: var(--border-radius);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   color: white;
+   font-size: 1.25rem;
+   margin-right: var(--spacing-md);
+}
+
+.kpi-primary .kpi-icon {
+   background-color: var(--primary-color);
+}
+
+.kpi-success .kpi-icon {
+   background-color: var(--success-color);
+}
+
+.kpi-warning .kpi-icon {
+   background-color: var(--warning-color);
+}
+
+.kpi-danger .kpi-icon {
+   background-color: var(--danger-color);
+}
+
+.kpi-info {
+   flex: 1;
+}
+
+.kpi-title {
+   font-size: 0.875rem;
+   font-weight: 600;
+   color: var(--text-primary);
+   margin: 0;
+}
+
+.kpi-subtitle {
+   font-size: 0.75rem;
+   color: var(--text-muted);
+   margin: 0;
+}
+
+.kpi-value {
+   font-size: 2rem;
+   font-weight: 700;
+   color: var(--text-primary);
+   margin-bottom: var(--spacing-sm);
+}
+
+.kpi-footer {
+   color: var(--text-muted);
+   font-size: 0.75rem;
+}
+
+/* Contenedores de gráficos */
+.chart-container {
+   background-color: var(--bg-secondary);
+   border: 1px solid var(--border-color);
+   border-radius: var(--border-radius);
+   box-shadow: var(--box-shadow);
+   overflow: hidden;
+   height: 100%;
+}
+
+.chart-header {
+   padding: var(--spacing-lg);
+   background-color: var(--bg-light);
+   border-bottom: 1px solid var(--border-color);
+   display: flex;
+   justify-content: space-between;
+   align-items: flex-start;
+}
+
+.chart-title-wrapper {
+   flex: 1;
+}
+
+.chart-title {
+   font-size: 1rem;
+   font-weight: 600;
+   color: var(--text-primary);
+   margin: 0;
+   display: flex;
+   align-items: center;
+}
+
+.chart-description {
+   font-size: 0.875rem;
+   color: var(--text-muted);
+   margin: var(--spacing-sm) 0 0 0;
+   line-height: 1.4;
+}
+
+.chart-explanation {
+   font-size: 0.75rem;
+   color: var(--text-muted);
+   margin-top: var(--spacing-xs);
+   font-weight: 400;
+}
+
+.chart-controls {
+   display: flex;
+   gap: var(--spacing-sm);
+}
+
+.chart-content {
+   padding: var(--spacing-lg);
+   min-height: 300px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+.chart-image {
+   max-width: 100%;
+   height: auto;
+   border-radius: var(--border-radius);
+}
+
+.chart-placeholder {
+   width: 100%;
+   height: 250px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   background-color: var(--bg-accent);
+   border-radius: var(--border-radius);
+   border: 2px dashed var(--border-color);
+}
+
+.placeholder-content {
+   text-align: center;
+   color: var(--text-muted);
+}
+
+.placeholder-icon {
+   font-size: 3rem;
+   margin-bottom: var(--spacing-md);
+   opacity: 0.5;
+}
+
+.placeholder-title {
+   font-size: 1.1rem;
+   font-weight: 600;
+   margin-bottom: var(--spacing-sm);
+   color: var(--text-secondary);
+}
+
+.placeholder-text {
+   font-size: 0.875rem;
+   line-height: 1.4;
+   max-width: 300px;
+   margin: 0 auto;
+}
+
+/* Secciones */
+.section-header {
+   margin-bottom: var(--spacing-xl);
+}
+
+.section-title {
+   font-size: 1.25rem;
+   font-weight: 600;
+   color: var(--text-primary);
+   margin-bottom: var(--spacing-sm);
+   display: flex;
+   align-items: center;
+}
+
+.section-description {
+   font-size: 0.9rem;
+   color: var(--text-muted);
+   line-height: 1.5;
+   margin: 0;
+}
+
+/* Tabla de datos */
+.data-table-container {
+   background-color: var(--bg-secondary);
+   border: 1px solid var(--border-color);
+   border-radius: var(--border-radius);
+   box-shadow: var(--box-shadow);
+   overflow: hidden;
+}
+
+.table-header {
+   padding: var(--spacing-lg);
+   background-color: var(--bg-light);
+   border-bottom: 1px solid var(--border-color);
+}
+
+.table-title {
+   font-size: 1.1rem;
+   font-weight: 600;
+   color: var(--text-primary);
+   margin: 0;
+   display: flex;
+   align-items: center;
+}
+
+.table-description {
+   font-size: 0.875rem;
+   color: var(--text-muted);
+   margin: var(--spacing-sm) 0 0 0;
+   line-height: 1.4;
+}
+
+.table-content {
+   padding: 0;
+}
+
+.table-search-container {
+   padding: 0 var(--spacing-lg);
+   background-color: var(--bg-light);
+   border-bottom: 1px solid var(--border-color);
+}
+
+.operations-summary-table {
+   margin: 0;
+   font-size: 0.875rem;
+}
+
+.table-header-enhanced {
+   background-color: var(--bg-accent);
+}
+
+.table-header-enhanced th {
+   border: none;
+   padding: var(--spacing-md);
+   font-weight: 600;
+   color: var(--text-primary);
+   font-size: 0.8rem;
+   text-transform: uppercase;
+   letter-spacing: 0.5px;
+}
+
+.th-content {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+}
+
+.table-row-enhanced {
+   transition: background-color 0.2s ease;
+   cursor: pointer;
+}
+
+.table-row-enhanced:hover {
+   background-color: var(--bg-accent);
+}
+
+.table-row-enhanced.selected {
+   background-color: #e8f2ff;
+   border-left: 3px solid var(--primary-color);
+}
+
+.table-row-enhanced td {
+   padding: var(--spacing-md);
+   border-color: var(--border-color);
+   vertical-align: middle;
+}
+
+.variable-name-cell {
+   min-width: 200px;
+}
+
+.variable-info {
+   display: flex;
+   flex-direction: column;
+}
+
+.variable-display-name {
+   font-weight: 600;
+   color: var(--text-primary);
+   font-size: 0.875rem;
+   margin-bottom: var(--spacing-xs);
+}
+
+.variable-code {
+   font-family: 'Courier New', monospace;
+   font-size: 0.75rem;
+   color: var(--text-muted);
+   background-color: var(--bg-accent);
+   padding: 2px 6px;
+   border-radius: 4px;
+   display: inline-block;
+}
+
+.value-cell {
+   text-align: center;
+}
+
+.value-display {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+}
+
+.value-amount {
+   font-weight: 600;
+   font-size: 0.9rem;
+}
+
+.unit-badge {
+   background-color: var(--bg-accent);
+   color: var(--text-secondary);
+   padding: 4px 8px;
+   border-radius: 12px;
+   font-size: 0.75rem;
+   font-weight: 500;
+}
+
+/* Badges de tendencia */
+.trend-badge {
+   padding: 4px 8px;
+   border-radius: 12px;
+   font-size: 0.75rem;
+   font-weight: 500;
+   display: inline-flex;
+   align-items: center;
+   gap: 4px;
+}
+
+.trend-up {
+   background-color: #d4edda;
+   color: var(--success-color);
+}
+
+.trend-down {
+   background-color: #f8d7da;
+   color: var(--danger-color);
+}
+
+.trend-stable {
+   background-color: #d1ecf1;
+   color: var(--info-color);
+}
+
+/* Badges de estado */
+.status-badge {
+   padding: 4px 8px;
+   border-radius: 12px;
+   font-size: 0.75rem;
+   font-weight: 500;
+}
+
+.status-excellent {
+   background-color: #d4edda;
+   color: var(--success-color);
+}
+
+.status-good {
+   background-color: #d1ecf1;
+   color: var(--info-color);
+}
+
+.status-low {
+   background-color: #f8d7da;
+   color: var(--danger-color);
+}
+
+.status-growing {
+   background-color: #d4edda;
+   color: var(--success-color);
+}
+
+.status-declining {
+   background-color: #f8d7da;
+   color: var(--danger-color);
+}
+
+.status-stable {
+   background-color: #fff3cd;
+   color: var(--warning-color);
+}
+
+.status-normal {
+   background-color: var(--bg-accent);
+   color: var(--text-secondary);
+}
+
+/* Estado vacío */
+.empty-state {
+   text-align: center;
+   padding: var(--spacing-xl);
+}
+
+.empty-content {
+   color: var(--text-muted);
+}
+
+.empty-icon {
+   font-size: 3rem;
+   margin-bottom: var(--spacing-md);
+   opacity: 0.5;
+}
+
+.empty-title {
+   font-weight: 600;
+   color: var(--text-secondary);
+   margin-bottom: var(--spacing-sm);
+}
+
+.empty-text {
+   font-size: 0.875rem;
+   line-height: 1.5;
+   max-width: 400px;
+   margin: 0 auto;
+}
+
+/* Footer de operaciones */
+.operations-footer {
+   background-color: var(--bg-light);
+   border: 1px solid var(--border-color);
+   border-radius: var(--border-radius);
+   padding: var(--spacing-md) var(--spacing-lg);
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   margin-top: var(--spacing-lg);
+}
+
+.footer-info {
+   color: var(--text-muted);
+   font-size: 0.875rem;
+}
+
+.footer-actions {
+   display: flex;
+   gap: var(--spacing-sm);
+}
+
+/* Botones */
+.btn-outline-primary {
+   color: var(--primary-color);
+   border-color: var(--primary-color);
+   background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+   background-color: var(--primary-color);
+   border-color: var(--primary-color);
+   color: white;
+}
+
+.btn-outline-success {
+   color: var(--success-color);
+   border-color: var(--success-color);
+   background-color: transparent;
+}
+
+.btn-outline-success:hover {
+   background-color: var(--success-color);
+   border-color: var(--success-color);
+   color: white;
+}
+
+.btn-outline-info {
+   color: var(--info-color);
+   border-color: var(--info-color);
+   background-color: transparent;
+}
+
+.btn-outline-info:hover {
+   background-color: var(--info-color);
+   border-color: var(--info-color);
+   color: white;
+}
+
+/* Tooltips personalizados */
+.tooltip .tooltip-inner {
+   background-color: var(--text-primary);
+   color: white;
+   font-size: 0.75rem;
+   max-width: 200px;
+}
+
+/* Toast container */
+#operationsToastContainer {
+   z-index: 1055;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+   #operations {
+       padding: var(--spacing-md);
+   }
+   
+   .chart-header {
+       flex-direction: column;
+       gap: var(--spacing-md);
+   }
+   
+   .chart-controls {
+       align-self: flex-start;
+   }
+   
+   .kpi-value {
+       font-size: 1.5rem;
+   }
+   
+   .operations-footer {
+       flex-direction: column;
+       gap: var(--spacing-md);
+       text-align: center;
+   }
+   
+   .summary-metric {
+       margin-bottom: var(--spacing-md);
+   }
+   
+   .th-content {
+       flex-direction: column;
+       align-items: flex-start;
+       gap: var(--spacing-xs);
+   }
+}
+
+@media (max-width: 576px) {
+   .metric-value {
+       font-size: 1.25rem;
+   }
+   
+   .kpi-value {
+       font-size: 1.25rem;
+   }
+   
+   .chart-content {
+       padding: var(--spacing-md);
+       min-height: 200px;
+   }
+   
+   .variable-name-cell {
+       min-width: auto;
+   }
+   
+   .operations-summary-table {
+       font-size: 0.8rem;
+   }
+}
+
+/* Animaciones sutiles */
+@keyframes fadeIn {
+   from {
+       opacity: 0;
+       transform: translateY(10px);
+   }
+   to {
+       opacity: 1;
+       transform: translateY(0);
+   }
+}
+
+.kpi-card,
+.chart-container,
+.data-table-container {
+   animation: fadeIn 0.5s ease-out;
+}
+
+/* Estados de loading */
+.loading {
+   opacity: 0.6;
+   pointer-events: none;
+}
+
+.loading::after {
+   content: '';
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   width: 20px;
+   height: 20px;
+   margin: -10px 0 0 -10px;
+   border: 2px solid var(--border-color);
+   border-radius: 50%;
+   border-top-color: var(--primary-color);
+   animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+   to {
+       transform: rotate(360deg);
+   }
+}
+
+/* Mejoras de accesibilidad */
+.btn:focus,
+.form-control:focus {
+   box-shadow: 0 0 0 0.2rem rgba(74, 107, 167, 0.25);
+   border-color: var(--primary-color);
+}
+
+/* Timeline dots para highlighted days */
+.timeline-dot {
+   width: 12px;
+   height: 12px;
+   border-radius: 50%;
+   background-color: var(--border-color);
+   transition: all 0.3s ease;
+}
+
+.timeline-dot.highlighted {
+   background-color: var(--primary-color);
+   transform: scale(1.2);
+}
+
+/* Progress bars */
+.progress {
+   height: 8px;
+   background-color: var(--bg-accent);
+   border-radius: 4px;
+}
+
+.progress-bar {
+   transition: width 0.6s ease;
+   border-radius: 4px;
+}
+
+/* Accordion para recomendaciones */
+.accordion-item {
+   border: 1px solid var(--border-color);
+   margin-bottom: var(--spacing-sm);
+   border-radius: var(--border-radius);
+   overflow: hidden;
+}
+
+.accordion-button {
+   background-color: var(--bg-light);
+   color: var(--text-primary);
+   border: none;
+   font-weight: 500;
+}
+
+.accordion-button:not(.collapsed) {
+   background-color: var(--bg-accent);
+   color: var(--text-primary);
+   box-shadow: none;
+}
+
+.accordion-body {
+   background-color: var(--bg-secondary);
+   color: var(--text-secondary);
+   line-height: 1.5;
+}
+
+/* Modal personalizado */
+.modal-content {
+   border: none;
+   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+   border-radius: var(--border-radius);
+}
+
+.modal-header {
+   background-color: var(--bg-light);
+   border-bottom: 1px solid var(--border-color);
+   color: var(--text-primary);
+}
+
+.modal-body {
+   color: var(--text-secondary);
+}
+
+/* Colores específicos para texto */
+.text-primary {
+   color: var(--primary-color) !important;
+}
+
+.text-success {
+   color: var(--success-color) !important;
+}
+
+.text-warning {
+   color: var(--warning-color) !important;
+}
+
+.text-danger {
+   color: var(--danger-color) !important;
+}
+
+.text-info {
+   color: var(--info-color) !important;
+}
+
+.text-muted {
+   color: var(--text-muted) !important;
+}
+
+</style>
+
+
+<!-- Operations Tab - Componente Mejorado -->
+<div class="tab-pane fade" id="operations" role="tabpanel" aria-labelledby="operations-tab">         
+    <!-- Header operativo con información contextual -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info border-0 shadow-sm">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="alert-icon">
+                        <i class="bx bx-cog"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h4 class="alert-heading mb-1">Análisis Operativo Integral</h4>
+                        <p class="mb-0 text-muted">
+                            Evaluación completa del rendimiento operacional durante 
+                            <strong>{{ all_variables_extracted|length|default:0 }} días</strong> de simulación
+                        </p>
+                    </div>
+                    <div class="ms-auto">
+                        <button type="button" class="btn btn-outline-info btn-sm" 
+                                data-bs-toggle="tooltip" 
+                                data-bs-placement="left" 
+                                title="Este análisis incluye métricas de eficiencia, producción, costos y utilización de recursos">
+                            <i class="bx bx-info-circle"></i>
+                            Ayuda
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Resumen ejecutivo en cards compactas -->
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="summary-metric">
+                            <div class="metric-label">Productos Vendidos</div>
+                            <div class="metric-value text-primary">
+                                {% if totales_acumulativos.TPV %}
+                                    {{ totales_acumulativos.TPV.total|floatformat:0 }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                                <span class="metric-unit">unidades</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="summary-metric">
+                            <div class="metric-label">Eficiencia Promedio</div>
+                            <div class="metric-value text-success">
+                                {% if totales_acumulativos.EOG and all_variables_extracted|length > 0 %}
+                                    {{ totales_acumulativos.EOG.total|floatformat:1 }}%
+                                {% else %}
+                                    <span class="text-muted">Calculando...</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="summary-metric">
+                            <div class="metric-label">Personal Activo</div>
+                            <div class="metric-value text-info">
+                                {% if totales_acumulativos.NEPP %}
+                                    {{ totales_acumulativos.NEPP.total|floatformat:0 }}
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                                <span class="metric-unit">empleados</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="summary-metric">
+                            <div class="metric-label">Período Analizado</div>
+                            <div class="metric-value text-warning">
+                                {{ all_variables_extracted|length|default:0 }}
+                                <span class="metric-unit">días</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards principales con mejor diseño -->
+    <div class="row mb-4 g-3">
+        <div class="col-xl-3 col-lg-6">
+            <div class="kpi-card kpi-primary">
+                <div class="kpi-header">
+                    <div class="kpi-icon">
+                        <i class="bx bx-package"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <h6 class="kpi-title">Productos Vendidos</h6>
+                        <div class="kpi-subtitle">Total del período</div>
+                    </div>
+                </div>
+                <div class="kpi-value">
+                    {% if totales_acumulativos.TPV %}
+                        {{ totales_acumulativos.TPV.total|floatformat:0 }}
+                    {% else %}
+                        0
+                    {% endif %}
+                </div>
+                <div class="kpi-footer">
+                    <small class="text-muted">
+                        <i class="bx bx-info-circle me-1" 
+                           data-bs-toggle="tooltip" 
+                           title="Cantidad total de productos vendidos durante el período simulado"></i>
+                        Ventas acumuladas
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-lg-6">
+            <div class="kpi-card kpi-success">
+                <div class="kpi-header">
+                    <div class="kpi-icon">
+                        <i class="bx bx-tachometer"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <h6 class="kpi-title">Eficiencia Operativa</h6>
+                        <div class="kpi-subtitle">Promedio general</div>
+                    </div>
+                </div>
+                <div class="kpi-value">
+                    {% if totales_acumulativos.EOG %}
+                        {{ totales_acumulativos.EOG.total|floatformat:1 }}%
+                    {% else %}
+                        0.0%
+                    {% endif %}
+                </div>
+                <div class="kpi-footer">
+                    <small class="text-muted">
+                        <i class="bx bx-info-circle me-1" 
+                           data-bs-toggle="tooltip" 
+                           title="Porcentaje de eficiencia en la utilización de recursos productivos"></i>
+                        Rendimiento operacional
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-lg-6">
+            <div class="kpi-card kpi-warning">
+                <div class="kpi-header">
+                    <div class="kpi-icon">
+                        <i class="bx bx-bar-chart"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <h6 class="kpi-title">Capacidad Total</h6>
+                        <div class="kpi-subtitle">Litros/período</div>
+                    </div>
+                </div>
+                <div class="kpi-value">
+                    {% if totales_acumulativos.CPROD %}
+                        {{ totales_acumulativos.CPROD.total|floatformat:0 }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
+                <div class="kpi-footer">
+                    <small class="text-muted">
+                        <i class="bx bx-info-circle me-1" 
+                           data-bs-toggle="tooltip" 
+                           title="Capacidad máxima de producción disponible en el sistema"></i>
+                        Capacidad instalada
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-lg-6">
+            <div class="kpi-card kpi-danger">
+                <div class="kpi-header">
+                    <div class="kpi-icon">
+                        <i class="bx bx-calculator"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <h6 class="kpi-title">Costo Variable Unit.</h6>
+                        <div class="kpi-subtitle">Promedio</div>
+                    </div>
+                </div>
+                <div class="kpi-value">
+                    {% if totales_acumulativos.CVU %}
+                        Bs. {{ totales_acumulativos.CVU.total|floatformat:2 }}
+                    {% else %}
+                        Bs. 0.00
+                    {% endif %}
+                </div>
+                <div class="kpi-footer">
+                    <small class="text-muted">
+                        <i class="bx bx-info-circle me-1" 
+                           data-bs-toggle="tooltip" 
+                           title="Costo variable promedio por unidad producida"></i>
+                        Costo por unidad
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de gráficos con explicaciones -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title-wrapper">
+                        <h6 class="chart-title">
+                            <i class="bx bx-tachometer me-2 text-primary"></i>
+                            Indicadores de Eficiencia Operativa
+                        </h6>
+                        <p class="chart-description">
+                            Visualización de métricas clave que miden el rendimiento y aprovechamiento 
+                            de los recursos operativos durante el período analizado.
+                        </p>
+                    </div>
+                    <div class="chart-controls">
+                        {% if image_data_eficiencia %}
+                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                onclick="downloadChart('{{ image_data_eficiencia }}', 'eficiencia-operativa.png')" 
+                                data-bs-toggle="tooltip" 
+                                title="Descargar gráfico como imagen PNG">
+                            <i class="bx bx-download"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" 
+                                onclick="openFullscreen('{{ image_data_eficiencia }}', 'Eficiencia Operativa')" 
+                                data-bs-toggle="tooltip" 
+                                title="Ver en pantalla completa">
+                            <i class="bx bx-fullscreen"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="chart-content">
+                    {% if image_data_eficiencia %}
+                    <img src="data:image/png;base64,{{ image_data_eficiencia }}" 
+                        class="chart-image" 
+                        alt="Gráfico de indicadores de eficiencia operativa mostrando el rendimiento del sistema"
+                        loading="lazy">
+                    {% else %}
+                    <div class="chart-placeholder">
+                        <div class="placeholder-content">
+                            <i class="bx bx-tachometer placeholder-icon"></i>
+                            <h6 class="placeholder-title">Indicadores de Eficiencia</h6>
+                            <p class="placeholder-text">
+                                Aquí se mostrará el análisis visual de las métricas de rendimiento 
+                                operativo una vez que se procesen los datos de la simulación.
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Placeholder para gráfico adicional -->
+        <div class="col-lg-6 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title-wrapper">
+                        <h6 class="chart-title">
+                            <i class="bx bx-trending-up me-2 text-success"></i>
+                            Tendencias Operacionales
+                        </h6>
+                        <p class="chart-description">
+                            Análisis temporal de las variables operativas clave para identificar 
+                            patrones y tendencias en el rendimiento.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="chart-content">
+                    <div class="chart-placeholder">
+                        <div class="placeholder-content">
+                            <i class="bx bx-trending-up placeholder-icon"></i>
+                            <h6 class="placeholder-title">Tendencias en Desarrollo</h6>
+                            <p class="placeholder-text">
+                                Este gráfico mostrará la evolución temporal de las métricas 
+                                operativas para facilitar el análisis de tendencias.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Variables operativas endógenas con mejor organización -->
+    {% if endogenous_charts %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="section-header">
+                <h5 class="section-title">
+                    <i class="bx bx-cog me-2"></i>
+                    Variables Operativas Endógenas
+                </h5>
+                <p class="section-description">
+                    Análisis detallado de las variables internas del sistema que determinan 
+                    el rendimiento operacional y la eficiencia productiva.
+                </p>
+            </div>
+        </div>
+        
+        {% for chart_name, chart_data in endogenous_charts.items %}
+            {% if 'TPV' in chart_name or 'EOG' in chart_name or 'CPROD' in chart_name or 'NEPP' in chart_name %}
+            <div class="col-lg-6 mb-4">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title-wrapper">
+                            <h6 class="chart-title">
+                                {% if 'TPV' in chart_name %}
+                                    <i class="bx bx-package text-primary me-2"></i>
+                                    Total Productos Vendidos
+                                    <div class="chart-explanation">
+                                        Evolución de las ventas totales a lo largo del período simulado
+                                    </div>
+                                {% elif 'EOG' in chart_name %}
+                                    <i class="bx bx-tachometer text-success me-2"></i>
+                                    Eficiencia Operativa
+                                    <div class="chart-explanation">
+                                        Porcentaje de aprovechamiento de los recursos productivos
+                                    </div>
+                                {% elif 'CPROD' in chart_name %}
+                                    <i class="bx bx-factory text-info me-2"></i>
+                                    Capacidad de Producción
+                                    <div class="chart-explanation">
+                                        Capacidad máxima de producción disponible por período
+                                    </div>
+                                {% elif 'NEPP' in chart_name %}
+                                    <i class="bx bx-group text-warning me-2"></i>
+                                    Personal en Producción
+                                    <div class="chart-explanation">
+                                        Número de empleados asignados a actividades productivas
+                                    </div>
+                                {% endif %}
+                            </h6>
+                        </div>
+                        <div class="chart-controls">
+                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                    onclick="downloadChart('{{ chart_data }}', '{{ chart_name }}.png')" 
+                                    data-bs-toggle="tooltip" 
+                                    title="Descargar gráfico">
+                                <i class="bx bx-download"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                    onclick="openFullscreen('{{ chart_data }}', '{{ chart_name }}')" 
+                                    data-bs-toggle="tooltip" 
+                                    title="Pantalla completa">
+                                <i class="bx bx-fullscreen"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <img src="data:image/png;base64,{{ chart_data }}" 
+                            class="chart-image" 
+                            alt="Gráfico de {{ chart_name }}"
+                            loading="lazy">
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Tabla resumen mejorada -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="data-table-container">
+                <div class="table-header">
+                    <h5 class="table-title">
+                        <i class="bx bx-table me-2"></i>
+                        Resumen Operativo por Variable
+                    </h5>
+                    <p class="table-description">
+                        Consolidado de métricas operativas con valores promedio, totales y análisis de tendencias
+                    </p>
+                </div>
+                
+                <div class="table-content">
+                    <div class="table-responsive">
+                        <table class="table table-hover operations-summary-table">
+                            <thead class="table-header-enhanced">
+                                <tr>
+                                    <th scope="col">
+                                        <div class="th-content">
+                                            <span>Variable Operativa</span>
+                                            <i class="bx bx-info-circle ms-1" 
+                                               data-bs-toggle="tooltip" 
+                                               title="Nombre y descripción de la variable analizada"></i>
+                                        </div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="th-content">
+                                            <span>Promedio Diario</span>
+                                            <i class="bx bx-info-circle ms-1" 
+                                               data-bs-toggle="tooltip" 
+                                               title="Valor promedio por día del período"></i>
+                                        </div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="th-content">
+                                            <span>Unidad</span>
+                                            <i class="bx bx-info-circle ms-1" 
+                                               data-bs-toggle="tooltip" 
+                                               title="Unidad de medida de la variable"></i>
+                                        </div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="th-content">
+                                            <span>Valor Total</span>
+                                            <i class="bx bx-info-circle ms-1" 
+                                               data-bs-toggle="tooltip" 
+                                               title="Valor acumulado en todo el período"></i>
+                                        </div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="th-content">
+                                            <span>Tendencia</span>
+                                            <i class="bx bx-info-circle ms-1" 
+                                               data-bs-toggle="tooltip" 
+                                               title="Dirección del comportamiento de la variable"></i>
+                                        </div>
+                                    </th>
+                                    <th scope="col">
+                                        <div class="th-content">
+                                            <span>Estado</span>
+                                            <i class="bx bx-info-circle ms-1" 
+                                               data-bs-toggle="tooltip" 
+                                               title="Evaluación cualitativa del rendimiento"></i>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for name_variable, info_variable in totales_acumulativos.items %}
+                                    {% if 'TPV' in name_variable or 'EOG' in name_variable or 'CPROD' in name_variable or 'NEPP' in name_variable or 'CFD' in name_variable or 'CVU' in name_variable %}
+                                    <tr class="table-row-enhanced">
+                                        <td class="variable-name-cell">
+                                            <div class="variable-info">
+                                                <strong class="variable-display-name">
+                                                    {% if name_variable == 'TPV' %}Total Productos Vendidos
+                                                    {% elif name_variable == 'EOG' %}Eficiencia Operativa General
+                                                    {% elif name_variable == 'CPROD' %}Capacidad de Producción
+                                                    {% elif name_variable == 'NEPP' %}Empleados en Producción
+                                                    {% elif name_variable == 'CFD' %}Costo Fijo Diario
+                                                    {% elif name_variable == 'CVU' %}Costo Variable Unitario
+                                                    {% else %}{{ name_variable }}
+                                                    {% endif %}
+                                                </strong>
+                                                <div class="variable-code">{{ name_variable }}</div>
+                                            </div>
+                                        </td>
+                                        <td class="value-cell">
+                                            <div class="value-display">
+                                                {% if info_variable.unit == "BS" %}
+                                                    <span class="value-amount text-warning">Bs. {{ info_variable.total|floatformat:2 }}</span>
+                                                {% elif info_variable.unit == "L" %}
+                                                    <span class="value-amount text-primary">{{ info_variable.total|floatformat:0 }} L</span>
+                                                {% elif "%" in info_variable.unit %}
+                                                    <span class="value-amount text-info">{{ info_variable.total|floatformat:3 }}%</span>
+                                                {% else %}
+                                                    <span class="value-amount">{{ info_variable.total|floatformat:2 }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="unit-badge">
+                                                {% if info_variable.unit == "BS" %}Bolivianos
+                                                {% elif info_variable.unit == "L" %}Litros
+                                                {% elif info_variable.unit == "%" %}Porcentaje
+                                                {% elif "Personas" in info_variable.unit %}Empleados
+                                                {% else %}{{ info_variable.unit }}
+                                                {% endif %}
+                                            </span>
+                                        </td>
+                                        <td class="value-cell">
+                                            <div class="value-display">
+                                                {% if all_variables_extracted|length > 0 %}
+                                                    {% widthratio info_variable.total 1 all_variables_extracted|length as daily_avg %}
+                                                    {% if info_variable.unit == "BS" %}
+                                                        <span class="value-amount">Bs. {{ daily_avg|floatformat:2 }}</span>
+                                                    {% elif info_variable.unit == "L" %}
+                                                        <span class="value-amount">{{ daily_avg|floatformat:1 }} L</span>
+                                                    {% elif "%" in info_variable.unit %}
+                                                        <span class="value-amount">{{ daily_avg|floatformat:3 }}%</span>
+                                                    {% else %}
+                                                        <span class="value-amount">{{ daily_avg|floatformat:2 }}</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if info_variable.trend == "increasing" %}
+                                                <span class="trend-badge trend-up">
+                                                    <i class="bx bx-trending-up me-1"></i>Creciente
+                                                </span>
+                                            {% elif info_variable.trend == "decreasing" %}
+                                                <span class="trend-badge trend-down">
+                                                    <i class="bx bx-trending-down me-1"></i>Decreciente
+                                                </span>
+                                            {% else %}
+                                                <span class="trend-badge trend-stable">
+                                                    <i class="bx bx-minus me-1"></i>Estable
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if name_variable == 'EOG' %}
+                                                {% if info_variable.total > 80 %}
+                                                    <span class="status-badge status-excellent">Excelente</span>
+                                                {% elif info_variable.total > 60 %}
+                                                    <span class="status-badge status-good">Bueno</span>
+                                                {% else %}
+                                                    <span class="status-badge status-low">Bajo</span>
+                                                {% endif %}
+                                            {% elif name_variable == 'TPV' %}
+                                                {% if info_variable.trend == "increasing" %}
+                                                    <span class="status-badge status-growing">Creciendo</span>
+                                                {% elif info_variable.trend == "decreasing" %}
+                                                    <span class="status-badge status-declining">Decreciendo</span>
+                                                {% else %}
+                                                    <span class="status-badge status-stable">Estable</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="status-badge status-normal">Normal</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="empty-state">
+                                        <div class="empty-content">
+                                            <i class="bx bx-info-circle empty-icon"></i>
+                                            <h6 class="empty-title">No hay datos operativos disponibles</h6>
+                                            <p class="empty-text">
+                                                Los datos se generarán automáticamente durante el procesamiento 
+                                                de la simulación. Por favor, ejecute la simulación para ver los resultados.
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer con información adicional -->
+    <div class="row">
+        <div class="col-12">
+            <div class="operations-footer">
+                <div class="footer-info">
+                    <small class="text-muted">
+                        <i class="bx bx-time me-1"></i>
+                        Última actualización: <span id="lastUpdateTime">{{ now|date:"d/m/Y H:i" }}</span>
+                    </small>
+                </div>
+                <div class="footer-actions">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="window.print()">
+                        <i class="bx bx-printer me-1"></i>
+                        Imprimir Reporte
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="exportOperationsReport()">
+                        <i class="bx bx-download me-1"></i>
+                        Exportar CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    // ==========================================
+// COMPONENTE DE OPERACIONES - JAVASCRIPT
+// ==========================================
+
+// Variables globales del componente
+let operationsChart = null;
+let efficiencyChart = null;
+let capacityChart = null;
+let operationsInitialized = false;
+
+/**
+ * Inicialización principal del componente de operaciones
+ */
+function initializeOperationsTab() {
+    if (operationsInitialized) {
+        console.log('Operations tab already initialized');
+        return;
+    }
+
+    try {
+        // Inicializar tooltips de Bootstrap
+        initializeTooltips();
+        
+        // Inicializar gráficos
+        initializeOperationsCharts();
+        
+        // Calcular métricas operacionales
+        calculateOperationalMetrics();
+        
+        // Configurar filtros y controles
+        setupOperationsFilters();
+        
+        // Análisis de capacidad
+        initializeCapacityAnalysis();
+        
+        // Configurar alertas operacionales
+        setupOperationsAlerts();
+        
+        // Configurar eventos de interfaz
+        setupUIEvents();
+        
+        // Actualizar timestamp
+        updateLastUpdateTime();
+        
+        operationsInitialized = true;
+        console.log('Operations tab initialized successfully');
+        
+        // Mostrar mensaje de bienvenida
+        showOperationsWelcome();
+        
+    } catch (error) {
+        console.error('Error initializing operations tab:', error);
+        showNotification('Error al inicializar el análisis operativo', 'error');
+    }
+}
+
+/**
+ * Inicializar tooltips de Bootstrap
+ */
+function initializeTooltips() {
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => {
+        return new bootstrap.Tooltip(tooltipTriggerEl, {
+            delay: { show: 500, hide: 100 }
+        });
+    });
+}
+
+/**
+ * Mostrar mensaje de bienvenida informativo
+ */
+function showOperationsWelcome() {
+    const hasData = document.querySelectorAll('.table-row-enhanced').length > 0;
+    
+    if (hasData) {
+        showNotification('Análisis operativo cargado correctamente', 'success', 3000);
+    } else {
+        showNotification('Ejecute la simulación para generar datos operativos', 'info', 5000);
+    }
+}
+
+/**
+ * Configurar eventos de la interfaz de usuario
+ */
+function setupUIEvents() {
+    // Evento para actualizar datos
+    document.addEventListener('refreshOperationsData', function() {
+        refreshOperationsData();
+    });
+    
+    // Eventos de hover para KPI cards
+    document.querySelectorAll('.kpi-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Eventos para tabla interactiva
+    setupTableInteractions();
+    
+    // Configurar búsqueda en tabla
+    setupTableSearch();
+}
+
+/**
+ * Configurar interacciones de la tabla
+ */
+function setupTableInteractions() {
+    const tableRows = document.querySelectorAll('.table-row-enhanced');
+    
+    tableRows.forEach(row => {
+        row.addEventListener('click', function() {
+            // Resaltar fila seleccionada
+            tableRows.forEach(r => r.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            // Mostrar detalles adicionales
+            const variableName = this.querySelector('.variable-code').textContent;
+            showVariableDetails(variableName);
+        });
+    });
+}
+
+/**
+ * Configurar búsqueda en tabla
+ */
+function setupTableSearch() {
+    // Crear campo de búsqueda si no existe
+    const tableContainer = document.querySelector('.data-table-container');
+    if (tableContainer && !document.getElementById('operationsTableSearch')) {
+        const searchContainer = document.createElement('div');
+        searchContainer.className = 'table-search-container mb-3';
+        searchContainer.innerHTML = `
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="bx bx-search"></i>
+                </span>
+                <input type="text" 
+                       class="form-control" 
+                       id="operationsTableSearch" 
+                       placeholder="Buscar variable operativa...">
+            </div>
+        `;
+        
+        tableContainer.insertBefore(searchContainer, tableContainer.querySelector('.table-content'));
+        
+        // Configurar evento de búsqueda
+        document.getElementById('operationsTableSearch').addEventListener('input', function(e) {
+            filterTableRows(e.target.value);
+        });
+    }
+}
+
+/**
+ * Filtrar filas de la tabla
+ */
+function filterTableRows(searchTerm) {
+    const rows = document.querySelectorAll('.table-row-enhanced');
+    const term = searchTerm.toLowerCase();
+    
+    rows.forEach(row => {
+        const variableName = row.querySelector('.variable-display-name').textContent.toLowerCase();
+        const variableCode = row.querySelector('.variable-code').textContent.toLowerCase();
+        
+        if (variableName.includes(term) || variableCode.includes(term)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+/**
+ * Mostrar detalles de variable seleccionada
+ */
+function showVariableDetails(variableName) {
+    const details = getVariableDetails(variableName);
+    
+    if (details) {
+        const modal = createDetailsModal(variableName, details);
+        document.body.appendChild(modal);
+        
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        // Limpiar modal después de cerrarlo
+        modal.addEventListener('hidden.bs.modal', function() {
+            modal.remove();
+        });
+    }
+}
+
+/**
+ * Obtener detalles de una variable
+ */
+function getVariableDetails(variableName) {
+    const variableInfo = {
+        'TPV': {
+            name: 'Total Productos Vendidos',
+            description: 'Cantidad total de productos vendidos durante el período de simulación.',
+            interpretation: 'Un valor alto indica buena demanda y capacidad de ventas.',
+            formula: 'Suma de productos vendidos por día'
+        },
+        'EOG': {
+            name: 'Eficiencia Operativa General',
+            description: 'Porcentaje de aprovechamiento de los recursos productivos disponibles.',
+            interpretation: 'Valores superiores al 80% indican excelente eficiencia operativa.',
+            formula: '(Producción Real / Capacidad Máxima) × 100'
+        },
+        'CPROD': {
+            name: 'Capacidad de Producción',
+            description: 'Capacidad máxima de producción disponible en el sistema.',
+            interpretation: 'Define el límite superior de producción posible.',
+            formula: 'Capacidad instalada del sistema'
+        },
+        'NEPP': {
+            name: 'Empleados en Producción',
+            description: 'Número de empleados asignados directamente a actividades productivas.',
+            interpretation: 'Recurso humano disponible para la producción.',
+            formula: 'Suma de empleados en áreas productivas'
+        },
+        'CFD': {
+            name: 'Costo Fijo Diario',
+            description: 'Costos que no varían con el nivel de producción.',
+            interpretation: 'Gastos constantes independientes del volumen producido.',
+            formula: 'Suma de costos fijos del período'
+        },
+        'CVU': {
+            name: 'Costo Variable Unitario',
+            description: 'Costo variable promedio por unidad producida.',
+            interpretation: 'Indica la eficiencia en el uso de recursos variables.',
+            formula: 'Total Costos Variables / Total Unidades Producidas'
+        }
+    };
+    
+    return variableInfo[variableName] || null;
+}
+
+/**
+ * Crear modal con detalles de variable
+ */
+function createDetailsModal(variableName, details) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.setAttribute('tabindex', '-1');
+    modal.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bx bx-info-circle me-2"></i>
+                        Detalles: ${details.name}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Descripción</h6>
+                            <p class="text-muted">${details.description}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Interpretación</h6>
+                            <p class="text-muted">${details.interpretation}</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Fórmula de Cálculo</h6>
+                            <code>${details.formula}</code>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    `;
+    return modal;
+}
+
+/**
+ * Actualizar timestamp de última actualización
+ */
+function updateLastUpdateTime() {
+    const timeElement = document.getElementById('lastUpdateTime');
+    if (timeElement) {
+        const now = new Date();
+        timeElement.textContent = now.toLocaleString('es-BO', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+}
+
+/**
+ * Inicialización de gráficos
+ */
+function initializeOperationsCharts() {
+    if (typeof Chart === 'undefined') {
+        console.warn('Chart.js no está disponible para gráficos operacionales');
+        return;
+    }
+    
+    initializeProductionChart();
+    initializeEfficiencyChart();
+    initializeCapacityUtilizationChart();
+    initializeOperationalTrendsChart();
+}
+
+/**
+ * Gráfico de producción
+ */
+function initializeProductionChart() {
+    const ctx = document.getElementById('productionChart');
+    if (!ctx) return;
+    
+    if (operationsChart) {
+        operationsChart.destroy();
+    }
+    
+    const operationalData = extractOperationalData();
+    
+    const config = {
+        type: 'bar',
+        data: {
+            labels: operationalData.labels,
+            datasets: [{
+                label: 'Producción Real (L)',
+                data: operationalData.production,
+                backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Demanda (L)',
+                data: operationalData.demand,
+                backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Capacidad Máxima (L)',
+                data: operationalData.capacity,
+                type: 'line',
+                borderColor: 'rgba(255, 206, 86, 1)',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: 0,
+                borderDash: [5, 5]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Producción vs Demanda vs Capacidad'
+                },
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        afterBody: function(context) {
+                            const dataIndex = context[0].dataIndex;
+                            const prod = operationalData.production[dataIndex];
+                            const demand = operationalData.demand[dataIndex];
+                            const capacity = operationalData.capacity[dataIndex];
+                            
+                            const efficiency = capacity > 0 ? ((prod / capacity) * 100).toFixed(1) : 0;
+                            const fulfillment = demand > 0 ? ((prod / demand) * 100).toFixed(1) : 100;
+                            
+                            return [
+                                `Eficiencia: ${efficiency}%`,
+                                `Cumplimiento: ${fulfillment}%`
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Litros'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Días de Simulación'
+                    }
+                }
+            }
+        }
+    };
+    
+    operationsChart = new Chart(ctx, config);
+}
+
+/**
+ * Gráfico de eficiencia
+ */
+function initializeEfficiencyChart() {
+    const ctx = document.getElementById('efficiencyChart');
+    if (!ctx) return;
+    
+    if (efficiencyChart) {
+        efficiencyChart.destroy();
+    }
+    
+    const operationalData = extractOperationalData();
+    const efficiencyData = operationalData.production.map((prod, index) => {
+        const capacity = operationalData.capacity[index];
+        return capacity > 0 ? (prod / capacity) * 100 : 0;
+    });
+    
+    const config = {
+        type: 'line',
+        data: {
+            labels: operationalData.labels,
+            datasets: [{
+                label: 'Eficiencia de Producción (%)',
+                data: efficiencyData,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Eficiencia de Producción Diaria'
+                },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const value = context.parsed.y;
+                            if (value >= 90) return 'Excelente eficiencia';
+                            if (value >= 70) return 'Buena eficiencia';
+                            if (value >= 50) return 'Eficiencia regular';
+                            return 'Eficiencia baja';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Eficiencia (%)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    };
+    
+    efficiencyChart = new Chart(ctx, config);
+}
+
+/**
+ * Gráfico de utilización de capacidad
+ */
+function initializeCapacityUtilizationChart() {
+    const ctx = document.getElementById('capacityUtilizationChart');
+    if (!ctx) return;
+    
+    if (capacityChart) {
+        capacityChart.destroy();
+    }
+    
+    const utilizationData = calculateCapacityUtilization();
+    
+    const config = {
+        type: 'doughnut',
+        data: {
+            labels: ['Capacidad Utilizada', 'Capacidad Disponible'],
+            datasets: [{
+                data: [utilizationData.used, utilizationData.available],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(220, 220, 220, 0.8)'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Utilización de Capacidad Promedio'
+                },
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed;
+                            return context.label + ': ' + value.toFixed(1) + '%';
+                        }
+                    }
+                }
+            }
+        }
+    };
+    
+    capacityChart = new Chart(ctx, config);
+}
+
+/**
+ * Gráfico de tendencias operacionales
+ */
+function initializeOperationalTrendsChart() {
+    const ctx = document.getElementById('operationalTrendsChart');
+    if (!ctx) return;
+    
+    const operationalData = extractOperationalData();
+    
+    // Calcular indicadores operacionales
+    const satisfactionRate = operationalData.production.map((prod, index) => {
+        const demand = operationalData.demand[index];
+        return demand > 0 ? Math.min((prod / demand) * 100, 100) : 100;
+    });
+    
+    const wasteRate = operationalData.production.map((prod, index) => {
+        const capacity = operationalData.capacity[index];
+        const demand = operationalData.demand[index];
+        const excess = Math.max(0, prod - demand);
+        return capacity > 0 ? (excess / capacity) * 100 : 0;
+    });
+    
+    const config = {
+        type: 'line',
+        data: {
+            labels: operationalData.labels,
+            datasets: [{
+                label: 'Tasa de Satisfacción (%)',
+                data: satisfactionRate,
+                borderColor: 'rgba(40, 167, 69, 1)',
+                backgroundColor: 'transparent',
+                yAxisID: 'y'
+            }, {
+                label: 'Tasa de Desperdicio (%)',
+                data: wasteRate,
+                borderColor: 'rgba(220, 53, 69, 1)',
+                backgroundColor: 'transparent',
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Indicadores Operacionales'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Satisfacción (%)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Desperdicio (%)'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            }
+        }
+    };
+    
+    new Chart(ctx, config);
+}
+
+/**
+ * Extraer datos operacionales del DOM
+ */
+function extractOperationalData() {
+    const dailyItems = document.querySelectorAll('.daily-result-item');
+    const labels = [];
+    const production = [];
+    const demand = [];
+    const capacity = [];
+    
+    dailyItems.forEach((item, index) => {
+        const day = index + 1;
+        labels.push(`Día ${day}`);
+        
+        const prod = parseFloat(item.querySelector('[data-production]')?.dataset.production || 
+                               item.querySelector('[data-demand]')?.dataset.demand || 0);
+        const dem = parseFloat(item.querySelector('[data-demand]')?.dataset.demand || 0);
+        const cap = parseFloat(document.querySelector('[data-variable="CPROD"] .variable-total')?.textContent.replace(/[^\d.-]/g, '') || 1000);
+        
+        production.push(prod);
+        demand.push(dem);
+        capacity.push(cap);
+    });
+    
+    return { labels, production, demand, capacity };
+}
+
+/**
+ * Calcular métricas operacionales
+ */
+function calculateOperationalMetrics() {
+    const operationalData = extractOperationalData();
+    
+    if (operationalData.production.length === 0) {
+        console.log('No operational data available for metrics calculation');
+        return;
+    }
+    
+    // Métricas clave
+    const totalProduction = operationalData.production.reduce((a, b) => a + b, 0);
+    const totalDemand = operationalData.demand.reduce((a, b) => a + b, 0);
+    const avgCapacityUtilization = operationalData.production.reduce((sum, prod, index) => {
+        const cap = operationalData.capacity[index];
+        return sum + (cap > 0 ? (prod / cap) * 100 : 0);
+    }, 0) / operationalData.production.length;
+    
+    const fulfillmentRate = totalDemand > 0 ? Math.min((totalProduction / totalDemand) * 100, 100) : 100;
+    const avgEfficiency = calculateAverageEfficiency(operationalData);
+    const wasteRate = calculateWasteRate(operationalData);
+    
+    // Tiempo de inactividad estimado
+    const downtime = calculateDowntime(operationalData);
+    
+    // OEE (Overall Equipment Effectiveness)
+    const oee = calculateOEE(avgCapacityUtilization, avgEfficiency, (100 - downtime));
+    
+    updateOperationalMetricsDisplay({
+        totalProduction,
+        totalDemand,
+        avgCapacityUtilization,
+        fulfillmentRate,
+        avgEfficiency,
+        wasteRate,
+        downtime,
+        oee
+    });
+}
+
+/**
+ * Calcular eficiencia promedio
+ */
+function calculateAverageEfficiency(data) {
+    const efficiencies = data.production.map((prod, index) => {
+        const demand = data.demand[index];
+        const capacity = data.capacity[index];
+        
+        if (capacity === 0) return 0;
+        
+        const targetProduction = Math.min(demand, capacity);
+        return targetProduction > 0 ? (prod / targetProduction) * 100 : 100;
+    });
+    
+    return efficiencies.reduce((a, b) => a + b, 0) / efficiencies.length;
+}
+
+/**
+ * Calcular tasa de desperdicio
+ */
+function calculateWasteRate(data) {
+    let totalWaste = 0;
+    let totalProduction = 0;
+    
+    data.production.forEach((prod, index) => {
+        const demand = data.demand[index];
+        const waste = Math.max(0, prod - demand);
+        totalWaste += waste;
+        totalProduction += prod;
+    });
+    
+    return totalProduction > 0 ? (totalWaste / totalProduction) * 100 : 0;
+}
+
+/**
+ * Calcular tiempo de inactividad
+ */
+function calculateDowntime(data) {
+    const avgEfficiency = calculateAverageEfficiency(data);
+    return Math.max(0, 100 - avgEfficiency);
+}
+
+/**
+ * Calcular OEE (Overall Equipment Effectiveness)
+ */
+function calculateOEE(availability, performance, quality) {
+    return (availability / 100) * (performance / 100) * (quality / 100) * 100;
+}
+
+/**
+ * Calcular utilización de capacidad
+ */
+function calculateCapacityUtilization() {
+    const operationalData = extractOperationalData();
+    
+    if (operationalData.production.length === 0) {
+        return { used: 0, available: 100 };
+    }
+    
+    const avgUtilization = operationalData.production.reduce((sum, prod, index) => {
+        const capacity = operationalData.capacity[index];
+        return sum + (capacity > 0 ? (prod / capacity) * 100 : 0);
+    }, 0) / operationalData.production.length;
+    
+    return {
+        used: avgUtilization,
+        available: 100 - avgUtilization
+    };
+}
+
+/**
+ * Actualizar display de métricas operacionales
+ */
+function updateOperationalMetricsDisplay(metrics) {
+    const elements = {
+        totalProduction: document.getElementById('totalProductionValue'),
+        capacityUtilization: document.getElementById('capacityUtilizationValue'),
+        fulfillmentRate: document.getElementById('fulfillmentRateValue'),
+        efficiency: document.getElementById('operationalEfficiencyValue'),
+        wasteRate: document.getElementById('wasteRateValue'),
+        oee: document.getElementById('oeeValue')
+    };
+    
+    if (elements.totalProduction) {
+        elements.totalProduction.textContent = `${formatNumber(metrics.totalProduction, 0)} L`;
+    }
+    if (elements.capacityUtilization) {
+        elements.capacityUtilization.textContent = `${metrics.avgCapacityUtilization.toFixed(1)}%`;
+        elements.capacityUtilization.className = getEfficiencyClass(metrics.avgCapacityUtilization);
+    }
+    if (elements.fulfillmentRate) {
+        elements.fulfillmentRate.textContent = `${metrics.fulfillmentRate.toFixed(1)}%`;
+        elements.fulfillmentRate.className = getEfficiencyClass(metrics.fulfillmentRate);
+    }
+    if (elements.efficiency) {
+        elements.efficiency.textContent = `${metrics.avgEfficiency.toFixed(1)}%`;
+        elements.efficiency.className = getEfficiencyClass(metrics.avgEfficiency);
+    }
+    if (elements.wasteRate) {
+        elements.wasteRate.textContent = `${metrics.wasteRate.toFixed(1)}%`;
+        elements.wasteRate.className = getWasteClass(metrics.wasteRate);
+    }
+    if (elements.oee) {
+        elements.oee.textContent = `${metrics.oee.toFixed(1)}%`;
+        elements.oee.className = getOEEClass(metrics.oee);
+    }
+    
+    updateOperationalProgressBars(metrics);
+}
+
+/**
+ * Obtener clase CSS para eficiencia
+ */
+function getEfficiencyClass(value) {
+    if (value >= 90) return 'text-success fw-bold';
+    if (value >= 70) return 'text-warning fw-bold';
+    return 'text-danger fw-bold';
+}
+
+/**
+ * Obtener clase CSS para desperdicio
+ */
+function getWasteClass(value) {
+    if (value <= 5) return 'text-success fw-bold';
+    if (value <= 15) return 'text-warning fw-bold';
+    return 'text-danger fw-bold';
+}
+
+/**
+ * Obtener clase CSS para OEE
+ */
+function getOEEClass(value) {
+    if (value >= 85) return 'text-success fw-bold';
+    if (value >= 60) return 'text-warning fw-bold';
+    return 'text-danger fw-bold';
+}
+
+/**
+ * Actualizar barras de progreso
+ */
+function updateOperationalProgressBars(metrics) {
+    const progressBars = {
+        capacity: document.getElementById('capacityProgress'),
+        efficiency: document.getElementById('efficiencyProgress'),
+        fulfillment: document.getElementById('fulfillmentProgress'),
+        oee: document.getElementById('oeeProgress')
+    };
+    
+    if (progressBars.capacity) {
+        updateProgressBar(progressBars.capacity, metrics.avgCapacityUtilization);
+    }
+    if (progressBars.efficiency) {
+        updateProgressBar(progressBars.efficiency, metrics.avgEfficiency);
+    }
+    if (progressBars.fulfillment) {
+        updateProgressBar(progressBars.fulfillment, metrics.fulfillmentRate);
+    }
+    if (progressBars.oee) {
+        updateProgressBar(progressBars.oee, metrics.oee);
+    }
+}
+
+/**
+ * Actualizar una barra de progreso individual
+ */
+function updateProgressBar(progressBar, value) {
+    const percentage = Math.min(100, Math.max(0, value));
+    progressBar.style.width = `${percentage}%`;
+    progressBar.setAttribute('aria-valuenow', percentage);
+    
+    // Cambiar color según el valor
+    progressBar.className = 'progress-bar';
+    if (percentage >= 80) {
+        progressBar.classList.add('bg-success');
+    } else if (percentage >= 60) {
+        progressBar.classList.add('bg-warning');
+    } else {
+        progressBar.classList.add('bg-danger');
+    }
+}
+
+/**
+ * Configurar filtros de operaciones
+ */
+function setupOperationsFilters() {
+    // Filtro por tipo de métrica operacional
+    const metricFilter = document.getElementById('operationsMetricFilter');
+    if (metricFilter) {
+        metricFilter.addEventListener('change', function() {
+            const metric = this.value;
+            highlightOperationalMetric(metric);
+        });
+    }
+    
+    // Filtro por eficiencia
+    const efficiencyFilter = document.getElementById('efficiencyRangeFilter');
+    if (efficiencyFilter) {
+        efficiencyFilter.addEventListener('change', function() {
+            const range = this.value;
+            filterByEfficiencyRange(range);
+        });
+    }
+}
+
+/**
+ * Resaltar métrica operacional específica
+ */
+function highlightOperationalMetric(metric) {
+    // Resaltar métrica específica
+    document.querySelectorAll('.operations-metric-card').forEach(card => {
+        card.classList.remove('border-primary');
+    });
+    
+    const targetCard = document.querySelector(`[data-metric="${metric}"]`);
+    if (targetCard) {
+        targetCard.classList.add('border-primary');
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    // Actualizar gráfico si es necesario
+    updateChartHighlight(metric);
+}
+
+/**
+ * Actualizar resaltado en gráfico
+ */
+function updateChartHighlight(metric) {
+    // Cambiar el gráfico principal según la métrica seleccionada
+    if (!operationsChart) return;
+    
+    const datasets = operationsChart.data.datasets;
+    datasets.forEach((dataset, index) => {
+        if (metric === 'production' && index === 0) {
+            dataset.borderWidth = 3;
+        } else if (metric === 'demand' && index === 1) {
+            dataset.borderWidth = 3;
+        } else if (metric === 'capacity' && index === 2) {
+            dataset.borderWidth = 3;
+        } else {
+            dataset.borderWidth = 1;
+        }
+    });
+    
+    operationsChart.update();
+}
+
+/**
+ * Filtrar por rango de eficiencia
+ */
+function filterByEfficiencyRange(range) {
+    const operationalData = extractOperationalData();
+    
+    let threshold = 0;
+    switch(range) {
+        case 'high': threshold = 80; break;
+        case 'medium': threshold = 60; break;
+        case 'low': threshold = 0; break;
+    }
+    
+    const filteredDays = [];
+    operationalData.production.forEach((prod, index) => {
+        const capacity = operationalData.capacity[index];
+        const efficiency = capacity > 0 ? (prod / capacity) * 100 : 0;
+        
+        if ((range === 'high' && efficiency >= 80) ||
+            (range === 'medium' && efficiency >= 60 && efficiency < 80) ||
+            (range === 'low' && efficiency < 60)) {
+            filteredDays.push(index + 1);
+        }
+    });
+    
+    if (filteredDays.length > 0) {
+        showNotification(`Encontrados ${filteredDays.length} días con eficiencia ${range}`, 'info');
+        highlightDaysInTimeline(filteredDays);
+    } else {
+        showNotification(`No se encontraron días con eficiencia ${range}`, 'warning');
+    }
+}
+
+/**
+ * Resaltar días en timeline
+ */
+function highlightDaysInTimeline(days) {
+    // Resaltar días específicos en la timeline
+    document.querySelectorAll('.timeline-dot').forEach((dot, index) => {
+        dot.classList.remove('highlighted');
+        if (days.includes(index + 1)) {
+            dot.classList.add('highlighted');
+        }
+    });
+}
+
+/**
+ * Inicializar análisis de capacidad
+ */
+function initializeCapacityAnalysis() {
+    const operationalData = extractOperationalData();
+    
+    if (operationalData.production.length === 0) {
+        console.log('No data available for capacity analysis');
+        return;
+    }
+    
+    // Análisis de cuellos de botella
+    const bottlenecks = identifyBottlenecks(operationalData);
+    displayBottleneckAnalysis(bottlenecks);
+    
+    // Recomendaciones de optimización
+    const recommendations = generateOptimizationRecommendations(operationalData);
+    displayOptimizationRecommendations(recommendations);
+}
+
+/**
+ * Identificar cuellos de botella
+ */
+function identifyBottlenecks(data) {
+    const bottlenecks = [];
+    
+    data.production.forEach((prod, index) => {
+        const demand = data.demand[index];
+        const capacity = data.capacity[index];
+        const day = index + 1;
+        
+        if (demand > capacity) {
+            bottlenecks.push({
+                day: day,
+                type: 'capacity',
+                shortage: demand - capacity,
+                severity: ((demand - capacity) / demand) * 100
+            });
+        } else if (prod < demand && prod < capacity * 0.9) {
+            bottlenecks.push({
+                day: day,
+                type: 'efficiency',
+                shortage: demand - prod,
+                severity: ((demand - prod) / demand) * 100
+            });
+        }
+    });
+    
+    return bottlenecks;
+}
+
+/**
+ * Mostrar análisis de cuellos de botella
+ */
+function displayBottleneckAnalysis(bottlenecks) {
+    const container = document.getElementById('bottleneckAnalysis');
+    if (!container) return;
+    
+    if (bottlenecks.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-success">
+                <i class="bx bx-check-circle me-2"></i>
+                No se detectaron cuellos de botella significativos en la producción.
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<h6>Cuellos de Botella Identificados:</h6>';
+    html += '<div class="row g-2">';
+    
+    bottlenecks.forEach(bottleneck => {
+        const severityClass = bottleneck.severity > 30 ? 'danger' : 
+                             bottleneck.severity > 15 ? 'warning' : 'info';
+        
+        html += `
+            <div class="col-md-6">
+                <div class="card border-${severityClass}">
+                    <div class="card-body p-2">
+                        <h6 class="card-title">Día ${bottleneck.day}</h6>
+                        <p class="card-text small">
+                            <strong>Tipo:</strong> ${bottleneck.type === 'capacity' ? 'Capacidad' : 'Eficiencia'}<br>
+                            <strong>Déficit:</strong> ${bottleneck.shortage.toFixed(0)} L<br>
+                            <strong>Severidad:</strong> ${bottleneck.severity.toFixed(1)}%
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+/**
+ * Generar recomendaciones de optimización
+ */
+function generateOptimizationRecommendations(data) {
+    const recommendations = [];
+    const avgCapacityUtilization = calculateCapacityUtilization().used;
+    const avgEfficiency = calculateAverageEfficiency(data);
+    const wasteRate = calculateWasteRate(data);
+    
+    if (avgCapacityUtilization < 70) {
+        recommendations.push({
+            type: 'capacity',
+            priority: 'medium',
+            title: 'Optimizar Utilización de Capacidad',
+            description: `La utilización promedio de capacidad es ${avgCapacityUtilization.toFixed(1)}%. Considere aumentar la producción o ajustar la capacidad.`
+        });
+    }
+    
+    if (avgEfficiency < 80) {
+        recommendations.push({
+            type: 'efficiency',
+            priority: 'high',
+            title: 'Mejorar Eficiencia Operacional',
+            description: `La eficiencia promedio es ${avgEfficiency.toFixed(1)}%. Revise los procesos de producción y capacitación del personal.`
+        });
+    }
+    
+    if (wasteRate > 10) {
+        recommendations.push({
+            type: 'waste',
+            priority: 'high',
+            title: 'Reducir Desperdicio',
+            description: `La tasa de desperdicio es ${wasteRate.toFixed(1)}%. Implemente sistemas de control de calidad y planificación de demanda.`
+        });
+    }
+    
+    return recommendations;
+}
+
+/**
+ * Mostrar recomendaciones de optimización
+ */
+function displayOptimizationRecommendations(recommendations) {
+    const container = document.getElementById('optimizationRecommendations');
+    if (!container) return;
+    
+    if (recommendations.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-success">
+                <i class="bx bx-thumbs-up me-2"></i>
+                Las operaciones están funcionando de manera óptima. ¡Excelente trabajo!
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<h6>Recomendaciones de Optimización:</h6>';
+    html += '<div class="accordion" id="recommendationsAccordion">';
+    
+    recommendations.forEach((rec, index) => {
+        const priorityClass = rec.priority === 'high' ? 'danger' : 
+                             rec.priority === 'medium' ? 'warning' : 'info';
+        
+        html += `
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading${index}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#collapse${index}">
+                        <span class="badge bg-${priorityClass} me-2">${rec.priority.toUpperCase()}</span>
+                        ${rec.title}
+                    </button>
+                </h2>
+                <div id="collapse${index}" class="accordion-collapse collapse" 
+                     data-bs-parent="#recommendationsAccordion">
+                    <div class="accordion-body">
+                        ${rec.description}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+/**
+ * Configurar alertas operacionales
+ */
+function setupOperationsAlerts() {
+    const operationalData = extractOperationalData();
+    
+    if (operationalData.production.length === 0) {
+        return;
+    }
+    
+    const alerts = [];
+    
+    // Verificar alertas de capacidad
+    operationalData.demand.forEach((demand, index) => {
+        const capacity = operationalData.capacity[index];
+        const day = index + 1;
+        
+        if (demand > capacity * 1.1) {
+            alerts.push({
+                type: 'danger',
+                day: day,
+                message: `Día ${day}: Demanda excede capacidad en ${((demand/capacity - 1) * 100).toFixed(1)}%`
+            });
+        } else if (demand > capacity * 0.9) {
+            alerts.push({
+                type: 'warning',
+                day: day,
+                message: `Día ${day}: Demanda cerca del límite de capacidad`
+            });
+        }
+    });
+    
+    displayOperationsAlerts(alerts);
+}
+
+/**
+ * Mostrar alertas operacionales
+ */
+function displayOperationsAlerts(alerts) {
+    const container = document.getElementById('operationsAlerts');
+    if (!container) return;
+    
+    if (alerts.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-success">
+                <i class="bx bx-shield-check me-2"></i>
+                No hay alertas operacionales activas.
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    alerts.forEach(alert => {
+        html += `
+            <div class="alert alert-${alert.type} alert-dismissible fade show">
+                <i class="bx bx-error-circle me-2"></i>
+                ${alert.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+/**
+ * Exportar reporte de operaciones
+ */
+function exportOperationsReport() {
+    try {
+        const operationalData = extractOperationalData();
+        const metrics = extractOperationalMetrics();
+        const csvContent = generateOperationsCSV(operationalData, metrics);
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `reporte_operaciones_${new Date().getTime()}.csv`;
+        link.click();
+        
+        showNotification('Reporte de operaciones exportado exitosamente', 'success');
+    } catch (error) {
+        console.error('Error exporting operations report:', error);
+        showNotification('Error al exportar reporte de operaciones', 'error');
+    }
+}
+
+/**
+ * Extraer métricas operacionales del DOM
+ */
+function extractOperationalMetrics() {
+    return {
+        totalProduction: parseFloat(document.getElementById('totalProductionValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        capacityUtilization: parseFloat(document.getElementById('capacityUtilizationValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        fulfillmentRate: parseFloat(document.getElementById('fulfillmentRateValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        efficiency: parseFloat(document.getElementById('operationalEfficiencyValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        wasteRate: parseFloat(document.getElementById('wasteRateValue')?.textContent.replace(/[^\d.-]/g, '') || 0),
+        oee: parseFloat(document.getElementById('oeeValue')?.textContent.replace(/[^\d.-]/g, '') || 0)
+    };
+}
+
+/**
+ * Generar CSV de operaciones
+ */
+function generateOperationsCSV(operationalData, metrics) {
+    let csv = 'Reporte de Operaciones - Simulación\n\n';
+    csv += 'Resumen de Métricas\n';
+    csv += 'Métrica,Valor\n';
+    csv += `Producción Total,"${metrics.totalProduction} L"\n`;
+    csv += `Utilización de Capacidad,"${metrics.capacityUtilization}%"\n`;
+    csv += `Tasa de Cumplimiento,"${metrics.fulfillmentRate}%"\n`;
+    csv += `Eficiencia Operacional,"${metrics.efficiency}%"\n`;
+    csv += `Tasa de Desperdicio,"${metrics.wasteRate}%"\n`;
+    csv += `OEE,"${metrics.oee}%"\n\n`;
+    
+    csv += 'Datos Diarios\n';
+    csv += 'Día,Producción (L),Demanda (L),Capacidad (L),Utilización (%)\n';
+    
+    operationalData.production.forEach((prod, index) => {
+        const day = index + 1;
+        const demand = operationalData.demand[index];
+        const capacity = operationalData.capacity[index];
+        const utilization = capacity > 0 ? (prod / capacity) * 100 : 0;
+        
+        csv += `${day},${prod},${demand},${capacity},${utilization.toFixed(1)}\n`;
+    });
+    
+    csv += `\nFecha de Generación,"${new Date().toLocaleDateString()}"\n`;
+    
+    return csv;
+}
+
+/**
+ * Refrescar datos de operaciones
+ */
+function refreshOperationsData() {
+    try {
+        // Recalcular métricas
+        calculateOperationalMetrics();
+        
+        // Actualizar gráficos
+        if (operationsChart) {
+            const newData = extractOperationalData();
+            operationsChart.data.labels = newData.labels;
+            operationsChart.data.datasets[0].data = newData.production;
+            operationsChart.data.datasets[1].data = newData.demand;
+            operationsChart.data.datasets[2].data = newData.capacity;
+            operationsChart.update();
+        }
+        
+        // Actualizar análisis
+        initializeCapacityAnalysis();
+        setupOperationsAlerts();
+        
+        // Actualizar timestamp
+        updateLastUpdateTime();
+        
+        showNotification('Datos operativos actualizados', 'success');
+        
+    } catch (error) {
+        console.error('Error refreshing operations data:', error);
+        showNotification('Error al actualizar datos operativos', 'error');
+    }
+}
+
+/**
+ * Mostrar notificación
+ */
+function showNotification(message, type = 'info', duration = 3000) {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    // Crear contenedor de toasts si no existe
+    let toastContainer = document.getElementById('operationsToastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'operationsToastContainer';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '1055';
+        document.body.appendChild(toastContainer);
+    }
+    
+    toastContainer.appendChild(toast);
+    
+    const bsToast = new bootstrap.Toast(toast, { delay: duration });
+    bsToast.show();
+    
+    // Limpiar toast después de ocultarlo
+    toast.addEventListener('hidden.bs.toast', function() {
+        toast.remove();
+    });
+}
+
+/**
+ * Formatear número
+ */
+function formatNumber(number, decimals = 2) {
+    return number.toLocaleString('es-BO', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
+}
+
+/**
+ * Funciones de gráficos (compatibilidad)
+ */
+function downloadChart(imageData, filename) {
+    try {
+        const link = document.createElement('a');
+        link.href = 'data:image/png;base64,' + imageData;
+        link.download = filename;
+        link.click();
+        
+        showNotification('Gráfico descargado exitosamente', 'success');
+    } catch (error) {
+        console.error('Error downloading chart:', error);
+        showNotification('Error al descargar gráfico', 'error');
+    }
+}
+
+function openFullscreen(imageData, title) {
+    try {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.setAttribute('tabindex', '-1');
+        modal.innerHTML = `
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img src="data:image/png;base64,${imageData}" 
+                             class="img-fluid" 
+                             alt="${title}">
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        
+        modal.addEventListener('hidden.bs.modal', function() {
+            modal.remove();
+        });
+        
+    } catch (error) {
+        console.error('Error opening fullscreen:', error);
+        showNotification('Error al abrir pantalla completa', 'error');
+    }
+}
+
+// ==========================================
+// INICIALIZACIÓN Y EVENTOS GLOBALES
+// ==========================================
+
+// Inicializar cuando se muestre el tab
+document.addEventListener('shown.bs.tab', function(e) {
+    if (e.target.getAttribute('aria-controls') === 'operations') {
+        setTimeout(initializeOperationsTab, 100);
+    }
+});
+
+// Re-inicializar si el tab ya está activo
+document.addEventListener('DOMContentLoaded', function() {
+    const operationsTab = document.getElementById('operations');
+    if (operationsTab && operationsTab.classList.contains('active')) {
+        setTimeout(initializeOperationsTab, 500);
+    }
+});
+
+// Limpiar recursos cuando se sale del tab
+document.addEventListener('hidden.bs.tab', function(e) {
+    if (e.target.getAttribute('aria-controls') === 'operations') {
+        // Limpiar gráficos para evitar memory leaks
+        if (operationsChart) {
+            operationsChart.destroy();
+            operationsChart = null;
+        }
+        if (efficiencyChart) {
+            efficiencyChart.destroy();
+            efficiencyChart = null;
+        }
+        if (capacityChart) {
+            capacityChart.destroy();
+            capacityChart = null;
+        }
+        
+        operationsInitialized = false;
+    }
+});
+
+// Exportar funciones globales para compatibilidad
+window.initializeOperationsTab = initializeOperationsTab;
+window.exportOperationsReport = exportOperationsReport;
+window.highlightOperationalMetric = highlightOperationalMetric;
+window.filterByEfficiencyRange = filterByEfficiencyRange;
+window.downloadChart = downloadChart;
+window.openFullscreen = openFullscreen;
+window.refreshOperationsData = refreshOperationsData;
+
+</script>

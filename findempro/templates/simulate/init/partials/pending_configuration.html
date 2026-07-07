@@ -1,0 +1,817 @@
+<!-- Pending Configuration State -->
+<div class="card h-100 pending-config-card">
+    <div class="card-body d-flex align-items-center justify-content-center">
+        <div class="text-center pending-content">
+            <!-- Animated Icon -->
+            <div class="pending-icon mb-4">
+                <div class="icon-container">
+                    <i class="bx bx-cog icon-main"></i>
+                    <div class="icon-pulse"></div>
+                    <div class="icon-pulse delay-1"></div>
+                    <div class="icon-pulse delay-2"></div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="pending-text">
+                <h4 class="text-muted mb-3">Configuración Pendiente</h4>
+                <p class="text-muted mb-4 lead">
+                    Complete el formulario de la izquierda para configurar su modelo de simulación estadística.
+                </p>
+            </div>
+            
+            <!-- Steps Guide -->
+            <div class="steps-guide mb-4">
+                <h6 class="text-muted mb-3">Pasos siguientes:</h6>
+                <div class="steps-list">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-text">
+                            <strong>Seleccione un cuestionario</strong>
+                            <small class="d-block text-muted">Elija el cuestionario con datos históricos</small>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-text">
+                            <strong>Configure el tiempo</strong>
+                            <small class="d-block text-muted">Defina duración y unidad temporal</small>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-text">
+                            <strong>Analice los datos</strong>
+                            <small class="d-block text-muted">Revise el modelo estadístico generado</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-primary mb-2" onclick="focusFirstField()">
+                    <i class="bx bx-play me-2"></i>
+                    Comenzar Configuración
+                </button>
+                <br>
+                <button class="btn btn-outline-info btn-sm" onclick="startTutorial()">
+                    <i class="bx bx-help-circle me-2"></i>
+                    Iniciar Tutorial Guiado
+                </button>
+            </div>
+            
+            <!-- Help Information -->
+            <div class="help-info mt-4">
+                <div class="alert alert-light border">
+                    <div class="d-flex align-items-start">
+                        <i class="bx bx-info-circle text-info me-3 mt-1"></i>
+                        <div class="flex-grow-1 text-start">
+                            <h6 class="alert-heading mb-2">¿Necesita ayuda?</h6>
+                            <p class="mb-2 small">
+                                Nuestro sistema de simulación utiliza análisis estadístico avanzado para 
+                                generar predicciones precisas basadas en sus datos históricos.
+                            </p>
+                            <div class="help-links">
+                                <a href="#" class="text-info text-decoration-none me-3" onclick="showDocumentation()">
+                                    <i class="bx bx-book me-1"></i>
+                                    Documentación
+                                </a>
+                                <a href="#" class="text-info text-decoration-none me-3" onclick="showExamples()">
+                                    <i class="bx bx-bulb me-1"></i>
+                                    Ejemplos
+                                </a>
+                                <a href="#" class="text-info text-decoration-none" onclick="contactSupport()">
+                                    <i class="bx bx-support me-1"></i>
+                                    Soporte
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="quick-stats mt-4">
+                <div class="row g-3">
+                    <div class="col-4">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="bx bx-trending-up text-success"></i>
+                            </div>
+                            <div class="stat-value">95%</div>
+                            <div class="stat-label">Precisión</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="bx bx-time text-primary"></i>
+                            </div>
+                            <div class="stat-value">&lt;5min</div>
+                            <div class="stat-label">Procesamiento</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <i class="bx bx-calendar text-warning"></i>
+                            </div>
+                            <div class="stat-value">365</div>
+                            <div class="stat-label">Días máx.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Features Preview -->
+            <div class="features-preview mt-4">
+                <h6 class="text-muted mb-3">Lo que obtendrá:</h6>
+                <div class="features-list">
+                    <div class="feature-item">
+                        <i class="bx bx-check-circle text-success me-2"></i>
+                        <span>Análisis estadístico automático</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="bx bx-check-circle text-success me-2"></i>
+                        <span>Gráficos interactivos de demanda</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="bx bx-check-circle text-success me-2"></i>
+                        <span>Predicciones con intervalos de confianza</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="bx bx-check-circle text-success me-2"></i>
+                        <span>Reportes detallados descargables</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Pending Configuration Styles */
+.pending-config-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px dashed #dee2e6;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    min-height: 600px;
+}
+
+.pending-config-card:hover {
+    border-color: #adb5bd;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.pending-content {
+    max-width: 500px;
+    padding: 2rem;
+}
+
+/* Animated Icon */
+.pending-icon {
+    position: relative;
+    display: inline-block;
+}
+
+.icon-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-main {
+    font-size: 4rem;
+    color: #6c757d;
+    z-index: 2;
+    position: relative;
+    animation: iconFloat 3s ease-in-out infinite;
+}
+
+.icon-pulse {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    border: 2px solid #6c757d;
+    border-radius: 50%;
+    opacity: 0;
+    animation: pulse 2s infinite;
+}
+
+.icon-pulse.delay-1 {
+    animation-delay: 0.5s;
+}
+
+.icon-pulse.delay-2 {
+    animation-delay: 1s;
+}
+
+@keyframes iconFloat {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Steps Guide */
+.steps-guide {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.steps-list {
+    text-align: left;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.step-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.step-item:hover {
+    background: rgba(33, 150, 243, 0.05);
+    transform: translateX(5px);
+}
+
+.step-number {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #2196f3, #1976d2);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.step-text {
+    flex-grow: 1;
+    padding-top: 2px;
+}
+
+.step-text strong {
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.step-text small {
+    font-size: 0.8rem;
+    margin-top: 2px;
+}
+
+/* Action Buttons */
+.action-buttons .btn {
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.action-buttons .btn-primary {
+    background: linear-gradient(135deg, #2196f3, #1976d2);
+    border: none;
+}
+
+/* Help Information */
+.help-info .alert {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+}
+
+.help-links a {
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.help-links a:hover {
+    transform: translateY(-1px);
+    text-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
+}
+
+/* Quick Stats */
+.quick-stats {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 8px;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.stat-item:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #495057;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Features Preview */
+.features-preview {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.features-list {
+    text-align: left;
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+    color: #495057;
+    transition: all 0.2s ease;
+}
+
+.feature-item:hover {
+    color: #28a745;
+    transform: translateX(3px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .pending-content {
+        padding: 1.5rem;
+        max-width: none;
+    }
+    
+    .icon-main {
+        font-size: 3rem;
+    }
+    
+    .icon-container {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .steps-guide,
+    .quick-stats,
+    .features-preview,
+    .help-info .alert {
+        padding: 16px;
+    }
+    
+    .step-number {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+    }
+    
+    .step-text strong {
+        font-size: 0.85rem;
+    }
+    
+    .stat-value {
+        font-size: 1rem;
+    }
+    
+    .help-links {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 576px) {
+    .pending-config-card {
+        min-height: 500px;
+    }
+    
+    .pending-content {
+        padding: 1rem;
+    }
+    
+    .icon-main {
+        font-size: 2.5rem;
+    }
+    
+    .action-buttons .btn {
+        padding: 10px 20px;
+        font-size: 0.875rem;
+    }
+    
+    .quick-stats .row {
+        gap: 8px;
+    }
+    
+    .stat-item {
+        padding: 4px;
+    }
+    
+    .features-list {
+        max-width: none;
+    }
+    
+    .feature-item {
+        font-size: 0.8rem;
+    }
+}
+
+/* Loading state for interactions */
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: btnSpin 1s linear infinite;
+}
+
+@keyframes btnSpin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+</style>
+
+<script>
+// Pending Configuration Interactions
+class PendingConfiguration {
+    constructor() {
+        this.init();
+    }
+    
+    init() {
+        this.bindEvents();
+        this.addInteractiveEffects();
+    }
+    
+    bindEvents() {
+        // Global functions for template usage
+        window.focusFirstField = () => this.focusFirstField();
+        window.startTutorial = () => this.startTutorial();
+        window.showDocumentation = () => this.showDocumentation();
+        window.showExamples = () => this.showExamples();
+        window.contactSupport = () => this.contactSupport();
+    }
+    
+    focusFirstField() {
+        const firstField = document.getElementById('selected_questionary_result');
+        if (firstField) {
+            // Add loading state to button
+            const btn = event.target;
+            this.setButtonLoading(btn, true);
+            
+            // Smooth scroll and focus
+            firstField.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            
+            setTimeout(() => {
+                firstField.focus();
+                this.highlightField(firstField);
+                this.setButtonLoading(btn, false);
+            }, 800);
+        } else {
+            this.showMessage('Formulario no encontrado. Por favor recargue la página.', 'warning');
+        }
+    }
+    
+    startTutorial() {
+        const btn = event.target;
+        this.setButtonLoading(btn, true);
+        
+        setTimeout(() => {
+            if (window.SimulationTutorial) {
+                SimulationTutorial.start();
+            } else {
+                this.showMessage('Tutorial no disponible. Intente recargar la página.', 'info');
+            }
+            this.setButtonLoading(btn, false);
+        }, 500);
+    }
+    
+    showDocumentation() {
+        event.preventDefault();
+        
+        // Create documentation modal
+        const modal = this.createInfoModal(
+            'Documentación del Sistema',
+            `
+            <div class="documentation-content">
+                <h6>Guía de Uso del Simulador</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <strong>1. Preparación de Datos:</strong>
+                        <small class="d-block text-muted">Asegúrese de tener al menos 30 puntos de datos históricos de demanda.</small>
+                    </li>
+                    <li class="mb-2">
+                        <strong>2. Selección de Cuestionario:</strong>
+                        <small class="d-block text-muted">Elija el cuestionario más reciente y completo para mejores resultados.</small>
+                    </li>
+                    <li class="mb-2">
+                        <strong>3. Configuración Temporal:</strong>
+                        <small class="d-block text-muted">La duración recomendada es entre 30-90 días para predicciones óptimas.</small>
+                    </li>
+                    <li class="mb-2">
+                        <strong>4. Análisis Estadístico:</strong>
+                        <small class="d-block text-muted">El sistema seleccionará automáticamente la mejor distribución de probabilidad.</small>
+                    </li>
+                </ul>
+                
+                <div class="alert alert-info mt-3">
+                    <small>
+                        <strong>Consejo:</strong> Para obtener mejores resultados, utilice datos de demanda de períodos similares 
+                        (misma estación, condiciones de mercado comparables).
+                    </small>
+                </div>
+            </div>
+            `
+        );
+        
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+        
+        // Clean up on close
+        modal.addEventListener('hidden.bs.modal', () => modal.remove());
+    }
+    
+    showExamples() {
+        event.preventDefault();
+        
+        const modal = this.createInfoModal(
+            'Ejemplos de Uso',
+            `
+            <div class="examples-content">
+                <h6>Casos de Uso Comunes</h6>
+                
+                <div class="example-item mb-3">
+                    <h6 class="text-primary">Ejemplo 1: Restaurante</h6>
+                    <ul class="small">
+                        <li>Datos: Demanda diaria de platos principales (60 días)</li>
+                        <li>Configuración: 30 días de simulación</li>
+                        <li>Resultado: Predicción de demanda para el próximo mes</li>
+                    </ul>
+                </div>
+                
+                <div class="example-item mb-3">
+                    <h6 class="text-success">Ejemplo 2: Tienda de Retail</h6>
+                    <ul class="small">
+                        <li>Datos: Ventas semanales de productos (20 semanas)</li>
+                        <li>Configuración: 12 semanas de simulación</li>
+                        <li>Resultado: Planificación de inventario trimestral</li>
+                    </ul>
+                </div>
+                
+                <div class="example-item mb-3">
+                    <h6 class="text-info">Ejemplo 3: Servicio Digital</h6>
+                    <ul class="small">
+                        <li>Datos: Usuarios activos mensuales (24 meses)</li>
+                        <li>Configuración: 6 meses de simulación</li>
+                        <li>Resultado: Proyección de crecimiento semestral</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-success mt-3">
+                    <small>
+                        <strong>Recomendación:</strong> Comience con períodos cortos (30 días) para familiarizarse 
+                        con el sistema antes de realizar simulaciones más extensas.
+                    </small>
+                </div>
+            </div>
+            `
+        );
+        
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+        
+        modal.addEventListener('hidden.bs.modal', () => modal.remove());
+    }
+    
+    contactSupport() {
+        event.preventDefault();
+        
+        const modal = this.createInfoModal(
+            'Contacto y Soporte',
+            `
+            <div class="support-content">
+                <h6>Canales de Soporte Disponibles</h6>
+                
+                <div class="support-options">
+                    <div class="support-item mb-3 p-3 border rounded">
+                        <div class="d-flex align-items-center">
+                            <i class="bx bx-envelope text-primary me-3 fs-4"></i>
+                            <div>
+                                <h6 class="mb-1">Email</h6>
+                                <small class="text-muted">soporte@empresa.com</small><br>
+                                <small class="text-success">Respuesta en 24h</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="support-item mb-3 p-3 border rounded">
+                        <div class="d-flex align-items-center">
+                            <i class="bx bx-phone text-success me-3 fs-4"></i>
+                            <div>
+                                <h6 class="mb-1">Teléfono</h6>
+                                <small class="text-muted">+1 (555) 123-4567</small><br>
+                                <small class="text-success">Lun-Vie 9:00-18:00</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="support-item mb-3 p-3 border rounded">
+                        <div class="d-flex align-items-center">
+                            <i class="bx bx-chat text-info me-3 fs-4"></i>
+                            <div>
+                                <h6 class="mb-1">Chat en Vivo</h6>
+                                <small class="text-muted">Disponible en la plataforma</small><br>
+                                <small class="text-success">Respuesta inmediata</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <small>
+                        <strong>Antes de contactar:</strong> Revise la documentación y ejemplos. 
+                        La mayoría de dudas comunes están cubiertas en estos recursos.
+                    </small>
+                </div>
+            </div>
+            `
+        );
+        
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+        
+        modal.addEventListener('hidden.bs.modal', () => modal.remove());
+    }
+    
+    createInfoModal(title, content) {
+        const modalId = 'infoModal' + Date.now();
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = modalId;
+        modal.setAttribute('tabindex', '-1');
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${content}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        return modal;
+    }
+    
+    highlightField(field) {
+        // Add highlight effect
+        field.style.boxShadow = '0 0 0 3px rgba(33, 150, 243, 0.3)';
+        field.style.borderColor = '#2196f3';
+        
+        // Remove highlight after 2 seconds
+        setTimeout(() => {
+            field.style.boxShadow = '';
+            field.style.borderColor = '';
+        }, 2000);
+    }
+    
+    setButtonLoading(button, loading) {
+        if (loading) {
+            button.classList.add('loading');
+            button.disabled = true;
+        } else {
+            button.classList.remove('loading');
+            button.disabled = false;
+        }
+    }
+    
+    showMessage(message, type = 'info') {
+        // Use global message system if available
+        if (window.simulationCore && window.simulationCore.showMessage) {
+            window.simulationCore.showMessage(message, type);
+        } else {
+            // Fallback to alert
+            alert(message);
+        }
+    }
+    
+    addInteractiveEffects() {
+        // Add hover effects to interactive elements
+        const interactiveElements = document.querySelectorAll('.step-item, .stat-item, .feature-item');
+        
+        interactiveElements.forEach(element => {
+            element.addEventListener('mouseenter', () => {
+                element.style.transform = element.style.transform || '';
+            });
+        });
+        
+        // Add click effect to step items
+        const stepItems = document.querySelectorAll('.step-item');
+        stepItems.forEach((step, index) => {
+            step.addEventListener('click', () => {
+                this.handleStepClick(index + 1);
+            });
+            step.style.cursor = 'pointer';
+        });
+    }
+    
+    handleStepClick(stepNumber) {
+        // Provide guidance for each step
+        const stepMessages = {
+            1: 'Diríjase al formulario de la izquierda y seleccione un cuestionario de la lista desplegable.',
+            2: 'Configure la duración de la simulación. Recomendamos comenzar con 30 días.',
+            3: 'Una vez configurados los parámetros, haga clic en "Configurar Modelo" para analizar los datos.'
+        };
+        
+        const message = stepMessages[stepNumber];
+        if (message) {
+            this.showMessage(message, 'info');
+            
+            // Optional: scroll to relevant section
+            if (stepNumber === 1) {
+                this.focusFirstField();
+            }
+        }
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    new PendingConfiguration();
+});
+</script>

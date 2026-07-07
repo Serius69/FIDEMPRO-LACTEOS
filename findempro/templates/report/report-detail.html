@@ -1,0 +1,48 @@
+{% extends "partials/base.html" %}
+{% load static %}
+
+{% block title %}{{ report.title }}{% endblock title %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">{{ report.title }}</h4>
+                    <span class="{{ report.status_class }}">{{ report.status_display }}</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-1">
+                        Tipo: {{ report.get_report_type_display }}
+                    </p>
+                    <p class="text-muted mb-1">
+                        Producto: {{ report.product_name }}
+                    </p>
+                    <p class="text-muted mb-3">
+                        Creado: {{ report.date_created|date:"d/m/Y H:i" }}
+                    </p>
+
+                    {% if report.summary %}
+                        <p>{{ report.summary }}</p>
+                    {% endif %}
+
+                    <h6>Resumen del contenido</h6>
+                    <p>{{ report.content_summary }}</p>
+
+                    {% if related_reports %}
+                        <h6 class="mt-4">Reportes relacionados</h6>
+                        <ul>
+                            {% for related in related_reports %}
+                                <li>
+                                    <a href="{% url 'report:report.detail' related.pk %}">{{ related.title }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

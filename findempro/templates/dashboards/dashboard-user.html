@@ -1,0 +1,1400 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Dashboard Ejecutivo - {{ business.name }}{% endblock title %}
+{% block extra_css %}
+<style>
+/* ── Executive Header ─────────────────────────────────────── */
+.executive-header {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--product);
+    border-radius: var(--r-xl);
+    margin-bottom: 32px;
+    color: var(--text-primary);
+}
+
+.executive-header h2 {
+    font-family: var(--font-brand) !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.02em;
+    color: var(--text-primary) !important;
+}
+
+.executive-header p, .executive-header small {
+    color: var(--text-secondary) !important;
+}
+
+.executive-header i { color: var(--product); opacity: 0.8; }
+
+/* ── KPI Cards ────────────────────────────────────────────── */
+.kpi-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md) !important;
+}
+.kpi-card:focus-within {
+  box-shadow: 0 0 0 2px var(--product) !important;
+}
+
+.kpi-card h6 {
+    font-family: var(--font-data) !important;
+    font-size: 11px !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: var(--text-muted) !important;
+}
+
+.kpi-card h3 {
+    font-family: var(--font-data) !important;
+    font-size: 26px !important;
+    font-weight: 500 !important;
+    color: var(--text-primary) !important;
+}
+
+/* ── Metric Icons ─────────────────────────────────────────── */
+.metric-icon {
+    width: 48px; height: 48px;
+    border-radius: var(--r-md);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+}
+.metric-icon.bg-success-subtle   { background: rgba(0,200,150,0.12) !important;  color: var(--success) !important; }
+.metric-icon.bg-primary-subtle   { background: var(--product-bg) !important;     color: var(--product) !important; }
+.metric-icon.bg-warning-subtle   { background: rgba(255,182,39,0.12) !important; color: var(--warning) !important; }
+.metric-icon.bg-info-subtle      { background: rgba(0,180,216,0.12) !important;  color: var(--info) !important; }
+.metric-icon.bg-danger-subtle    { background: rgba(255,59,80,0.12) !important;  color: var(--danger) !important; }
+.metric-icon.bg-secondary-subtle { background: rgba(255,255,255,0.08) !important; color: var(--text-secondary) !important; }
+
+/* ── Quick Actions ────────────────────────────────────────── */
+.quick-action {
+    display: flex; align-items: center;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--border);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    background: var(--bg-surface);
+    transition: border-color 0.2s ease, background 0.2s ease,
+                transform 0.15s ease, box-shadow 0.15s ease;
+    text-decoration: none;
+}
+
+.quick-action:hover {
+    border-left-color: var(--product);
+    background: var(--product-bg);
+    box-shadow: var(--shadow-sm);
+    transform: translateX(2px);
+}
+
+.quick-action:active {
+    transform: translateX(0) scale(0.99);
+    box-shadow: none;
+}
+
+.quick-action .fw-semibold { color: var(--text-primary); font-size: 13px !important; }
+.quick-action .text-muted  { color: var(--text-muted) !important; }
+
+.qa-icon {
+    width: 38px; height: 38px;
+    border-radius: var(--r-md);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+}
+.qa-icon.bg-primary-subtle { background: var(--product-bg) !important;    color: var(--product) !important; }
+.qa-icon.bg-success-subtle { background: rgba(0,200,150,0.12) !important; color: var(--success) !important; }
+.qa-icon.bg-info-subtle    { background: rgba(0,180,216,0.12) !important; color: var(--info) !important; }
+
+/* ── Product Ranking ──────────────────────────────────────── */
+.product-rank {
+    display: flex; align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+}
+.product-rank:last-child { border-bottom: none; }
+.product-rank h6 { color: var(--text-primary) !important; font-size: 13px !important; }
+
+.rank-number {
+    width: 28px; height: 28px;
+    background: var(--product-bg);
+    border: 1px solid var(--product-border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-data);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--product);
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+/* ── Gauge ────────────────────────────────────────────────── */
+.performance-gauge { text-align: center; }
+
+.gauge-circle {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(
+        var(--product) 0deg,
+        var(--product) calc(var(--progress) * 3.6deg),
+        var(--bg-surface) calc(var(--progress) * 3.6deg),
+        var(--bg-surface) 360deg
+    );
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.gauge-inner {
+    width: 90px; height: 90px;
+    background: var(--bg-elevated);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-data);
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: var(--product);
+}
+
+/* ── Timeline ─────────────────────────────────────────────── */
+.timeline { position: relative; padding-left: 30px; }
+.timeline-item { position: relative; padding-bottom: 20px; }
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -25px; top: 8px; bottom: -12px;
+    width: 1px;
+    background: var(--border);
+}
+.timeline-item:last-child::before { display: none; }
+.timeline-marker { position: absolute; left: -30px; top: 8px; width: 10px; height: 10px; border-radius: 50%; }
+.timeline-marker.bg-primary { background: var(--product) !important; }
+
+.timeline-content {
+    background: var(--bg-surface);
+    padding: 12px;
+    border-radius: var(--r-md);
+    border-left: 2px solid var(--product);
+}
+.timeline-content h6 { color: var(--text-primary); font-size: 13px; }
+
+/* ── Alert Cards ──────────────────────────────────────────── */
+.alert-card   { border: 1px solid rgba(255,59,80,0.25);  background: rgba(255,59,80,0.08);  border-radius: var(--r-md); padding: 14px; }
+.success-card { border: 1px solid rgba(0,200,150,0.25);  background: rgba(0,200,150,0.08);  border-radius: var(--r-md); padding: 14px; }
+.warning-card { border: 1px solid rgba(255,182,39,0.25); background: rgba(255,182,39,0.08); border-radius: var(--r-md); padding: 14px; }
+.alert-card h6, .success-card h6, .warning-card h6 { color: var(--text-primary); font-size: 13px; font-weight: 500; }
+.alert-card small, .success-card small, .warning-card small { color: var(--text-secondary); }
+
+/* ── Skeleton (dark) ──────────────────────────────────────── */
+.skeleton {
+    background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.06) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s infinite;
+    border-radius: var(--r-sm);
+    display: inline-block;
+}
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+.kpi-loading h3 { visibility: hidden; }
+.kpi-loading .skeleton-h3  { height: 32px; width: 120px; margin-bottom: 4px; }
+.kpi-loading .skeleton-badge { height: 20px; width: 70px; }
+
+/* ── Progress bars ────────────────────────────────────────── */
+.progress { background: rgba(255,255,255,0.08); border-radius: var(--r-sm); }
+.progress-bar.bg-info    { background: var(--info) !important; }
+.progress-bar.bg-success { background: var(--success) !important; }
+.progress-bar.bg-warning { background: var(--warning) !important; }
+.progress-bar.bg-danger  { background: var(--danger) !important; }
+
+/* ── Avatar styles ────────────────────────────────────────── */
+.avatar-title { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 50%; }
+.avatar-title.bg-info-subtle     { background: rgba(0,180,216,0.12) !important; color: var(--info) !important; }
+.avatar-title.bg-warning-subtle  { background: rgba(255,182,39,0.12) !important; color: var(--warning) !important; }
+.avatar-title.bg-danger-subtle   { background: rgba(255,59,80,0.12) !important;  color: var(--danger) !important; }
+.avatar-title.bg-success-subtle  { background: rgba(0,200,150,0.12) !important;  color: var(--success) !important; }
+.avatar-title.bg-primary-subtle  { background: var(--product-bg) !important;     color: var(--product) !important; }
+.avatar-title.bg-secondary-subtle { background: rgba(255,255,255,0.08) !important; color: var(--text-secondary) !important; }
+
+/* ── Badges -subtle ───────────────────────────────────────── */
+.badge.bg-primary-subtle   { background: var(--product-bg) !important;          color: var(--product) !important;        border: 1px solid var(--product-border) !important; }
+.badge.bg-success-subtle   { background: rgba(0,200,150,0.12) !important;        color: var(--success) !important;         border: 1px solid rgba(0,200,150,0.3) !important; }
+.badge.bg-danger-subtle    { background: rgba(255,59,80,0.12) !important;         color: var(--danger) !important;          border: 1px solid rgba(255,59,80,0.3) !important; }
+.badge.bg-warning-subtle   { background: rgba(255,182,39,0.12) !important;        color: var(--warning) !important;         border: 1px solid rgba(255,182,39,0.3) !important; }
+.badge.bg-info-subtle      { background: rgba(0,180,216,0.12) !important;         color: var(--info) !important;            border: 1px solid rgba(0,180,216,0.3) !important; }
+
+/* ── Soft buttons ─────────────────────────────────────────── */
+.btn-soft-primary   { background: var(--product-bg) !important;       color: var(--product) !important;       border: none; }
+.btn-soft-secondary { background: rgba(255,255,255,0.08) !important;  color: var(--text-secondary) !important; border: none; }
+.btn-soft-primary:hover   { filter: brightness(1.2); }
+.btn-soft-secondary:hover { background: rgba(255,255,255,0.12) !important; color: var(--text-primary) !important; }
+
+/* ── Offcanvas ────────────────────────────────────────────── */
+.offcanvas { background: var(--bg-elevated) !important; border-left: 1px solid var(--border-strong) !important; }
+.offcanvas-header { border-bottom: 1px solid var(--border) !important; }
+.offcanvas-title { font-family: var(--font-brand) !important; font-weight: 600 !important; color: var(--text-primary) !important; }
+
+/* ── List group ───────────────────────────────────────────── */
+.list-group-item { background: var(--bg-elevated); border-color: var(--border); color: var(--text-secondary); font-size: 14px; }
+.list-group-item:hover, .list-group-item-action:hover { background: rgba(255,255,255,0.06) !important; color: var(--text-primary) !important; }
+
+/* ── Misc ─────────────────────────────────────────────────── */
+.trend-chart { min-height: 300px; }
+
+/* ── Table improvements ───────────────────────────────────── */
+.table-hover > tbody > tr {
+    transition: background 0.12s ease !important;
+}
+
+.table-hover > tbody > tr:hover > * {
+    background-color: rgba(255,255,255,0.04) !important;
+}
+
+/* Alternating rows for better readability */
+.table-striped-subtle > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255,255,255,0.015) !important;
+}
+
+/* Progress bars in table */
+.table .progress {
+    background: rgba(255,255,255,0.06) !important;
+    border-radius: 4px !important;
+    overflow: hidden;
+}
+
+.table .progress-bar {
+    transition: width 0.6s ease !important;
+}
+
+/* ── KPI loading overlay ──────────────────────────────────── */
+.kpi-skeleton-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.04) 50%,
+        transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s infinite;
+    border-radius: var(--r-md);
+    pointer-events: none;
+}
+
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ── Button active/focus enhancements ────────────────────── */
+.btn-soft-primary:active,
+.btn-soft-secondary:active {
+    transform: scale(0.98) !important;
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--product) !important;
+    outline-offset: 2px !important;
+}
+
+/* ── Dropdown menu smooth ─────────────────────────────────── */
+.dropdown-menu {
+    animation: dropdownFadeIn 0.15s ease !important;
+}
+
+@keyframes dropdownFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .executive-header { padding: 20px !important; }
+    .gauge-circle { width: 100px; height: 100px; }
+    .gauge-inner  { width: 75px; height: 75px; font-size: 1rem; }
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Executive Header -->
+            <div class="executive-header p-4 mb-4">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h2 class="mb-1">{{ greeting }}, {{ user.first_name|default:user.username }}</h2>
+                        <p class="mb-3 opacity-75">Dashboard Ejecutivo - {{ business.name }}</p>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-calendar-line me-2"></i>
+                                    <small>{{ "now"|date:"d M Y" }}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-building-line me-2"></i>
+                                    <small>{{ business_type_display }}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-map-pin-line me-2"></i>
+                                    <small>{{ business_location }}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-line-chart-line me-2"></i>
+                                    <small>Crecimiento: {{ growth_rate }}%</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 text-end">
+                        <div class="d-flex align-items-center justify-content-end gap-3">
+                            <form method="GET" action="{% url 'dashboard:dashboard.user' %}" id="businessForm">
+                                <select name="business_id" class="form-select text-dark" 
+                                        onchange="document.getElementById('businessForm').submit()">
+                                    {% for biz in businesses %}
+                                        <option value="{{ biz.id }}" {% if biz.id == business.id %}selected{% endif %}>
+                                            {{ biz.name }}
+                                        </option>
+                                    {% empty %}
+                                        <option>No hay negocios disponibles</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                            <button type="button" class="btn btn-light btn-sm" onclick="refreshDashboard()">
+                                <i class="ri-refresh-line"></i> Actualizar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Cards Row -->
+            <div class="row g-4 mb-4">
+                <!-- Revenue KPI -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card kpi-card h-100" style="position:relative;">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="metric-icon bg-success-subtle text-success me-3">
+                                    <i class="ri-money-dollar-circle-line"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-1"><span title="Total de dinero que entró a tu empresa por ventas en el período seleccionado">Ingresos Totales ⓘ</span></h6>
+                                    <h3 class="mb-0" data-kpi="revenue">Bs. <span class="counter-value" data-target="{{ total_revenue|floatformat:2 }}">0</span></h3>
+                                    <div class="d-flex align-items-center mt-2">
+                                        {% if revenue_change > 0 %}
+                                            <span class="badge bg-success-subtle text-success">
+                                                <i class="ri-arrow-up-line"></i> {{ revenue_change|floatformat:1 }}%
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger">
+                                                <i class="ri-arrow-down-line"></i> {{ revenue_change|floatformat:1 }}%
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profit Margin KPI -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card kpi-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="metric-icon bg-primary-subtle text-primary me-3">
+                                    <i class="ri-line-chart-line"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-1"><span title="Porcentaje de cada boliviano de ventas que se convierte en ganancia neta, después de descontar todos los costos">Margen de Beneficio ⓘ</span></h6>
+                                    <h3 class="mb-0" data-kpi="profit_margin">{{ profit_margin_percentage }}%</h3>
+                                    <div class="d-flex align-items-center mt-2">
+                                        {% if profit_change > 0 %}
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                <i class="ri-arrow-up-line"></i> {{ profit_change|floatformat:1 }}%
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger">
+                                                <i class="ri-arrow-down-line"></i> {{ profit_change|floatformat:1 }}%
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROI KPI -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card kpi-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="metric-icon bg-warning-subtle text-warning me-3">
+                                    <i class="ri-percent-line"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-1"><span title="Retorno sobre la inversión: cuánto ganaste por cada boliviano invertido. Un ROI del 20% significa que recuperas Bs. 1 más Bs. 0.20 de ganancia">ROI ⓘ</span></h6>
+                                    <h3 class="mb-0" data-kpi="roi">{{ roi_percentage }}%</h3>
+                                    <div class="d-flex align-items-center mt-2">
+                                        {% if roi_percentage > 15 %}
+                                            <span class="badge bg-success-subtle text-success">Excelente</span>
+                                        {% elif roi_percentage > 8 %}
+                                            <span class="badge bg-warning-subtle text-warning">Bueno</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger">Mejorar</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Efficiency Score KPI -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card kpi-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="metric-icon bg-info-subtle text-info me-3">
+                                    <i class="ri-speed-line"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="text-muted mb-1">Score de Eficiencia</h6>
+                                    <h3 class="mb-0" data-kpi="efficiency">{{ efficiency_score }}/100</h3>
+                                    <div class="progress mt-2" style="height: 6px;">
+                                        <div class="progress-bar bg-info" role="progressbar" 
+                                             style="width: {{ efficiency_score }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Dashboard Content -->
+            <div class="row g-4">
+                <!-- Performance Trends Chart -->
+                <div class="col-lg-8">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Tendencias de Rendimiento (6 meses)</h5>
+                            <div class="dropdown">
+                                <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" 
+                                        data-bs-toggle="dropdown">
+                                    <i class="ri-more-2-fill"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="exportChart('trends')">
+                                        <i class="ri-download-2-line me-2"></i>Exportar Gráfico
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="toggleChartType()">
+                                        <i class="ri-bar-chart-line me-2"></i>Cambiar Tipo
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="trendsChart" class="trend-chart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Performance Gauge -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Rendimiento General</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="performance-gauge">
+                                <div class="gauge-circle" style="--progress: {{ efficiency_score }}%;">
+                                    <div class="gauge-inner">
+                                        {{ efficiency_score }}%
+                                    </div>
+                                </div>
+                                <h6 class="mb-2">Score General</h6>
+                                <p class="text-muted small mb-3">
+                                    Basado en margen de beneficio, ROI y eficiencia operativa
+                                </p>
+                                
+                                <!-- Performance Breakdown -->
+                                <div class="row g-2 text-start">
+                                    <div class="col-6">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">Rentabilidad:</small>
+                                            <small class="fw-medium">{{ profit_margin_percentage }}%</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">ROI:</small>
+                                            <small class="fw-medium">{{ roi_percentage }}%</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">Productos:</small>
+                                            <small class="fw-medium">{{ products_count }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">Simulaciones:</small>
+                                            <small class="fw-medium">{{ simulations_count }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secondary Metrics Row -->
+            <div class="row g-4 my-4">
+                <!-- Inventory & Demand -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="avatar-lg mx-auto mb-3">
+                                <div class="avatar-title bg-info-subtle text-info rounded-circle">
+                                    <i class="ri-stack-line fs-3"></i>
+                                </div>
+                            </div>
+                            <h4 class="mb-1">{{ total_inventory_levels|floatformat:0 }}</h4>
+                            <p class="text-muted mb-0">Unidades en Inventario</p>
+                            <div class="mt-2">
+                                {% if inventory_change > 0 %}
+                                    <span class="text-success"><i class="ri-arrow-up-line"></i> {{ inventory_change }}%</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="ri-arrow-down-line"></i> {{ inventory_change }}%</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="avatar-lg mx-auto mb-3">
+                                <div class="avatar-title bg-warning-subtle text-warning rounded-circle">
+                                    <i class="ri-shopping-cart-line fs-3"></i>
+                                </div>
+                            </div>
+                            <h4 class="mb-1">{{ total_demand|floatformat:0 }}</h4>
+                            <p class="text-muted mb-0">Demanda Total</p>
+                            <div class="mt-2">
+                                {% if demand_change > 0 %}
+                                    <span class="text-success"><i class="ri-arrow-up-line"></i> {{ demand_change }}%</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="ri-arrow-down-line"></i> {{ demand_change }}%</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="avatar-lg mx-auto mb-3">
+                                <div class="avatar-title bg-danger-subtle text-danger rounded-circle">
+                                    <i class="ri-wallet-line fs-3"></i>
+                                </div>
+                            </div>
+                            <h4 class="mb-1">Bs. {{ total_costs|floatformat:2 }}</h4>
+                            <p class="text-muted mb-0">Costos Totales</p>
+                            <div class="mt-2">
+                                {% if costs_change < 0 %}
+                                    <span class="text-success"><i class="ri-arrow-down-line"></i> {{ costs_change|floatformat:1 }}%</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="ri-arrow-up-line"></i> {{ costs_change|floatformat:1 }}%</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="avatar-lg mx-auto mb-3">
+                                <div class="avatar-title bg-secondary-subtle text-secondary rounded-circle">
+                                    <i class="ri-factory-line fs-3"></i>
+                                </div>
+                            </div>
+                            <h4 class="mb-1">{{ total_production_output|floatformat:0 }}</h4>
+                            <p class="text-muted mb-0">Producción Total</p>
+                            <div class="mt-2">
+                                {% if production_change > 0 %}
+                                    <span class="text-success"><i class="ri-arrow-up-line"></i> {{ production_change }}%</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="ri-arrow-down-line"></i> {{ production_change }}%</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics & Insights Row -->
+            <div class="row g-4">
+                <!-- Top Products Ranking -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Top Productos</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if top_products %}
+                                {% for product in top_products %}
+                                <div class="product-rank">
+                                    <div class="rank-number">{{ forloop.counter }}</div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">{{ product.name|truncatechars:25 }}</h6>
+                                        <small class="text-muted">
+                                            {{ product.simulations_count }} simulaciones
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <i class="ri-arrow-right-s-line text-muted"></i>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="ri-product-hunt-line fs-1 text-muted"></i>
+                                    <p class="text-muted mt-2">No hay productos registrados</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Alerts -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Alertas de Negocio</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert-container">
+                                <!-- Critical Alert -->
+                                {% if profit_margin_percentage < 10 %}
+                                <div class="alert alert-card mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-error-warning-line text-danger me-3 fs-4"></i>
+                                        <div>
+                                            <h6 class="mb-1">Margen de Beneficio Bajo</h6>
+                                            <small class="text-muted">
+                                                Tu margen está por debajo del 10%. Revisa costos.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Success Alert -->
+                                {% if efficiency_score > 80 %}
+                                <div class="alert success-card mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-checkbox-circle-line text-success me-3 fs-4"></i>
+                                        <div>
+                                            <h6 class="mb-1">Excelente Rendimiento</h6>
+                                            <small class="text-muted">
+                                                Tu negocio tiene un score superior al 80%.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Warning Alert -->
+                                {% if inventory_change < -20 %}
+                                <div class="alert warning-card mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-alert-line text-warning me-3 fs-4"></i>
+                                        <div>
+                                            <h6 class="mb-1">Inventario Bajo</h6>
+                                            <small class="text-muted">
+                                                El inventario ha bajado {{ inventory_change }}% este mes.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Growth Alert -->
+                                {% if growth_rate > 10 %}
+                                <div class="alert success-card mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-line-chart-line text-success me-3 fs-4"></i>
+                                        <div>
+                                            <h6 class="mb-1">Crecimiento Acelerado</h6>
+                                            <small class="text-muted">
+                                                Crecimiento del {{ growth_rate }}% en 6 meses.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if profit_margin_percentage >= 10 and efficiency_score <= 80 and inventory_change >= -20 and growth_rate <= 10 %}
+                                <div class="text-center py-4">
+                                    <i class="ri-shield-check-line fs-1 text-success"></i>
+                                    <p class="text-muted mt-2">Todo está funcionando correctamente</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Acciones Rápidas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-column gap-2">
+                                <div class="quick-action" onclick="showComingSoonNotification('Nueva Simulación')">
+                                    <div class="qa-icon bg-primary-subtle text-primary me-3">
+                                        <i class="ri-play-circle-line"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold small">Nueva Simulación</div>
+                                        <div class="text-muted" style="font-size:0.72rem">Ejecutar análisis predictivo</div>
+                                    </div>
+                                    <i class="ri-arrow-right-s-line text-muted ms-2"></i>
+                                </div>
+                                <div class="quick-action" onclick="generateReport()">
+                                    <div class="qa-icon bg-success-subtle text-success me-3">
+                                        <i class="ri-file-chart-line"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold small">Generar Reporte</div>
+                                        <div class="text-muted" style="font-size:0.72rem">Reporte ejecutivo completo</div>
+                                    </div>
+                                    <i class="ri-arrow-right-s-line text-muted ms-2"></i>
+                                </div>
+                                <div class="quick-action" onclick="showComingSoonNotification('Nuevo Producto')">
+                                    <div class="qa-icon bg-info-subtle text-info me-3">
+                                        <i class="ri-add-circle-line"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold small">Nuevo Producto</div>
+                                        <div class="text-muted" style="font-size:0.72rem">Agregar al portafolio</div>
+                                    </div>
+                                    <i class="ri-arrow-right-s-line text-muted ms-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations Table -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Recomendaciones y Análisis Recientes</h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-soft-primary btn-sm" onclick="showComingSoonNotification('Exportar Recomendaciones')">
+                                    <i class="ri-download-2-line me-1"></i>Exportar
+                                </button>
+                                <button class="btn btn-soft-secondary btn-sm" onclick="refreshRecommendations()">
+                                    <i class="ri-refresh-line me-1"></i>Actualizar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if page_obj.object_list %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-striped-subtle align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Producto</th>
+                                                <th>Análisis</th>
+                                                <th>Resultado</th>
+                                                <th>Estado</th>
+                                                <th class="d-mobile-none">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for rec in page_obj %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex flex-column">
+                                                        <span class="fw-medium">{{ rec.simulation_date|date:"d/m/Y" }}</span>
+                                                        <small class="text-muted">{{ rec.simulation_date|time:"H:i" }}</small>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar-sm me-2">
+                                                            <div class="avatar-title bg-info-subtle text-info rounded">
+                                                                <i class="ri-product-hunt-line"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0">{{ rec.product_name|truncatechars:20 }}</h6>
+                                                            <small class="text-muted">ID: #{{ rec.simulation_id }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-primary-subtle text-primary">
+                                                        {{ rec.variable_name }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                                            <div class="progress-bar 
+                                                                {% if rec.data_percentage > 75 %}bg-success
+                                                                {% elif rec.data_percentage > 50 %}bg-warning
+                                                                {% else %}bg-danger{% endif %}" 
+                                                                 role="progressbar" 
+                                                                 style="width: {{ rec.data_percentage|floatformat:0 }}%">
+                                                            </div>
+                                                        </div>
+                                                        <small class="fw-medium">{{ rec.data_percentage|floatformat:1 }}%</small>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    {% if rec.data_percentage > 75 %}
+                                                        <span class="badge bg-success">Óptimo</span>
+                                                    {% elif rec.data_percentage > 50 %}
+                                                        <span class="badge bg-warning">Regular</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Crítico</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="d-mobile-none">
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-soft-secondary btn-sm dropdown-toggle"
+                                                                type="button" data-bs-toggle="dropdown"
+                                                                aria-label="Acciones">
+                                                            <i class="ri-more-2-line"></i>
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                            <li><a class="dropdown-item" href="#" onclick="showComingSoonNotification('Ver Detalles')">
+                                                                <i class="ri-eye-line me-2"></i>Ver Detalles
+                                                            </a></li>
+                                                            <li><a class="dropdown-item" href="#" onclick="showComingSoonNotification('Generar Recomendación')">
+                                                                <i class="ri-lightbulb-line me-2"></i>Generar Recomendación
+                                                            </a></li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li><a class="dropdown-item text-danger" href="#" onclick="if(confirm('¿Eliminar este elemento? Esta acción no se puede deshacer.'))showComingSoonNotification('Eliminar')">
+                                                                <i class="ri-delete-bin-line me-2"></i>Eliminar
+                                                            </a></li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Enhanced Pagination -->
+                                {% if page_obj.has_other_pages %}
+                                <nav class="mt-4">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <p class="text-muted mb-0">
+                                                Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} 
+                                                de {{ page_obj.paginator.count }} registros
+                                            </p>
+                                        </div>
+                                        <ul class="pagination justify-content-center mb-0">
+                                            {% if page_obj.has_previous %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page=1&business_id={{ business.id }}">
+                                                        <i class="ri-arrow-left-double-line"></i>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&business_id={{ business.id }}">
+                                                        <i class="ri-arrow-left-s-line"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                            
+                                            <li class="page-item active">
+                                                <span class="page-link">
+                                                    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                                                </span>
+                                            </li>
+                                            
+                                            {% if page_obj.has_next %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&business_id={{ business.id }}">
+                                                        <i class="ri-arrow-right-s-line"></i>
+                                                    </a>
+                                                </li>
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&business_id={{ business.id }}">
+                                                        <i class="ri-arrow-right-double-line"></i>
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </nav>
+                                {% endif %}
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" 
+                                               trigger="loop" 
+                                               colors="primary:#405189,secondary:#0ab39c" 
+                                               style="width:100px;height:100px">
+                                    </lord-icon>
+                                    <h5 class="mt-4">No hay análisis disponibles</h5>
+                                    <p class="text-muted mb-4">
+                                        Comienza ejecutando una simulación para generar insights y recomendaciones 
+                                        para {{ business.name }}.
+                                    </p>
+                                    <button class="btn btn-primary" onclick="showComingSoonNotification('Ejecutar Primera Simulación')">
+                                        <i class="ri-play-circle-line me-2"></i>Ejecutar Primera Simulación
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Sidebar -->
+            <div class="position-fixed end-0 top-50 translate-middle-y" style="z-index: 1000;">
+                <button class="btn btn-primary btn-sm rounded-start-0" type="button" 
+                        data-bs-toggle="offcanvas" data-bs-target="#activityOffcanvas">
+                    <i class="ri-history-line"></i>
+                </button>
+            </div>
+
+            <!-- Activity Offcanvas -->
+            <div class="offcanvas offcanvas-end" tabindex="-1" id="activityOffcanvas" style="width: 400px;">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title">Actividad Reciente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+                </div>
+                <div class="offcanvas-body">
+                    {% if recent_activity %}
+                        <div class="timeline">
+                            {% for activity in recent_activity %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-primary"></div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <h6 class="mb-0">{{ activity.action }}</h6>
+                                        <small class="text-muted">{{ activity.timestamp|timesince }}</small>
+                                    </div>
+                                    {% if activity.details %}
+                                        <p class="text-muted small mb-0">{{ activity.details }}</p>
+                                    {% endif %}
+                                    <small class="text-primary">{{ activity.timestamp|date:"d/m H:i" }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="ri-history-line fs-1 text-muted"></i>
+                            <p class="text-muted mt-3">No hay actividad reciente</p>
+                            <small class="text-muted">Las acciones aparecerán aquí</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+// Dashboard data
+const trendsData = {{ monthly_trends_json|safe }};
+
+// Initialize dashboard on load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCounters();
+    initializeTrendsChart();
+    setupAutoRefresh();
+});
+
+// Counter Animation
+function initializeCounters() {
+    const counters = document.querySelectorAll('.counter-value');
+    const speed = 200;
+    
+    counters.forEach(counter => {
+        const target = parseFloat(counter.getAttribute('data-target'));
+        const increment = target / speed;
+        
+        const updateCounter = () => {
+            const current = parseFloat(counter.innerText);
+            
+            if (current < target) {
+                counter.innerText = (current + increment).toFixed(2);
+                setTimeout(updateCounter, 1);
+            } else {
+                counter.innerText = target.toFixed(2);
+            }
+        };
+        
+        updateCounter();
+    });
+}
+
+// Trends Chart with ApexCharts
+function initializeTrendsChart() {
+    if (!trendsData || trendsData.length === 0) {
+        document.getElementById('trendsChart').innerHTML = '<div class="text-center py-5"><p class="text-muted">No hay datos suficientes para mostrar tendencias</p></div>';
+        return;
+    }
+
+    const options = {
+        series: [{
+            name: 'Ingresos',
+            data: trendsData.map(item => item.revenue),
+            color: '#00D4C8'
+        }, {
+            name: 'Costos',
+            data: trendsData.map(item => item.costs),
+            color: '#FF3B50'
+        }, {
+            name: 'Beneficio',
+            data: trendsData.map(item => item.profit),
+            color: '#00C896'
+        }],
+        chart: {
+            type: 'line',
+            height: 300,
+            background: 'transparent',
+            foreColor: 'rgba(255,255,255,0.6)',
+            fontFamily: "'JetBrains Mono', monospace",
+            toolbar: {
+                show: true,
+                tools: {
+                    download: true,
+                    selection: false,
+                    zoom: false,
+                    zoomin: false,
+                    zoomout: false,
+                    pan: false,
+                    reset: false
+                }
+            },
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800
+            }
+        },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 2.5 },
+        xaxis: {
+            categories: trendsData.map(item => item.month),
+            labels: {
+                style: { fontSize: '10px', colors: 'rgba(255,255,255,0.32)' }
+            },
+            axisBorder: { color: 'rgba(255,255,255,0.08)' },
+            axisTicks:  { color: 'rgba(255,255,255,0.08)' }
+        },
+        yaxis: {
+            title: { text: 'Bs.', style: { color: 'rgba(255,255,255,0.32)', fontSize: '10px' } },
+            labels: {
+                style: { fontSize: '10px', colors: 'rgba(255,255,255,0.32)' },
+                formatter: function (val) { return 'Bs. ' + val.toLocaleString(); }
+            }
+        },
+        legend: {
+            position: 'top',
+            labels: { colors: 'rgba(255,255,255,0.6)' },
+            fontSize: '11px'
+        },
+        grid: {
+            borderColor: 'rgba(255,255,255,0.04)',
+            strokeDashArray: 3
+        },
+        tooltip: {
+            theme: 'dark',
+            y: { formatter: function (val) { return 'Bs. ' + val.toLocaleString(); } }
+        },
+        markers: { size: 4, strokeWidth: 0, hover: { size: 6 } }
+    };
+
+    const chart = new ApexCharts(document.querySelector("#trendsChart"), options);
+    chart.render();
+    
+    // Store chart globally for export
+    window.trendsChart = chart;
+}
+
+// Auto-refresh setup
+function setupAutoRefresh() {
+    // Refresh every 5 minutes
+    setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            refreshDashboardData();
+        }
+    }, 300000);
+}
+
+// Refresh dashboard data (only uses available URLs)
+function refreshDashboard() {
+    const btn = event.target.closest('button');
+    const originalContent = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Actualizando...';
+    
+    fetch('{% url "dashboard:update_metrics" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'business_id={{ business.id }}'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Dashboard actualizado correctamente', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Error al actualizar: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('Error de conexión', 'error');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    });
+}
+
+// Refresh KPI cards using the lightweight summary API (no full reload)
+function refreshDashboardData() {
+    fetch('{% url "dashboard:summary_api" %}?business_id={{ business.id }}')
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            updateKpiCards(data);
+        })
+        .catch(err => console.error('Error refreshing summary:', err));
+}
+
+// Update metrics cards from summary API response
+function updateKpiCards(data) {
+    // Revenue counter
+    const revEl = document.querySelector('[data-kpi="revenue"] .counter-value');
+    if (revEl) {
+        revEl.setAttribute('data-target', data.avg_revenue.toFixed(2));
+        animateCounter(revEl, data.avg_revenue);
+    }
+
+    // Profit margin
+    const pmEl = document.querySelector('[data-kpi="profit_margin"]');
+    if (pmEl) pmEl.textContent = data.profit_margin.toFixed(1) + '%';
+
+    // ROI — not available in summary, keep as-is
+    // Efficiency — not available in summary, keep as-is
+
+    // Re-render trends chart series if data arrives
+    if (window.trendsChart && data.monthly_trends) {
+        window.trendsChart.updateSeries([
+            { name: 'Ingresos',  data: data.monthly_trends.map(d => d.revenue) },
+            { name: 'Costos',    data: data.monthly_trends.map(d => d.costs) },
+            { name: 'Beneficio', data: data.monthly_trends.map(d => d.profit) },
+        ]);
+    }
+}
+
+// Smooth counter animation (shared helper)
+function animateCounter(el, target) {
+    const duration = 600;
+    const start = parseFloat(el.textContent) || 0;
+    const startTime = performance.now();
+    const step = (now) => {
+        const pct = Math.min((now - startTime) / duration, 1);
+        el.textContent = (start + (target - start) * pct).toFixed(2);
+        if (pct < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+}
+
+// Refresh recommendations
+function refreshRecommendations() {
+    const container = document.querySelector('.table-responsive');
+    const overlay = document.createElement('div');
+    overlay.className = 'position-relative';
+    overlay.innerHTML = `
+        <div class="position-absolute top-50 start-50 translate-middle" style="z-index: 10;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    `;
+    
+    container.style.opacity = '0.5';
+    container.appendChild(overlay);
+    
+    // Simulate refresh - could be enhanced with actual AJAX call
+    setTimeout(() => {
+        container.style.opacity = '1';
+        overlay.remove();
+        showNotification('Recomendaciones actualizadas', 'success');
+    }, 2000);
+}
+
+// Export functions (adapted for available functionality)
+function exportChart(type) {
+    if (type === 'trends' && window.trendsChart) {
+        window.trendsChart.dataURI().then(({ imgURI, blob }) => {
+            const link = document.createElement('a');
+            link.href = imgURI;
+            link.download = 'tendencias-{{ business.name }}-{{ "now"|date:"Y-m-d" }}.png';
+            link.click();
+        });
+    }
+}
+
+function generateReport() {
+    const btn = event.target.closest('.quick-action');
+    const originalContent = btn.innerHTML;
+    
+    btn.style.opacity = '0.7';
+    btn.innerHTML = `
+        <div class="spinner-border spinner-border-sm text-success mb-2"></div>
+        <h6 class="mb-1">Generando...</h6>
+        <small class="text-muted">Por favor espera</small>
+    `;
+    
+    // Simulate report generation
+    setTimeout(() => {
+        btn.style.opacity = '1';
+        btn.innerHTML = originalContent;
+        showNotification('Reporte generado exitosamente', 'success');
+        // Could redirect to a report page when implemented
+    }, 2000);
+}
+
+function toggleChartType() {
+    if (window.trendsChart) {
+        const currentType = window.trendsChart.w.config.chart.type;
+        const newType = currentType === 'line' ? 'bar' : 'line';
+        
+        window.trendsChart.updateOptions({
+            chart: {
+                type: newType
+            }
+        });
+        
+        showNotification(`Gráfico cambiado a ${newType === 'line' ? 'líneas' : 'barras'}`, 'info');
+    }
+}
+
+// Coming soon notification for features not yet implemented
+function showComingSoonNotification(feature) {
+    showNotification(`${feature} - Funcionalidad próximamente disponible`, 'info');
+}
+
+// Enhanced notification system
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="ri-${type === 'success' ? 'check-circle' : type === 'error' ? 'error-warning' : 'information'}-line me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl+R or F5 - Refresh dashboard
+    if ((e.ctrlKey && e.key === 'r') || e.key === 'F5') {
+        e.preventDefault();
+        refreshDashboard();
+    }
+    
+    // Ctrl+G - Generate report
+    if (e.ctrlKey && e.key === 'g') {
+        e.preventDefault();
+        generateReport();
+    }
+});
+
+// Responsive chart handling
+window.addEventListener('resize', function() {
+    if (window.trendsChart) {
+        window.trendsChart.resize();
+    }
+});
+
+// Initialize tooltips and popovers
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => {
+        new bootstrap.Tooltip(tooltip);
+    });
+    
+    // Initialize Bootstrap popovers
+    const popovers = document.querySelectorAll('[data-bs-toggle="popover"]');
+    popovers.forEach(popover => {
+        new bootstrap.Popover(popover);
+    });
+});
+
+// Progressive Web App support
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+                console.log('SW registered: ', registration);
+            })
+            .catch(function(registrationError) {
+                console.log('SW registration failed: ', registrationError);
+            });
+    });
+}
+</script>
+
+
+{% endblock extra_js %}

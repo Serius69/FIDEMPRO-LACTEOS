@@ -1,0 +1,129 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" {% block html %}data-layout="vertical" data-topbar="dark" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" {% endblock html %}>
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %}{% endblock title %} | Findempro AI — Sistema de decisiones financieras para PYME</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Findempro AI — Decisiones financieras inteligentes para PYME en el sector lácteo" name="description" />
+    <meta content="Kapitalya" name="author" />
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico'%}">
+    <!-- Google Fonts: Space Grotesk + Inter + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    {% block css %}
+    {% block extra_css %}
+    {% endblock extra_css %}
+
+    <!-- Layout config Js -->
+    <script src="{% static 'js/layout.js'%}"></script>
+    <!-- Bootstrap Css -->
+    <link href="{% static 'css/bootstrap.min.css'%}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+    <!-- Icons Css -->
+    <link href="{% static 'css/icons.min.css'%}" rel="stylesheet" type="text/css" />
+    <!-- App Css -->
+    <link href="{% static 'css/app.min.css'%}" id="app-style" rel="stylesheet" type="text/css" />
+    <!-- custom Css -->
+    <link href="{% static 'css/custom.min.css'%}" rel="stylesheet" type="text/css" />
+    <!-- Kapitalya Design System: tokens primero, componentes al final para ganar cascada -->
+    <link href="{% static 'css/tokens.css'%}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'css/kapitalya.css'%}" rel="stylesheet" type="text/css" />
+    {% endblock css %}
+</head>
+
+<body>
+
+<a href="#main-content" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden" onfocus="this.style.cssText='position:fixed;top:8px;left:8px;width:auto;height:auto;padding:8px 16px;background:#1a1f3a;color:#fff;border-radius:4px;font-size:14px;font-weight:600;z-index:9999;text-decoration:none;outline:2px solid #f59e0b'" onblur="this.style.cssText='position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden'">Ir al contenido principal</a>
+
+    <!-- Begin page -->
+    <div id="layout-wrapper">
+        {% block header %}
+        {% include "partials/topbar.html" %}
+        {% endblock header %}
+        {% block sidebar %}
+        {% include "partials/sidebar.html" %}
+        {% endblock sidebar %}
+        <main id="main-content" tabindex="-1" role="main">
+        {% block content %}
+        {% block pagetitle %}
+        {% endblock pagetitle %}
+        {% block footer %}
+        {% endblock footer %}
+        {% endblock content %}
+        </main>
+    </div>
+    
+    {% block extra_content %}        
+    {% endblock extra_content %}
+        
+    <!-- END layout-wrapper -->
+    {% block right_sidebar %}
+    {% include "partials/customizer.html" %}
+    {% endblock right_sidebar %}
+
+    {% block javascript %}
+    <!-- JAVASCRIPT -->
+    <script src="{% static 'libs/bootstrap/dist/js/bootstrap.bundle.min.js'%}"></script>
+    <script src="{% static 'libs/simplebar/dist/simplebar.min.js'%}"></script>
+    <script src="{% static 'libs/node-waves/dist/waves.min.js'%}"></script>
+    <script src="{% static 'libs/feather-icons/dist/feather.min.js'%}"></script>
+    <script src="{% static 'js/pages/plugins/lord-icon-2.1.0.js'%}"></script>
+    <script src="{% static 'js/plugins.js'%}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'libs/sweetalert2/dist/sweetalert2.min.js' %}"></script>
+    <!-- prismjs plugin -->
+    <script src="{% static 'libs/prismjs/prism.js'%}"></script>
+    <script src="{% static 'libs/list.js/dist/list.min.js'%}"></script>
+    <script src="{% static 'libs/list.pagination.js/dist/list.pagination.min.js'%}"></script>
+    <!-- apexcharts -->
+    <script src="{% static 'libs/apexcharts/dist/apexcharts.min.js'%}"></script>
+    <!-- Vector map-->
+    <script src="{% static 'libs/jsvectormap/dist/js/jsvectormap.min.js'%}"></script>
+    <script src="{% static 'libs/jsvectormap/dist/maps/world-merc.js'%}"></script>
+    <!--Swiper slider js-->
+    <script src="{% static 'libs/swiper/swiper-bundle.min.js'%}"></script>
+    <!-- Dashboard init -->
+    <script src="{% static 'js/pages/dashboard-ecommerce.init.js'%}"></script>
+    <!-- echarts js -->
+    <script src="{% static 'libs/echarts/dist/echarts.min.js'%}"></script>
+    <!-- echarts init -->
+    <script src="{% static 'js/pages/echarts.init.js'%}"></script>
+
+    {% if messages %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        {% for message in messages %}
+        Swal.fire({
+            icon: '{% if message.tags == "alert-success" %}success{% else %}error{% endif %}',
+            title: "{{ message|safe }}",
+            showConfirmButton: false,
+            timer: 3000,
+        });
+        {% endfor %}
+    });
+    </script>
+    {% endif %}
+
+    {% block extra_js %}
+    {% endblock extra_js %}
+    {% endblock javascript %}
+    <!-- App js -->
+    <script src="{% static 'js/app.js'%}"></script>
+
+    <!-- OfflineBanner -->
+    <div id="kap-offline" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9998;background:#f59e0b;color:#fff;text-align:center;padding:8px 16px;font-size:13px;font-weight:600;" role="alert">
+      ⚠️ Sin conexión a internet — el sistema puede no funcionar correctamente
+    </div>
+    <script>
+    (function(){
+      function sync(){document.getElementById('kap-offline').style.display=navigator.onLine?'none':'block'}
+      sync();window.addEventListener('online',sync);window.addEventListener('offline',sync);
+    })();
+    </script>
+
+</body>
+
+</html>

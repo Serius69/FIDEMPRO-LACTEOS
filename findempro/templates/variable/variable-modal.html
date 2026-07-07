@@ -1,0 +1,1832 @@
+<!-- addOrUpdateVariableModal Mejorado -->
+<div class="modal fade" id="addOrUpdateVariable" tabindex="-1" aria-labelledby="addOrUpdateVariablelabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+      <div class="modal-content border-0 shadow-lg">
+        <form id="variableForm" autocomplete="off" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <!-- Header Mejorado -->
+            <div class="modal-header p-4 border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm bg-white bg-opacity-10 rounded-circle me-3">
+                        <i class="ri-function-line fs-4 text-white" style="line-height: 40px;"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title mb-0" id="addOrUpdateVariablelabel">Crear Nueva Variable</h5>
+                        <small class="opacity-75">Configure los parámetros de la variable del sistema</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-0">
+                <input type="hidden" id="variable-id-field" name="variable_id" />
+                
+                <!-- Progress Bar -->
+                <div class="progress" style="height: 3px;">
+                    <div class="progress-bar bg-success" id="formProgress" style="width: 20%"></div>
+                </div>
+                
+                <!-- Contenido Principal -->
+                <div class="container-fluid p-4">
+                    <!-- Sección 1: Imagen y Información Básica -->
+                    <div class="section-card mb-4" data-section="1">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center mb-4">
+                                    <div class="step-indicator active me-3">1</div>
+                                    <div>
+                                        <h6 class="mb-0">Información Básica</h6>
+                                        <small class="text-muted">Imagen y datos principales de la variable</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Imagen de la Variable -->
+                            <div class="col-lg-4">
+                                <div class="image-upload-section text-center">
+                                    <div class="position-relative d-inline-block">
+                                        <div class="image-preview-container">
+                                            <img src="/media/images/variable/variable-dummy-img.jpg" id="logo-img" class="variable-preview-img"/>
+                                            <div class="image-overlay">
+                                                <i class="ri-camera-line fs-1"></i>
+                                                <p class="mb-0 small">Clic para cambiar</p>
+                                            </div>
+                                        </div>
+                                        <div class="upload-button">
+                                            <label for="image_src" class="btn btn-primary btn-sm rounded-pill">
+                                                <i class="ri-upload-line me-1"></i>
+                                                Subir Imagen
+                                            </label>
+                                            <input class="d-none" id="image_src" type="file" accept="image/png, image/jpeg, image/jpg, image/gif" name="image_src"/>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <h6 class="text-primary">Imagen de la Variable</h6>
+                                        <p class="text-muted small mb-0">PNG, JPG, GIF hasta 10MB</p>
+                                        <p class="text-muted small">Recomendado: 400x400px</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Información Básica -->
+                            <div class="col-lg-8">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <div class="form-floating">
+                                            <input type="text" id="name" class="form-control" placeholder="Nombre de la variable" name="name" required maxlength="70"/>
+                                            <label for="name">
+                                                <i class="ri-text me-1"></i>Nombre de la variable <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="invalid-feedback">
+                                                <i class="ri-error-warning-line me-1"></i>
+                                                Ingrese un nombre de variable válido.
+                                            </div>
+                                            <div class="form-text">
+                                                <span id="name-counter">0</span>/70 caracteres
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <select class="form-select" id="fk_product" name="fk_product" required>
+                                                <option value="">Seleccione un producto</option>
+                                                {% for product in products %}
+                                                <option value="{{ product.id }}" data-business="{{ product.fk_business.name }}">
+                                                    {{ product.name }} - {{ product.fk_business.name }}
+                                                </option>
+                                                {% empty %}
+                                                <option value="">No hay productos disponibles</option>
+                                                {% endfor %}
+                                            </select>
+                                            <label for="fk_product">
+                                                <i class="ri-product-hunt-line me-1"></i>Producto asociado <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="invalid-feedback">
+                                                <i class="ri-error-warning-line me-1"></i>
+                                                Seleccione el producto asociado para la variable.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <select class="form-select" id="type" name="type" required>
+                                                <option value="">Seleccione un tipo</option>
+                                                <option value="1">🔵 Exógena</option>
+                                                <option value="2">🟢 Estado</option>
+                                                <option value="3">🟡 Endógena</option>
+                                            </select>
+                                            <label for="type">
+                                                <i class="ri-node-tree me-1"></i>Tipo de variable <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="invalid-feedback">
+                                                <i class="ri-error-warning-line me-1"></i>
+                                                Seleccione un tipo de variable.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Información sobre tipos -->
+                                <div class="type-info-container mt-3">
+                                    <div class="alert alert-info border-0 d-none" id="type-info">
+                                        <div class="d-flex">
+                                            <i class="ri-information-line me-2 fs-5"></i>
+                                            <div>
+                                                <h6 class="alert-heading mb-1" id="type-title"></h6>
+                                                <p class="mb-0 small" id="type-description"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 2: Configuración Avanzada -->
+                    <div class="section-card mb-4" data-section="2">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center mb-4">
+                                    <div class="step-indicator me-3">2</div>
+                                    <div>
+                                        <h6 class="mb-0">Configuración Avanzada</h6>
+                                        <small class="text-muted">Unidades de medida e iniciales</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-lg-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="unit" name="unit">
+                                        <option value="">Seleccione una unidad</option>
+                                        <optgroup label="💰 Moneda">
+                                            <option value="Bs">Bs (Bolivianos)</option>
+                                            <option value="USD">USD (Dólares)</option>
+                                            <option value="EUR">EUR (Euros)</option>
+                                        </optgroup>
+                                        <optgroup label="📏 Volumen">
+                                            <option value="L">L (Litros)</option>
+                                            <option value="mL">mL (Mililitros)</option>
+                                            <option value="m³">m³ (Metros cúbicos)</option>
+                                            <option value="cm³">cm³ (Centímetros cúbicos)</option>
+                                        </optgroup>
+                                        <optgroup label="⚖️ Peso">
+                                            <option value="Kg">Kg (Kilogramos)</option>
+                                            <option value="g">g (Gramos)</option>
+                                            <option value="t">t (Toneladas)</option>
+                                            <option value="lb">lb (Libras)</option>
+                                        </optgroup>
+                                        <optgroup label="📐 Longitud">
+                                            <option value="m">m (Metros)</option>
+                                            <option value="cm">cm (Centímetros)</option>
+                                            <option value="mm">mm (Milímetros)</option>
+                                            <option value="km">km (Kilómetros)</option>
+                                        </optgroup>
+                                        <optgroup label="⏰ Tiempo">
+                                            <option value="h">h (Horas)</option>
+                                            <option value="min">min (Minutos)</option>
+                                            <option value="s">s (Segundos)</option>
+                                            <option value="días">días</option>
+                                            <option value="semanas">semanas</option>
+                                            <option value="meses">meses</option>
+                                        </optgroup>
+                                        <optgroup label="📊 Porcentaje y Ratios">
+                                            <option value="%">% (Porcentaje)</option>
+                                            <option value="‰">‰ (Por mil)</option>
+                                            <option value="Lt/Bs">Lt/Bs (Litros por Boliviano)</option>
+                                            <option value="Kg/h">Kg/h (Kilogramos por hora)</option>
+                                            <option value="unidades/día">unidades/día</option>
+                                        </optgroup>
+                                        <optgroup label="🔢 Otros">
+                                            <option value="unidad">Unidad</option>
+                                            <option value="pieza">Pieza</option>
+                                            <option value="lote">Lote</option>
+                                            <option value="docena">Docena</option>
+                                            <option value="caja">Caja</option>
+                                        </optgroup>
+                                    </select>
+                                    <label for="unit">
+                                        <i class="ri-ruler-line me-1"></i>Unidad de medida
+                                    </label>
+                                </div>
+                                <div class="form-text">
+                                    <i class="ri-information-line me-1"></i>
+                                    Opcional: Especifique la unidad de medida de la variable
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="form-floating">
+                                    <input type="text" id="initials" class="form-control" name="initials" maxlength="4" readonly style="background-color: #f8f9fa;"/>
+                                    <label for="initials">
+                                        <i class="ri-text me-1"></i>Iniciales (generadas automáticamente)
+                                    </label>
+                                </div>
+                                <div class="form-text">
+                                    <i class="ri-robot-line me-1"></i>
+                                    Las iniciales se generan automáticamente usando IA
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preview de la unidad seleccionada -->
+                        <div class="unit-preview-container mt-3 d-none" id="unitPreview">
+                            <div class="alert alert-success border-0">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-check-line me-2 fs-5"></i>
+                                    <div>
+                                        <strong>Unidad seleccionada:</strong>
+                                        <span id="selectedUnitText"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 3: Descripción y Validación -->
+                    <div class="section-card mb-4" data-section="3">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center mb-4">
+                                    <div class="step-indicator me-3">3</div>
+                                    <div>
+                                        <h6 class="mb-0">Descripción y Documentación</h6>
+                                        <small class="text-muted">Documente el propósito y uso de la variable</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <textarea class="form-control" id="description" rows="4" placeholder="Descripción detallada..." name="description" required maxlength="500" style="height: 120px;"></textarea>
+                                    <label for="description">
+                                        <i class="ri-file-text-line me-1"></i>Descripción detallada <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="invalid-feedback">
+                                        <i class="ri-error-warning-line me-1"></i>
+                                        Ingrese una descripción de la variable.
+                                    </div>
+                                </div>
+                                <div class="form-text d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="ri-information-line me-1"></i>
+                                        Describa el propósito, fuente de datos y cómo se utiliza esta variable
+                                    </div>
+                                    <div>
+                                        <span id="description-counter">0</span>/500 caracteres
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sugerencias de descripción -->
+                        <div class="description-suggestions mt-3">
+                            <h6 class="text-primary mb-2">
+                                <i class="ri-lightbulb-line me-1"></i>
+                                Sugerencias para una buena descripción:
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="suggestion-card">
+                                        <i class="ri-question-line text-info"></i>
+                                        <strong>¿Qué representa?</strong>
+                                        <small>Explique qué mide o representa esta variable</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="suggestion-card">
+                                        <i class="ri-database-line text-success"></i>
+                                        <strong>Fuente de datos</strong>
+                                        <small>¿De dónde provienen los valores?</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="suggestion-card">
+                                        <i class="ri-settings-line text-warning"></i>
+                                        <strong>Uso en el sistema</strong>
+                                        <small>¿Cómo se utiliza en cálculos?</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 4: Revisión Final -->
+                    <div class="section-card" data-section="4">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center mb-4">
+                                    <div class="step-indicator me-3">4</div>
+                                    <div>
+                                        <h6 class="mb-0">Revisión Final</h6>
+                                        <small class="text-muted">Verifique la información antes de guardar</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="review-container">
+                            <div class="row">
+                                <div class="col-lg-8">
+                                    <div class="review-card">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="ri-eye-line me-1"></i>
+                                            Vista Previa de la Variable
+                                        </h6>
+                                        
+                                        <div class="variable-preview">
+                                            <div class="d-flex align-items-start mb-3">
+                                                <img id="review-image" src="/media/images/variable/variable-dummy-img.jpg" class="review-img me-3">
+                                                <div class="flex-grow-1">
+                                                    <h5 id="review-name" class="mb-1">Nombre de la variable</h5>
+                                                    <div class="d-flex gap-2 mb-2">
+                                                        <span id="review-type" class="badge bg-primary">Tipo</span>
+                                                        <span id="review-initials" class="badge bg-secondary">Iniciales</span>
+                                                        <span id="review-unit" class="badge bg-info d-none">Unidad</span>
+                                                    </div>
+                                                    <p id="review-product" class="text-muted mb-2">Producto asociado</p>
+                                                    <p id="review-description" class="small">Descripción de la variable</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-4">
+                                    <div class="validation-checklist">
+                                        <h6 class="text-success mb-3">
+                                            <i class="ri-shield-check-line me-1"></i>
+                                            Lista de Verificación
+                                        </h6>
+                                        
+                                        <div class="checklist-item" data-field="name">
+                                            <i class="ri-close-circle-line text-danger"></i>
+                                            <span>Nombre completado</span>
+                                        </div>
+                                        <div class="checklist-item" data-field="product">
+                                            <i class="ri-close-circle-line text-danger"></i>
+                                            <span>Producto seleccionado</span>
+                                        </div>
+                                        <div class="checklist-item" data-field="type">
+                                            <i class="ri-close-circle-line text-danger"></i>
+                                            <span>Tipo definido</span>
+                                        </div>
+                                        <div class="checklist-item" data-field="description">
+                                            <i class="ri-close-circle-line text-danger"></i>
+                                            <span>Descripción completada</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer Mejorado -->
+            <div class="modal-footer border-0 p-4" style="background-color: #f8f9fa;">
+                <div class="w-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="step-navigation">
+                            <button type="button" class="btn btn-outline-secondary" id="prevStep" disabled>
+                                <i class="ri-arrow-left-line me-1"></i>
+                                Anterior
+                            </button>
+                            <button type="button" class="btn btn-primary" id="nextStep">
+                                Siguiente
+                                <i class="ri-arrow-right-line ms-1"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="final-actions">
+                            <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">
+                                <i class="ri-close-line me-1"></i>
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-success d-none" id="submit-variable-btn">
+                                <i class="ri-save-3-line me-1"></i>
+                                <span id="submit-btn-text">Guardar Variable</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+      </div>
+    </div>
+</div>
+
+<!-- Modal de Eliminación Mejorado -->
+<div id="removeVariableModal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white;">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm bg-white bg-opacity-10 rounded-circle me-3">
+                        <i class="ri-delete-bin-line fs-4 text-white" style="line-height: 40px;"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">Eliminar Variable</h5>
+                        <small class="opacity-75">Esta acción no se puede deshacer</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="avatar-xl mx-auto mb-3" style="background: linear-gradient(135deg, #ff6b6b, #ee5a52); border-radius: 50%;">
+                        <lord-icon
+                            src="https://cdn.lordicon.com/gsqxdxog.json"
+                            trigger="loop"
+                            colors="primary:#ffffff,secondary:#ffffff"
+                            style="width: 60px; height: 60px; line-height: 80px;">
+                        </lord-icon>
+                    </div>
+                    <h4 class="text-danger">¿Está completamente seguro?</h4>
+                    <p class="text-muted">
+                        Esta acción eliminará permanentemente la variable y todas sus asociaciones del sistema.
+                    </p>
+                </div>
+                
+                <div class="alert alert-warning border-0">
+                    <div class="d-flex">
+                        <i class="ri-alert-triangle-line me-3 fs-4 text-warning"></i>
+                        <div>
+                            <h6 class="alert-heading">Advertencia</h6>
+                            <p class="mb-0">
+                                Al eliminar esta variable, también se eliminarán todas las ecuaciones 
+                                y relaciones asociadas. Esta acción es irreversible.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <form id="deleteVariableForm" method="POST" class="w-100">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                            <i class="ri-close-line me-1"></i>
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-danger delete-variable-btn">
+                            <i class="ri-delete-bin-line me-1"></i>
+                            Sí, eliminar permanentemente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Ecuación Mejorado -->
+<div class="modal fade" id="addOrUpdateEquation" tabindex="-1" aria-labelledby="addOrUpdateEquationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xxl">
+        <div class="modal-content border-0 shadow-lg">
+          <form id="equationForm" autocomplete="off" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <!-- Header Mejorado -->
+            <div class="modal-header p-4 border-0" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm bg-white bg-opacity-10 rounded-circle me-3">
+                        <i class="ri-function-add-line fs-4 text-white" style="line-height: 40px;"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title mb-0" id="addOrUpdateEquationModalLabel">Crear Nueva Ecuación</h5>
+                        <small class="opacity-75">Define relaciones matemáticas entre variables</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-4">
+              <input type="hidden" id="equation-id-field" name="equation_id" />
+              
+              <div class="row g-4">
+                <!-- Información Principal -->
+                <div class="col-lg-6">
+                    <div class="equation-section">
+                        <h6 class="text-primary mb-3">
+                            <i class="ri-information-line me-2"></i>
+                            Información Principal
+                        </h6>
+                        
+                        <div class="mb-3">
+                            <div class="form-floating">
+                                <input type="text" id="eq_name" class="form-control" placeholder="Nombre de la ecuación" name="name" required maxlength="70"/>
+                                <label for="eq_name">
+                                    <i class="ri-text me-1"></i>Nombre de la Ecuación <span class="text-danger">*</span>
+                                </label>
+                                <div class="invalid-feedback">
+                                    <i class="ri-error-warning-line me-1"></i>
+                                    Ingrese un nombre para la ecuación.
+                                </div>
+                            </div>
+                            <div class="form-text">
+                                Ejemplo: "Cálculo de Producción Total", "Fórmula de Costos"
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-floating">
+                                <input type="text" id="expression" class="form-control" placeholder="Expresión matemática" name="expression" required/>
+                                <label for="expression">
+                                    <i class="ri-function-line me-1"></i>Expresión Matemática <span class="text-danger">*</span>
+                                </label>
+                                <div class="invalid-feedback">
+                                    <i class="ri-error-warning-line me-1"></i>
+                                    Ingrese la expresión matemática de la ecuación.
+                                </div>
+                            </div>
+                            <div class="form-text">
+                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                    <span class="badge bg-light text-dark">x = y + z</span>
+                                    <span class="badge bg-light text-dark">total = precio * cantidad</span>
+                                    <span class="badge bg-light text-dark">ganancia = ingresos - gastos</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="expression-validator d-none" id="expressionValidator">
+                            <div class="alert alert-success border-0 d-flex align-items-center">
+                                <i class="ri-check-line me-2 fs-5"></i>
+                                <span>Expresión válida</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Variables Relacionadas -->
+                <div class="col-lg-6">
+                    <div class="equation-section">
+                        <h6 class="text-primary mb-3">
+                            <i class="ri-git-branch-line me-2"></i>
+                            Variables Relacionadas
+                        </h6>
+                        
+                        <div class="mb-3">
+                            <div class="form-floating">
+                                <select class="form-select" id="fk_variable1" name="fk_variable1" required>
+                                    <option value="">Seleccione la variable principal</option>
+                                    {% for variable in variables %}
+                                    <option value="{{ variable.id }}" data-product="{{ variable.fk_product.name }}" data-type="{{ variable.get_type_display }}">
+                                        {{ variable.name }} - {{ variable.fk_product.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <label for="fk_variable1">
+                                    <i class="ri-focus-line me-1"></i>Variable Principal <span class="text-danger">*</span>
+                                </label>
+                                <div class="invalid-feedback">
+                                    <i class="ri-error-warning-line me-1"></i>
+                                    Seleccione la variable principal de la ecuación.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="fk_variable2" name="fk_variable2">
+                                        <option value="">Ninguna</option>
+                                        {% for variable in variables %}
+                                        <option value="{{ variable.id }}">{{ variable.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="fk_variable2">
+                                        <i class="ri-links-line me-1"></i>Variable 2
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="fk_variable3" name="fk_variable3">
+                                        <option value="">Ninguna</option>
+                                        {% for variable in variables %}
+                                        <option value="{{ variable.id }}">{{ variable.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="fk_variable3">
+                                        <i class="ri-links-line me-1"></i>Variable 3
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="fk_variable4" name="fk_variable4">
+                                        <option value="">Ninguna</option>
+                                        {% for variable in variables %}
+                                        <option value="{{ variable.id }}">{{ variable.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="fk_variable4">
+                                        <i class="ri-links-line me-1"></i>Variable 4
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="fk_variable5" name="fk_variable5">
+                                        <option value="">Ninguna</option>
+                                        {% for variable in variables %}
+                                        <option value="{{ variable.id }}">{{ variable.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="fk_variable5">
+                                        <i class="ri-links-line me-1"></i>Variable 5
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Área y Descripción -->
+                <div class="col-12">
+                    <div class="equation-section">
+                        <div class="row g-3">
+                            <div class="col-lg-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="fk_area" name="fk_area">
+                                        <option value="">Ninguna área específica</option>
+                                        <option value="1">📊 Producción</option>
+                                        <option value="2">💰 Finanzas</option>
+                                        <option value="3">📈 Ventas</option>
+                                        <option value="4">🏭 Operaciones</option>
+                                        <option value="5">👥 Recursos Humanos</option>
+                                        <option value="6">📦 Inventario</option>
+                                        <option value="7">🚚 Logística</option>
+                                        <option value="8">🔬 Calidad</option>
+                                    </select>
+                                    <label for="fk_area">
+                                        <i class="ri-building-line me-1"></i>Área de Aplicación
+                                    </label>
+                                </div>
+                                <div class="form-text">
+                                    Seleccione el área donde se aplica esta ecuación
+                                </div>
+                            </div>
+                            
+                            <div class="col-lg-6">
+                                <div class="form-floating">
+                                    <select class="form-select" id="eq_priority" name="priority">
+                                        <option value="1">🔴 Alta - Crítica para el sistema</option>
+                                        <option value="2" selected>🟡 Media - Importante</option>
+                                        <option value="3">🟢 Baja - Informativa</option>
+                                    </select>
+                                    <label for="eq_priority">
+                                        <i class="ri-alarm-warning-line me-1"></i>Prioridad
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="equation-section">
+                        <h6 class="text-primary mb-3">
+                            <i class="ri-file-text-line me-2"></i>
+                            Descripción y Documentación
+                        </h6>
+                        
+                        <div class="form-floating">
+                            <textarea class="form-control" id="eq_description" rows="4" placeholder="Descripción de la ecuación..." name="description" required maxlength="500" style="height: 100px;"></textarea>
+                            <label for="eq_description">
+                                <i class="ri-file-text-line me-1"></i>Descripción <span class="text-danger">*</span>
+                            </label>
+                            <div class="invalid-feedback">
+                                <i class="ri-error-warning-line me-1"></i>
+                                Ingrese una descripción de la ecuación.
+                            </div>
+                        </div>
+                        <div class="form-text d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="ri-information-line me-1"></i>
+                                Describa el propósito, contexto y aplicación de esta ecuación
+                            </div>
+                            <div>
+                                <span id="eq-description-counter">0</span>/500 caracteres
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview de la Ecuación -->
+                <div class="col-12">
+                    <div class="equation-preview-section">
+                        <h6 class="text-primary mb-3">
+                            <i class="ri-eye-line me-2"></i>
+                            Vista Previa de la Ecuación
+                        </h6>
+                        
+                        <div class="equation-preview-card">
+                            <div class="row">
+                                <div class="col-lg-8">
+                                    <h6 id="preview-eq-name" class="mb-2">Nombre de la ecuación</h6>
+                                    <div class="expression-display mb-3">
+                                        <code id="preview-expression" class="fs-5">Expresión matemática</code>
+                                    </div>
+                                    <p id="preview-eq-description" class="text-muted mb-0">Descripción de la ecuación</p>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="variables-list">
+                                        <h6 class="small text-muted mb-2">Variables involucradas:</h6>
+                                        <div id="preview-variables" class="d-flex flex-wrap gap-1">
+                                            <!-- Variables se llenan dinámicamente -->
+                                        </div>
+                                    </div>
+                                    <div class="area-info mt-3">
+                                        <span id="preview-area" class="badge bg-info">Área no definida</span>
+                                        <span id="preview-priority" class="badge bg-warning ms-1">Media</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Footer Mejorado -->
+            <div class="modal-footer border-0 p-4" style="background-color: #f8f9fa;">
+                <div class="w-100 d-flex justify-content-between align-items-center">
+                    <div class="validation-status">
+                        <div class="d-flex align-items-center">
+                            <div class="validation-icon me-2">
+                                <i class="ri-error-warning-line text-warning" id="validationIcon"></i>
+                            </div>
+                            <span id="validationText" class="text-muted">Complete todos los campos requeridos</span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-light me-2" data-bs-dismiss="modal">
+                            <i class="ri-close-line me-1"></i>
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-outline-primary me-2" id="validateEquation">
+                            <i class="ri-check-line me-1"></i>
+                            Validar
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submit-equation-btn">
+                            <i class="ri-save-3-line me-1"></i>
+                            <span id="eq-submit-btn-text">Guardar Ecuación</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+          </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Eliminación de Ecuación -->
+<div id="removeEquationModal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white;">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm bg-white bg-opacity-10 rounded-circle me-3">
+                        <i class="ri-function-line fs-4 text-white" style="line-height: 40px;"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">Eliminar Ecuación</h5>
+                        <small class="opacity-75">Confirme la eliminación de la ecuación</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="avatar-xl mx-auto mb-3" style="background: linear-gradient(135deg, #ff6b6b, #ee5a52); border-radius: 50%;">
+                        <lord-icon
+                            src="https://cdn.lordicon.com/gsqxdxog.json"
+                            trigger="loop"
+                            colors="primary:#ffffff,secondary:#ffffff"
+                            style="width: 60px; height: 60px; line-height: 80px;">
+                        </lord-icon>
+                    </div>
+                    <h4 class="text-danger">¿Eliminar ecuación?</h4>
+                    <p class="text-muted">
+                        Esta acción eliminará permanentemente la ecuación del sistema.
+                    </p>
+                </div>
+                
+                <div class="alert alert-warning border-0">
+                    <div class="d-flex">
+                        <i class="ri-alert-triangle-line me-3 fs-4 text-warning"></i>
+                        <div>
+                            <h6 class="alert-heading">Impacto de la eliminación</h6>
+                            <p class="mb-0">
+                                La ecuación será removida del modelo de simulación. 
+                                Verifique que no afecte otros cálculos dependientes.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <form id="deleteEquationForm" method="POST" class="w-100">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                            <i class="ri-close-line me-1"></i>
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-danger delete-equation-btn">
+                            <i class="ri-delete-bin-line me-1"></i>
+                            Sí, eliminar ecuación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos CSS para los modales mejorados */
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --danger-gradient: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+/* Secciones del formulario */
+.section-card {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.section-card:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Indicadores de pasos */
+.step-indicator {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.step-indicator:not(.active) {
+    background: #e9ecef;
+    color: #6c757d;
+}
+
+.step-indicator.completed {
+    background: var(--success-gradient);
+}
+
+/* Imagen de la variable */
+.image-upload-section {
+    position: relative;
+}
+
+.image-preview-container {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.image-preview-container:hover {
+    transform: scale(1.05);
+}
+
+.variable-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all 0.3s ease;
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.image-preview-container:hover .image-overlay {
+    opacity: 1;
+}
+
+.upload-button {
+    margin-top: 1rem;
+}
+
+/* Información de tipos */
+.type-info-container {
+    transition: all 0.3s ease;
+}
+
+/* Sugerencias de descripción */
+.suggestion-card {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 15px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.suggestion-card:hover {
+    background: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.suggestion-card i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Vista previa de variable */
+.review-card, .variable-preview {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 15px;
+    padding: 1.5rem;
+}
+
+.review-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 15px;
+    object-fit: cover;
+    border: 2px solid #e9ecef;
+}
+
+/* Lista de verificación */
+.validation-checklist {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 15px;
+    padding: 1.5rem;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.checklist-item i {
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.checklist-item.completed i {
+    color: #28a745;
+}
+
+.checklist-item.completed span {
+    color: #28a745;
+    text-decoration: line-through;
+}
+
+/* Ecuaciones */
+.equation-section {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.equation-preview-card {
+    background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 1.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.expression-display {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Contadores de caracteres */
+.form-text {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+/* Preview de unidad */
+.unit-preview-container {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Floating labels mejorados */
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label,
+.form-floating > .form-select ~ label {
+    color: #667eea;
+}
+
+/* Botones de navegación */
+.step-navigation .btn {
+    min-width: 120px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .section-card {
+        padding: 1.5rem;
+    }
+    
+    .image-preview-container {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .equation-section {
+        padding: 1rem;
+    }
+}
+
+/* Animaciones */
+.section-card {
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Estados de validación */
+.is-valid {
+    border-color: #28a745;
+}
+
+.is-invalid {
+    border-color: #dc3545;
+}
+
+.validation-icon {
+    transition: all 0.3s ease;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Variables globales
+    let currentStep = 1;
+    const totalSteps = 4;
+    let formData = {};
+    
+    // Elementos del DOM
+    const progressBar = document.getElementById('formProgress');
+    const prevBtn = document.getElementById('prevStep');
+    const nextBtn = document.getElementById('nextStep');
+    const submitBtn = document.getElementById('submit-variable-btn');
+    const sections = document.querySelectorAll('.section-card');
+    
+    // Información de tipos de variables
+    const typeInfo = {
+        1: {
+            title: '🔵 Variable Exógena',
+            description: 'Variables externas al sistema, cuyos valores provienen del entorno exterior y no son controlados por el modelo interno.'
+        },
+        2: {
+            title: '🟢 Variable de Estado',
+            description: 'Variables que representan el estado actual del sistema en un momento determinado, sirven como punto de referencia.'
+        },
+        3: {
+            title: '🟡 Variable Endógena',
+            description: 'Variables calculadas internamente por el sistema basándose en otras variables y ecuaciones del modelo.'
+        }
+    };
+    
+    // Inicialización
+    initializeForm();
+    setupEventListeners();
+    
+    function initializeForm() {
+        showSection(1);
+        updateProgress();
+        updateStepIndicators();
+    }
+    
+    function setupEventListeners() {
+        // Navegación entre pasos
+        nextBtn.addEventListener('click', nextStep);
+        prevBtn.addEventListener('click', prevStep);
+        
+        // Contadores de caracteres
+        setupCharacterCounters();
+        
+        // Preview de imagen
+        setupImagePreview();
+        
+        // Información de tipos
+        setupTypeInfo();
+        
+        // Validación en tiempo real
+        setupRealtimeValidation();
+        
+        // Preview de unidad
+        setupUnitPreview();
+        
+        // Generación automática de iniciales
+        setupInitialsGeneration();
+        
+        // Reset del modal
+        setupModalReset();
+    }
+    
+    function setupCharacterCounters() {
+        const nameField = document.getElementById('name');
+        const nameCounter = document.getElementById('name-counter');
+        
+        const descField = document.getElementById('description');
+        const descCounter = document.getElementById('description-counter');
+        
+        nameField.addEventListener('input', function() {
+            updateCounter(this, nameCounter, 70);
+        });
+        
+        descField.addEventListener('input', function() {
+            updateCounter(this, descCounter, 500);
+        });
+    }
+    
+    function updateCounter(field, counter, maxLength) {
+        const length = field.value.length;
+        counter.textContent = length;
+        
+        if (length > maxLength * 0.9) {
+            counter.style.color = '#dc3545';
+        } else if (length > maxLength * 0.7) {
+            counter.style.color = '#fd7e14';
+        } else {
+            counter.style.color = '#6c757d';
+        }
+    }
+    
+    function setupImagePreview() {
+        const imageInput = document.getElementById('image_src');
+        const previewImg = document.getElementById('logo-img');
+        const reviewImg = document.getElementById('review-image');
+        
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (validateImageFile(file)) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        if (reviewImg) reviewImg.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+    }
+    
+    function validateImageFile(file) {
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        
+        if (!validTypes.includes(file.type)) {
+            showNotification('Por favor seleccione un archivo de imagen válido (JPG, PNG, GIF)', 'error');
+            return false;
+        }
+        
+        if (file.size > maxSize) {
+            showNotification('El archivo es demasiado grande. Máximo 10MB.', 'error');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    function setupTypeInfo() {
+        const typeSelect = document.getElementById('type');
+        const typeInfoDiv = document.getElementById('type-info');
+        const typeTitle = document.getElementById('type-title');
+        const typeDescription = document.getElementById('type-description');
+        
+        typeSelect.addEventListener('change', function() {
+            const selectedType = this.value;
+            if (selectedType && typeInfo[selectedType]) {
+                typeTitle.textContent = typeInfo[selectedType].title;
+                typeDescription.textContent = typeInfo[selectedType].description;
+                typeInfoDiv.classList.remove('d-none');
+            } else {
+                typeInfoDiv.classList.add('d-none');
+            }
+            updateReview();
+        });
+    }
+    
+    function setupRealtimeValidation() {
+        const requiredFields = ['name', 'fk_product', 'type', 'description'];
+        
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('input', function() {
+                    validateField(this);
+                    updateValidationChecklist();
+                    updateReview();
+                });
+                
+                field.addEventListener('change', function() {
+                    validateField(this);
+                    updateValidationChecklist();
+                    updateReview();
+                });
+            }
+        });
+    }
+    
+    function validateField(field) {
+        const isValid = field.checkValidity() && field.value.trim() !== '';
+        
+        if (isValid) {
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+        } else {
+            field.classList.remove('is-valid');
+            field.classList.add('is-invalid');
+        }
+        
+        return isValid;
+    }
+    
+    function updateValidationChecklist() {
+        const fields = {
+            name: document.getElementById('name'),
+            product: document.getElementById('fk_product'),
+            type: document.getElementById('type'),
+            description: document.getElementById('description')
+        };
+        
+        Object.keys(fields).forEach(key => {
+            const field = fields[key];
+            const checklistItem = document.querySelector(`.checklist-item[data-field="${key}"]`);
+            if (field && checklistItem) {
+                const isValid = field.value.trim() !== '';
+                const icon = checklistItem.querySelector('i');
+                
+                if (isValid) {
+                    icon.className = 'ri-check-circle-line text-success';
+                    checklistItem.classList.add('completed');
+                } else {
+                    icon.className = 'ri-close-circle-line text-danger';
+                    checklistItem.classList.remove('completed');
+                }
+            }
+        });
+    }
+    
+    function setupUnitPreview() {
+        const unitSelect = document.getElementById('unit');
+        const unitPreview = document.getElementById('unitPreview');
+        const selectedUnitText = document.getElementById('selectedUnitText');
+        
+        unitSelect.addEventListener('change', function() {
+            if (this.value) {
+                const selectedOption = this.options[this.selectedIndex];
+                selectedUnitText.textContent = selectedOption.textContent;
+                unitPreview.classList.remove('d-none');
+            } else {
+                unitPreview.classList.add('d-none');
+            }
+            updateReview();
+        });
+    }
+    
+    function setupInitialsGeneration() {
+        const nameField = document.getElementById('name');
+        const initialsField = document.getElementById('initials');
+        
+        nameField.addEventListener('input', function() {
+            const name = this.value.trim();
+            if (name) {
+                const initials = generateInitials(name);
+                initialsField.value = initials;
+                updateReview();
+            }
+        });
+    }
+    
+    function generateInitials(name) {
+        const words = name.split(' ');
+        let initials = '';
+        
+        for (let i = 0; i < Math.min(words.length, 4); i++) {
+            if (words[i] && words[i].length > 0) {
+                initials += words[i][0].toUpperCase();
+            }
+        }
+        
+        // Rellenar con 'X' si es necesario
+        while (initials.length < 4) {
+            initials += 'X';
+        }
+        
+        return initials.substring(0, 4);
+    }
+    
+    function updateReview() {
+        // Actualizar vista previa en la sección 4
+        const reviewName = document.getElementById('review-name');
+        const reviewType = document.getElementById('review-type');
+        const reviewInitials = document.getElementById('review-initials');
+        const reviewUnit = document.getElementById('review-unit');
+        const reviewProduct = document.getElementById('review-product');
+        const reviewDescription = document.getElementById('review-description');
+        
+        // Obtener valores de los campos
+        const name = document.getElementById('name').value || 'Nombre de la variable';
+        const type = document.getElementById('type').value;
+        const initials = document.getElementById('initials').value || 'INIT';
+        const unit = document.getElementById('unit').value;
+        const productSelect = document.getElementById('fk_product');
+        const product = productSelect.options[productSelect.selectedIndex]?.text || 'Producto asociado';
+        const description = document.getElementById('description').value || 'Descripción de la variable';
+        
+        // Actualizar elementos
+        if (reviewName) reviewName.textContent = name;
+        if (reviewProduct) reviewProduct.textContent = product;
+        if (reviewDescription) reviewDescription.textContent = description;
+        if (reviewInitials) reviewInitials.textContent = initials;
+        
+        // Actualizar badge de tipo
+        if (reviewType && type) {
+            const typeLabels = {
+                '1': { text: '🔵 Exógena', class: 'bg-success' },
+                '2': { text: '🟢 Estado', class: 'bg-info' },
+                '3': { text: '🟡 Endógena', class: 'bg-warning' }
+            };
+            
+            const typeData = typeLabels[type];
+            if (typeData) {
+                reviewType.textContent = typeData.text;
+                reviewType.className = `badge ${typeData.class}`;
+            }
+        }
+        
+        // Actualizar badge de unidad
+        if (reviewUnit) {
+            if (unit) {
+                const unitSelect = document.getElementById('unit');
+                const unitText = unitSelect.options[unitSelect.selectedIndex].text;
+                reviewUnit.textContent = unitText;
+                reviewUnit.classList.remove('d-none');
+            } else {
+                reviewUnit.classList.add('d-none');
+            }
+        }
+    }
+    
+    function setupModalReset() {
+        const modal = document.getElementById('addOrUpdateVariable');
+        modal.addEventListener('hidden.bs.modal', function() {
+            resetForm();
+        });
+    }
+    
+    function resetForm() {
+        // Resetear a paso 1
+        currentStep = 1;
+        showSection(1);
+        updateProgress();
+        updateStepIndicators();
+        
+        // Limpiar formulario
+        const form = document.getElementById('variableForm');
+        form.reset();
+        form.classList.remove('was-validated');
+        
+        // Resetear imagen
+        const logoImg = document.getElementById('logo-img');
+        const reviewImg = document.getElementById('review-image');
+        if (logoImg) logoImg.src = '/media/images/variable/variable-dummy-img.jpg';
+        if (reviewImg) reviewImg.src = '/media/images/variable/variable-dummy-img.jpg';
+        
+        // Resetear contadores
+        document.getElementById('name-counter').textContent = '0';
+        document.getElementById('description-counter').textContent = '0';
+        
+        // Ocultar elementos opcionales
+        document.getElementById('type-info').classList.add('d-none');
+        document.getElementById('unitPreview').classList.add('d-none');
+        
+        // Resetear validaciones
+        document.querySelectorAll('.is-valid, .is-invalid').forEach(el => {
+            el.classList.remove('is-valid', 'is-invalid');
+        });
+        
+        // Resetear checklist
+        document.querySelectorAll('.checklist-item').forEach(item => {
+            item.classList.remove('completed');
+            const icon = item.querySelector('i');
+            icon.className = 'ri-close-circle-line text-danger';
+        });
+        
+        // Resetear título del modal
+        document.getElementById('addOrUpdateVariablelabel').textContent = 'Crear Nueva Variable';
+        document.getElementById('submit-btn-text').textContent = 'Guardar Variable';
+    }
+    
+    function nextStep() {
+        if (validateCurrentStep()) {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                showSection(currentStep);
+                updateProgress();
+                updateStepIndicators();
+            }
+        }
+    }
+    
+    function prevStep() {
+        if (currentStep > 1) {
+            currentStep--;
+            showSection(currentStep);
+            updateProgress();
+            updateStepIndicators();
+        }
+    }
+    
+    function validateCurrentStep() {
+        const section = document.querySelector(`[data-section="${currentStep}"]`);
+        const requiredFields = section.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!validateField(field)) {
+                isValid = false;
+            }
+        });
+        
+        if (!isValid) {
+            showNotification('Complete todos los campos requeridos antes de continuar', 'warning');
+        }
+        
+        return isValid;
+    }
+    
+    function showSection(stepNumber) {
+        sections.forEach((section, index) => {
+            if (index + 1 === stepNumber) {
+                section.style.display = 'block';
+                section.style.animation = 'fadeInUp 0.5s ease';
+            } else {
+                section.style.display = 'none';
+            }
+        });
+        
+        // Actualizar botones de navegación
+        prevBtn.disabled = stepNumber === 1;
+        
+        if (stepNumber === totalSteps) {
+            nextBtn.classList.add('d-none');
+            submitBtn.classList.remove('d-none');
+        } else {
+            nextBtn.classList.remove('d-none');
+            submitBtn.classList.add('d-none');
+        }
+    }
+    
+    function updateProgress() {
+        const progress = (currentStep / totalSteps) * 100;
+        progressBar.style.width = progress + '%';
+    }
+    
+    function updateStepIndicators() {
+        const indicators = document.querySelectorAll('.step-indicator');
+        indicators.forEach((indicator, index) => {
+            const stepNum = index + 1;
+            
+            if (stepNum < currentStep) {
+                indicator.classList.add('completed');
+                indicator.classList.remove('active');
+            } else if (stepNum === currentStep) {
+                indicator.classList.add('active');
+                indicator.classList.remove('completed');
+            } else {
+                indicator.classList.remove('active', 'completed');
+            }
+        });
+    }
+    
+    function showNotification(message, type = 'info') {
+        const alertClass = {
+            'success': 'alert-success',
+            'error': 'alert-danger',
+            'warning': 'alert-warning',
+            'info': 'alert-info'
+        };
+        
+        const notification = document.createElement('div');
+        notification.className = `alert ${alertClass[type]} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 10000; min-width: 300px;';
+        notification.innerHTML = `
+            <i class="ri-information-line me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+    
+    // Función global para cargar detalles de variable (para edición)
+    window.loadVariableDetails = function(variableId) {
+        fetch(`/variable/details/${variableId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Llenar campos del formulario
+                document.getElementById('variable-id-field').value = variableId;
+                document.getElementById('name').value = data.name || '';
+                document.getElementById('fk_product').value = data.fk_product || '';
+                document.getElementById('type').value = data.type || '';
+                document.getElementById('unit').value = data.unit || '';
+                document.getElementById('initials').value = data.initials || '';
+                document.getElementById('description').value = data.description || '';
+                
+                // Actualizar imagen si existe
+                if (data.image_src) {
+                    document.getElementById('logo-img').src = data.image_src;
+                    document.getElementById('review-image').src = data.image_src;
+                }
+                
+                // Actualizar título del modal
+                document.getElementById('addOrUpdateVariablelabel').textContent = 'Editar Variable';
+                document.getElementById('submit-btn-text').textContent = 'Actualizar Variable';
+                
+                // Trigger eventos para actualizar UI
+                document.getElementById('type').dispatchEvent(new Event('change'));
+                document.getElementById('unit').dispatchEvent(new Event('change'));
+                document.getElementById('name').dispatchEvent(new Event('input'));
+                document.getElementById('description').dispatchEvent(new Event('input'));
+                
+                updateReview();
+                updateValidationChecklist();
+            })
+            .catch(error => {
+                showNotification('Error al cargar los detalles: ' + error.message, 'error');
+            });
+    };
+});
+
+// Script para ecuaciones
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos del modal de ecuación
+    const eqForm = document.getElementById('equationForm');
+    const eqDescCounter = document.getElementById('eq-description-counter');
+    const validateBtn = document.getElementById('validateEquation');
+    const validationIcon = document.getElementById('validationIcon');
+    const validationText = document.getElementById('validationText');
+    
+    // Setup contadores y preview para ecuaciones
+    if (eqDescCounter) {
+        const eqDescField = document.getElementById('eq_description');
+        eqDescField.addEventListener('input', function() {
+            const length = this.value.length;
+            eqDescCounter.textContent = length;
+            
+            if (length > 450) {
+                eqDescCounter.style.color = '#dc3545';
+            } else if (length > 400) {
+                eqDescCounter.style.color = '#fd7e14';
+            } else {
+                eqDescCounter.style.color = '#6c757d';
+            }
+            
+            updateEquationPreview();
+        });
+    }
+    
+    // Preview en tiempo real para ecuaciones
+    const eqFields = ['eq_name', 'expression', 'eq_description', 'fk_area', 'eq_priority'];
+    eqFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', updateEquationPreview);
+            field.addEventListener('change', updateEquationPreview);
+        }
+    });
+    
+    // Variables selection
+    const variableFields = ['fk_variable1', 'fk_variable2', 'fk_variable3', 'fk_variable4', 'fk_variable5'];
+    variableFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('change', updateEquationPreview);
+        }
+    });
+    
+    function updateEquationPreview() {
+        const name = document.getElementById('eq_name').value || 'Nombre de la ecuación';
+        const expression = document.getElementById('expression').value || 'Expresión matemática';
+        const description = document.getElementById('eq_description').value || 'Descripción de la ecuación';
+        const area = document.getElementById('fk_area').value;
+        const priority = document.getElementById('eq_priority').value;
+        
+        // Actualizar preview
+        document.getElementById('preview-eq-name').textContent = name;
+        document.getElementById('preview-expression').textContent = expression;
+        document.getElementById('preview-eq-description').textContent = description;
+        
+        // Actualizar área
+        const areaSelect = document.getElementById('fk_area');
+        const areaText = area ? areaSelect.options[areaSelect.selectedIndex].text : 'Área no definida';
+        document.getElementById('preview-area').textContent = areaText;
+        
+        // Actualizar prioridad
+        const prioritySelect = document.getElementById('eq_priority');
+        const priorityText = prioritySelect.options[prioritySelect.selectedIndex].text;
+        const priorityBadge = document.getElementById('preview-priority');
+        priorityBadge.textContent = priorityText;
+        
+        // Cambiar color del badge según prioridad
+        priorityBadge.className = 'badge ms-1';
+        if (priority === '1') priorityBadge.classList.add('bg-danger');
+        else if (priority === '2') priorityBadge.classList.add('bg-warning');
+        else priorityBadge.classList.add('bg-success');
+        
+        // Actualizar variables
+        updateVariablesPreview();
+        updateValidationStatus();
+    }
+    
+    function updateVariablesPreview() {
+        const variablesContainer = document.getElementById('preview-variables');
+        variablesContainer.innerHTML = '';
+        
+        variableFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field && field.value) {
+                const selectedOption = field.options[field.selectedIndex];
+                const variableName = selectedOption.text.split(' - ')[0];
+                
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary me-1 mb-1';
+                badge.textContent = variableName;
+                variablesContainer.appendChild(badge);
+            }
+        });
+        
+        if (variablesContainer.children.length === 0) {
+            variablesContainer.innerHTML = '<span class="text-muted small">No hay variables seleccionadas</span>';
+        }
+    }
+    
+    function updateValidationStatus() {
+        const requiredFields = ['eq_name', 'expression', 'fk_variable1', 'eq_description'];
+        let allValid = true;
+        
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (!field || !field.value.trim()) {
+                allValid = false;
+            }
+        });
+        
+        if (allValid) {
+            validationIcon.className = 'ri-check-line text-success';
+            validationText.textContent = 'Todos los campos están completos';
+            validationText.className = 'text-success';
+        } else {
+            validationIcon.className = 'ri-error-warning-line text-warning';
+            validationText.textContent = 'Complete todos los campos requeridos';
+            validationText.className = 'text-muted';
+        }
+    }
+    
+    // Validación de expresión
+    if (validateBtn) {
+        validateBtn.addEventListener('click', function() {
+            const expression = document.getElementById('expression').value;
+            if (expression) {
+                // Simulación de validación
+                const isValid = validateExpression(expression);
+                const validator = document.getElementById('expressionValidator');
+                
+                if (isValid) {
+                    validator.innerHTML = '<div class="alert alert-success border-0 d-flex align-items-center"><i class="ri-check-line me-2 fs-5"></i><span>Expresión matemática válida</span></div>';
+                } else {
+                    validator.innerHTML = '<div class="alert alert-danger border-0 d-flex align-items-center"><i class="ri-error-warning-line me-2 fs-5"></i><span>Expresión matemática inválida</span></div>';
+                }
+                
+                validator.classList.remove('d-none');
+            }
+        });
+    }
+    
+    function validateExpression(expression) {
+        // Validación básica de expresión matemática
+        const basicPattern = /^[a-zA-Z_][a-zA-Z0-9_]*\s*=\s*[a-zA-Z0-9_+\-*/().\s]+$/;
+        return basicPattern.test(expression);
+    }
+    
+    // Reset del modal de ecuación
+    const eqModal = document.getElementById('addOrUpdateEquation');
+    if (eqModal) {
+        eqModal.addEventListener('hidden.bs.modal', function() {
+            // Reset form
+            const form = document.getElementById('equationForm');
+            form.reset();
+            form.classList.remove('was-validated');
+            
+            // Reset preview
+            document.getElementById('preview-eq-name').textContent = 'Nombre de la ecuación';
+            document.getElementById('preview-expression').textContent = 'Expresión matemática';
+            document.getElementById('preview-eq-description').textContent = 'Descripción de la ecuación';
+            document.getElementById('preview-variables').innerHTML = '<span class="text-muted small">No hay variables seleccionadas</span>';
+            
+            // Reset validation
+            document.getElementById('expressionValidator').classList.add('d-none');
+            document.getElementById('eq-description-counter').textContent = '0';
+            
+            // Reset título
+            document.getElementById('addOrUpdateEquationModalLabel').innerHTML = '<i class="ri-function-add-line me-2"></i>Crear Nueva Ecuación';
+            document.getElementById('eq-submit-btn-text').textContent = 'Guardar Ecuación';
+        });
+    }
+});
+</script>

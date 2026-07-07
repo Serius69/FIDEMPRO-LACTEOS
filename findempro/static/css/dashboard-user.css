@@ -1,0 +1,690 @@
+/* Dashboard User CSS - Versión Mejorada */
+/* Manteniendo la estructura original y agregando nuevas funcionalidades */
+
+/* Variables CSS para consistencia */
+:root {
+    --primary-color: #3b82f6;
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #3b82f6;
+    --card-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    --card-shadow-hover: 0 8px 35px rgba(0,0,0,0.15);
+    --border-radius: 15px;
+    --transition: all 0.3s ease;
+}
+
+/* Manteniendo tu estructura de metric-card original pero mejorada */
+.metric-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: none;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    position: relative;
+    background: white;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--primary-gradient);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.metric-card:hover::before {
+    transform: scaleX(1);
+}
+
+/* Mejorando tu chart-container existente */
+.chart-container {
+    min-height: 300px;
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.chart-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+}
+
+/* Mejorando tu business-selector */
+.business-selector {
+    min-width: 250px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1);
+    color: white;
+    transition: var(--transition);
+}
+
+.business-selector:focus {
+    border-color: rgba(255,255,255,0.5);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.1);
+}
+
+.business-selector option {
+    color: #333;
+    background: white;
+}
+
+/* Manteniendo tu dashboard-grid pero con mejoras */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* Nuevas clases para el dashboard ejecutivo */
+
+/* Executive Header */
+.executive-header {
+    background: var(--primary-gradient);
+    color: white;
+    border-radius: var(--border-radius);
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.executive-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.1"><polygon points="0,100 1000,0 1000,100"/></svg>');
+    background-size: cover;
+    background-position: bottom;
+}
+
+.executive-header .row {
+    position: relative;
+    z-index: 2;
+}
+
+/* KPI Cards Enhancement */
+.kpi-card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+    background: white;
+    overflow: hidden;
+    position: relative;
+}
+
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--primary-gradient);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow-hover);
+}
+
+.kpi-card:hover::before {
+    transform: scaleX(1);
+}
+
+/* Metric Icons */
+.metric-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-icon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.kpi-card:hover .metric-icon::before {
+    transform: translateX(100%);
+}
+
+/* Counter Animation */
+.counter-value {
+    font-weight: 700;
+    background: linear-gradient(45deg, #333, #666);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Trend Chart */
+.trend-chart {
+    height: 300px;
+    position: relative;
+}
+
+/* Performance Gauge */
+.performance-gauge {
+    text-align: center;
+    padding: 20px;
+}
+
+.gauge-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    position: relative;
+    background: conic-gradient(
+        #4f46e5 0deg, 
+        #4f46e5 calc(var(--progress, 0) * 3.6deg), 
+        #e5e7eb calc(var(--progress, 0) * 3.6deg), 
+        #e5e7eb 360deg
+    );
+    transition: var(--transition);
+    animation: gaugeRotate 2s ease-in-out;
+}
+
+@keyframes gaugeRotate {
+    from {
+        transform: rotate(-90deg);
+    }
+    to {
+        transform: rotate(0deg);
+    }
+}
+
+.gauge-inner {
+    width: 90px;
+    height: 90px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    color: #4f46e5;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Quick Actions */
+.quick-action {
+    border: 2px dashed #e5e7eb;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    transition: var(--transition);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    background: white;
+}
+
+.quick-action::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(79,70,229,0.05), rgba(79,70,229,0.1));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.quick-action:hover {
+    border-color: #4f46e5;
+    background-color: #f8fafc;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(79,70,229,0.2);
+}
+
+.quick-action:hover::before {
+    opacity: 1;
+}
+
+.quick-action i {
+    transition: var(--transition);
+}
+
+.quick-action:hover i {
+    transform: scale(1.1);
+}
+
+/* Alert Cards */
+.alert-card {
+    border-left: 4px solid var(--danger-color);
+    background: linear-gradient(90deg, rgba(239,68,68,0.1) 0%, rgba(255,255,255,1) 100%);
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    transition: var(--transition);
+}
+
+.success-card {
+    border-left: 4px solid var(--success-color);
+    background: linear-gradient(90deg, rgba(16,185,129,0.1) 0%, rgba(255,255,255,1) 100%);
+}
+
+.warning-card {
+    border-left: 4px solid var(--warning-color);
+    background: linear-gradient(90deg, rgba(245,158,11,0.1) 0%, rgba(255,255,255,1) 100%);
+}
+
+.alert-card:hover,
+.success-card:hover,
+.warning-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Product Ranking */
+.product-rank {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    background: #f8fafc;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.product-rank::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary-gradient);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.product-rank:hover {
+    background: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transform: translateX(5px);
+}
+
+.product-rank:hover::before {
+    transform: scaleY(1);
+}
+
+.rank-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 15px;
+    transition: var(--transition);
+}
+
+.product-rank:hover .rank-number {
+    transform: scale(1.1);
+}
+
+/* Mejorando tu timeline existente */
+.timeline {
+    position: relative;
+    padding-left: 30px; /* Aumentado de 20px */
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--primary-color), #e9ecef);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 25px; /* Aumentado de 20px */
+    padding-left: 25px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -33px; /* Ajustado para el nuevo padding */
+    top: 5px;
+    width: 12px; /* Aumentado de 10px */
+    height: 12px; /* Aumentado de 10px */
+    background: var(--primary-color);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+    z-index: 2;
+}
+
+.timeline-marker::before {
+    display: none; /* Removemos esto ya que usamos el ::before del .timeline */
+}
+
+.timeline-content {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: var(--transition);
+}
+
+.timeline-content:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+/* Progress Bar Enhancements */
+.progress {
+    background-color: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 8px; /* Altura consistente */
+}
+
+.progress-bar {
+    transition: width 1.5s ease-in-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+    animation: progressShine 2s infinite;
+}
+
+@keyframes progressShine {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Badge Enhancements */
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* Table Enhancements */
+.table-hover tbody tr {
+    transition: var(--transition);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(79,70,229,0.05);
+    transform: scale(1.01);
+}
+
+/* Card Enhancements */
+.card {
+    transition: var(--transition);
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border-radius: 10px;
+}
+
+.card:hover {
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 10px 10px 0 0 !important;
+}
+
+/* Button Enhancements */
+.btn {
+    border-radius: 8px;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.btn:hover::before {
+    transform: translateX(100%);
+}
+
+/* Loading States */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    border-radius: var(--border-radius);
+}
+
+/* Offcanvas Enhancement */
+.offcanvas {
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+    box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+}
+
+.offcanvas-header {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+/* Form Enhancements */
+.form-select {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    transition: var(--transition);
+}
+
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+/* Manteniendo tu media query original pero mejorado */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .executive-header {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 20px;
+    }
+    
+    .executive-header .col-lg-4 {
+        margin-top: 20px;
+    }
+    
+    .metric-card,
+    .kpi-card {
+        margin-bottom: 15px;
+    }
+    
+    .metric-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .gauge-circle {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .gauge-inner {
+        width: 75px;
+        height: 75px;
+        font-size: 16px;
+    }
+    
+    .timeline {
+        padding-left: 20px;
+    }
+    
+    .timeline-item {
+        padding-left: 15px;
+    }
+    
+    .timeline-marker {
+        left: -28px;
+    }
+    
+    .business-selector {
+        min-width: 200px;
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .executive-header {
+        margin-bottom: 20px;
+        padding: 20px;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+    
+    .quick-action {
+        padding: 15px;
+    }
+    
+    .table-responsive {
+        font-size: 14px;
+    }
+    
+    .business-selector {
+        min-width: 150px;
+    }
+}
+
+/* Accessibility Enhancements */
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Focus indicators for keyboard navigation */
+.btn:focus,
+.form-select:focus,
+.quick-action:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Animation performance optimization */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .executive-header,
+    .quick-action,
+    .btn,
+    .offcanvas,
+    .position-fixed {
+        display: none !important;
+    }
+    
+    .card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .trend-chart {
+        height: 200px;
+    }
+}

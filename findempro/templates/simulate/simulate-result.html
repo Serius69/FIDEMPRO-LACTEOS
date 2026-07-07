@@ -1,0 +1,801 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block title %}Resultados de Simulación{% endblock title %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/joint.css' %}"> 
+<link rel="stylesheet" href="{% static 'libs/dropzone/dist/dropzone.css'%}" type="text/css" />
+<link rel="stylesheet" href="{% static 'libs/filepond/dist/filepond.min.css'%}" type="text/css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.css" />
+<link rel="stylesheet" href="{% static 'css/simulate-result.css' %}">
+{% endblock extra_css %}
+{% block content %}
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
+            <!-- Page Title -->
+            {% block pagetitle %}
+            {% include "partials/page-title.html" with pagetitle="Simulación" title="Resultados" %}
+            {% endblock pagetitle %}
+            {% include 'simulate/result/partials/top.html' %}
+            <!-- Main Content Grid -->
+            <div class="row">
+                {% include 'simulate/result/partials/sidebar.html' %}
+                <!-- Main Charts and Analysis -->
+                <div class="col-lg-8">
+                    <!-- Chart Tabs -->
+                    <div class="chart-tabs">
+                        <ul class="nav nav-tabs" id="chartTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#overview" type="button" role="tab">
+                                    <i class="bx bx-line-chart me-2"></i>
+                                    Resumen General
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="financial-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#financial" type="button" role="tab">
+                                    <i class="bx bx-dollar me-2"></i>
+                                    Análisis Financiero
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="operations-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#operations" type="button" role="tab">
+                                    <i class="bx bx-cog me-2"></i>
+                                    Análisis Operativo
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="demand-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#demand" type="button" role="tab">
+                                    <i class="bx bx-trending-up me-2"></i>
+                                    Analisis Demanda
+                                </button>
+                            </li>
+                            <!-- En la sección de Tab Content, agregar nuevos tabs -->
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="endogenous-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#endogenous" type="button" role="tab">
+                                    <i class="bx bx-scatter-chart me-2"></i>
+                                    Analisis variables vitales
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="analysis-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#analysis" type="button" role="tab">
+                                    <i class="bx bx-analyse me-2"></i>
+                                    Análisis Estadístico
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="validation-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#validation" type="button" role="tab">
+                                    <i class="bx bx-check-double me-2"></i>
+                                    Análisis validación del Modelo
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="ks-validation-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#ks-validation" type="button" role="tab">
+                                    <i class="bx bx-test-tube me-2"></i>
+                                    Análisis validación KS
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="chartTabsContent">
+                        {% include 'simulate/result/tabs/overview-tab.html' %}
+                        {% include 'simulate/result/tabs/finantial-tab.html' %}
+                        {% include 'simulate/result/tabs/operations-tab.html' %}
+                        {% include 'simulate/result/tabs/demand-tab.html' %}
+                        {% include 'simulate/result/tabs/endogenous-tab.html' %}
+                        {% include 'simulate/result/tabs/analysis-tab.html' %}
+                        {% include 'simulate/result/tabs/validation-tab.html' %}
+                        {% include 'simulate/result/tabs/ksvalidation-tab.html' %}        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'simulate/result/partials/modal.html' %}  
+    {% block footer %}
+    {% include "partials/footer.html" %}
+    {% endblock footer %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- Agregar en la sección de scripts, después de los scripts existentes -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<script>
+// ==========================================
+// SCRIPT PRINCIPAL - SIMULATE-RESULT.HTML
+// ==========================================
+
+// Variables globales principales
+let currentPage = 1;
+let rowsPerPage = 10;
+let allCharts = [];
+let loadedCharts = 0;
+const CHARTS_PER_BATCH = 3;
+
+// ==========================================
+// INICIALIZACIÓN PRINCIPAL
+// ==========================================
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+});
+
+function initializeApp() {
+    // Inicializar componentes principales
+    initializeCounters();
+    initializeTablePagination();
+    initializeChartInteractions();
+    initializeExportFunctions();
+    initializeTooltips();
+    initializeTabEvents();
+    initializeKeyboardShortcuts();
+    setupLazyLoading();
+    
+    // Ocultar tutorial si no es primera vez
+    if (localStorage.getItem('resultsViewedBefore')) {
+        hideTutorial();
+    }
+    
+    console.log('Simulate Result App initialized successfully');
+}
+
+// ==========================================
+// CONTADORES ANIMADOS
+// ==========================================
+function initializeCounters() {
+    const counters = document.querySelectorAll('.counter');
+    const speed = 200;
+    
+    const animateCounter = (counter) => {
+        const target = parseFloat(counter.getAttribute('data-target'));
+        const count = parseFloat(counter.innerText) || 0;
+        const increment = target / speed;
+        
+        if (count < target) {
+            const newCount = Math.ceil(count + increment);
+            if (target % 1 === 0) {
+                counter.innerText = newCount.toLocaleString('es-ES');
+            } else {
+                counter.innerText = newCount.toFixed(2);
+            }
+            setTimeout(() => animateCounter(counter), 1);
+        } else {
+            if (target % 1 === 0) {
+                counter.innerText = target.toLocaleString('es-ES');
+            } else {
+                counter.innerText = target.toFixed(2);
+            }
+        }
+    };
+    
+    // Observer para activar cuando sea visible
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounter(entry.target);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.5
+    });
+    
+    counters.forEach(counter => {
+        observer.observe(counter);
+    });
+}
+
+// ==========================================
+// PAGINACIÓN DE TABLAS
+// ==========================================
+function initializeTablePagination() {
+    const table = document.getElementById('demandTable');
+    if (!table) return;
+    
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const totalPages = Math.ceil(rows.length / rowsPerPage);
+    
+    const prevBtn = document.getElementById('prevTablePage');
+    const nextBtn = document.getElementById('nextTablePage');
+    const pageInfo = document.getElementById('tablePageInfo');
+    
+    if (!prevBtn || !nextBtn) return;
+    
+    function updateTableDisplay() {
+        // Ocultar todas las filas
+        rows.forEach(row => row.style.display = 'none');
+        
+        // Mostrar filas de la página actual
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = Math.min(startIndex + rowsPerPage, rows.length);
+        
+        for (let i = startIndex; i < endIndex; i++) {
+            if (rows[i]) {
+                rows[i].style.display = 'table-row';
+                rows[i].style.animation = 'fadeIn 0.2s ease';
+            }
+        }
+        
+        // Actualizar info
+        if (pageInfo) pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+        
+        // Actualizar botones
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+        
+        // Actualizar clases de botones
+        prevBtn.className = currentPage === 1 ? 
+            'btn btn-sm btn-outline-secondary' : 
+            'btn btn-sm btn-outline-primary';
+        nextBtn.className = currentPage === totalPages ? 
+            'btn btn-sm btn-outline-secondary' : 
+            'btn btn-sm btn-outline-primary';
+    }
+    
+    prevBtn.addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            updateTableDisplay();
+        }
+    });
+    
+    nextBtn.addEventListener('click', function() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            updateTableDisplay();
+        }
+    });
+    
+    updateTableDisplay();
+}
+
+// ==========================================
+// FUNCIONES DE GRÁFICOS UNIFICADAS
+// ==========================================
+function initializeChartInteractions() {
+    // Click en imágenes para expandir
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('chart-image')) {
+            const src = e.target.src;
+            const alt = e.target.alt;
+            const base64Data = src.split(',')[1];
+            if (base64Data) {
+                openFullscreen(base64Data, alt);
+            }
+        }
+    });
+    
+    // Hover effects para gráficos
+    document.querySelectorAll('.chart-container').forEach(container => {
+        container.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.02)';
+            this.style.transition = 'transform 0.2s ease';
+        });
+        
+        container.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+}
+
+function downloadChart(chartData, filename) {
+    try {
+        if (!chartData) {
+            console.warn('No chart data provided for download');
+            showNotification('No hay datos del gráfico para descargar', 'warning');
+            return;
+        }
+        
+        const link = document.createElement('a');
+        link.href = 'data:image/png;base64,' + chartData;
+        link.download = filename || `grafico_${new Date().getTime()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showNotification('Gráfico descargado exitosamente', 'success');
+    } catch (error) {
+        console.error('Error downloading chart:', error);
+        showNotification('Error al descargar el gráfico', 'error');
+    }
+}
+
+// ==========================================
+// EXPORTACIÓN UNIFICADA
+// ==========================================
+function initializeExportFunctions() {
+    // Exportar a PDF
+    window.exportToPDF = async function() {
+        const btn = event?.target;
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Generando PDF...';
+            btn.disabled = true;
+            
+            try {
+                const element = document.querySelector('.page-content');
+                const canvas = await html2canvas(element, {
+                    scale: 1.5,
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jspdf.jsPDF({
+                    orientation: 'landscape',
+                    unit: 'px',
+                    format: [canvas.width, canvas.height]
+                });
+                
+                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                pdf.save(`simulacion_resultados_${new Date().getTime()}.pdf`);
+                
+                showNotification('PDF generado exitosamente', 'success');
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                showNotification('Error al generar PDF', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    };
+    
+    // Exportar a Excel/CSV
+    window.exportToExcel = function() {
+        const btn = event?.target;
+        if (btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Generando Excel...';
+            btn.disabled = true;
+            
+            try {
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "Variable,Valor Total,Unidad,Promedio,Tendencia\n";
+                
+                // Obtener datos de la tabla de variables
+                const rows = document.querySelectorAll('#endogenousTableBody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 5) {
+                        const variable = cells[0].textContent.trim();
+                        const total = cells[1].textContent.trim().replace(/[^\d.-]/g, '');
+                        const unit = cells[2].textContent.trim();
+                        const average = cells[3].textContent.trim().replace(/[^\d.-]/g, '');
+                        const trend = cells[4].textContent.trim();
+                        
+                        csvContent += `"${variable}","${total}","${unit}","${average}","${trend}"\n`;
+                    }
+                });
+                
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `simulacion_resultados_${new Date().getTime()}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showNotification('Archivo Excel generado exitosamente', 'success');
+            } catch (error) {
+                console.error('Error generating Excel:', error);
+                showNotification('Error al generar Excel', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    };
+}
+
+// ==========================================
+// EVENTOS DE PESTAÑAS
+// ==========================================
+function initializeTabEvents() {
+    // Inicializar contenido cuando se muestre una pestaña
+    document.addEventListener('shown.bs.tab', function(e) {
+        const targetId = e.target.getAttribute('aria-controls');
+        
+        // Animar entrada de contenido
+        const targetPane = document.getElementById(targetId);
+        if (targetPane) {
+            targetPane.style.animation = 'fadeIn 0.3s ease';
+        }
+        
+        // Trigger eventos específicos por tab
+        document.dispatchEvent(new CustomEvent('tabChanged', {
+            detail: { tabId: targetId }
+        }));
+    });
+}
+
+// ==========================================
+// ATAJOS DE TECLADO GLOBALES
+// ==========================================
+function initializeKeyboardShortcuts() {
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + S para exportar
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            if (typeof exportToPDF === 'function') {
+                exportToPDF();
+            }
+        }
+        
+        // Ctrl/Cmd + E para exportar Excel
+        if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+            e.preventDefault();
+            if (typeof exportToExcel === 'function') {
+                exportToExcel();
+            }
+        }
+        
+        // ESC para cerrar modales
+        if (e.key === 'Escape') {
+            if (typeof closeAllModals === 'function') {
+                closeAllModals();
+            }
+        }
+        
+        // F11 para toggle fullscreen (en navegadores compatibles)
+        if (e.key === 'F11') {
+            e.preventDefault();
+            toggleFullscreen();
+        }
+    });
+}
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            console.log('Error attempting to enable fullscreen:', err);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+// ==========================================
+// FUNCIONES AUXILIARES
+// ==========================================
+function initializeTooltips() {
+    // Agregar estilos de animación
+    if (!document.getElementById('custom-animations')) {
+        const style = document.createElement('style');
+        style.id = 'custom-animations';
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; transform: translateY(0); }
+                to { opacity: 0; transform: translateY(-10px); }
+            }
+            @keyframes slideIn {
+                from { transform: translateX(-100%); }
+                to { transform: translateX(0); }
+            }
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+            .cursor-pointer { cursor: pointer; }
+            .hover-scale:hover { transform: scale(1.02); transition: transform 0.2s ease; }
+            .loading-shimmer {
+                background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+                background-size: 200% 100%;
+                animation: shimmer 2s infinite;
+            }
+            @keyframes shimmer {
+                0% { background-position: -200% 0; }
+                100% { background-position: 200% 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Inicializar tooltips de Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                delay: { show: 500, hide: 100 }
+            });
+        });
+    }
+}
+
+function showNotification(message, type = 'info', duration = 5000) {
+    const notification = document.createElement('div');
+    const alertClass = type === 'error' ? 'danger' : type;
+    notification.className = `alert alert-${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = `
+        top: 20px; 
+        right: 20px; 
+        z-index: 10000; 
+        min-width: 300px; 
+        max-width: 500px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    
+    const icon = type === 'success' ? 'bx-check-circle' : 
+                 type === 'error' || type === 'danger' ? 'bx-error' : 
+                 type === 'warning' ? 'bx-error-circle' : 'bx-info-circle';
+    
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bx ${icon} me-2 flex-shrink-0"></i>
+            <div class="flex-grow-1">${message}</div>
+            <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remover después del tiempo especificado
+    if (duration > 0) {
+        setTimeout(() => {
+            if (notification && notification.parentNode) {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }
+        }, duration);
+    }
+    
+    return notification;
+}
+
+function hideTutorial() {
+    const tutorial = document.getElementById('resultsTutorial');
+    if (tutorial) {
+        tutorial.style.animation = 'fadeOut 0.5s ease-out';
+        setTimeout(() => {
+            tutorial.style.display = 'none';
+        }, 500);
+        localStorage.setItem('resultsViewedBefore', 'true');
+    }
+}
+
+function shareResults() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Resultados de Simulación',
+            text: 'Mira los resultados de mi simulación de negocio',
+            url: window.location.href
+        }).then(() => {
+            showNotification('Compartido exitosamente', 'success');
+        }).catch((error) => {
+            console.log('Error sharing:', error);
+            fallbackShare();
+        });
+    } else {
+        fallbackShare();
+    }
+}
+
+function fallbackShare() {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            showNotification('Enlace copiado al portapapeles', 'success');
+        }).catch(() => {
+            showNotification('No se pudo copiar el enlace', 'error');
+        });
+    } else {
+        showNotification('Función de compartir no disponible', 'info');
+    }
+}
+
+// ==========================================
+// GESTIÓN DE PERFORMANCE Y MEMORIA
+// ==========================================
+function checkPerformance() {
+    if ('performance' in window && 'memory' in performance) {
+        const memoryUsage = performance.memory.usedJSHeapSize / 1048576;
+        console.log(`Memory usage: ${memoryUsage.toFixed(2)} MB`);
+        
+        if (memoryUsage > 500) {
+            console.warn('High memory usage detected. Consider closing other tabs.');
+            showNotification('Alto uso de memoria detectado. Considera cerrar otras pestañas.', 'warning');
+        }
+    }
+}
+
+// Lazy loading de imágenes
+function setupLazyLoading() {
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.classList.remove('lazy');
+                        img.classList.add('loaded');
+                        observer.unobserve(img);
+                    }
+                }
+            });
+        }, {
+            rootMargin: '50px'
+        });
+        
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            img.classList.add('lazy');
+            imageObserver.observe(img);
+        });
+    }
+}
+
+// ==========================================
+// EVENTOS DE IMPRESIÓN
+// ==========================================
+window.addEventListener('beforeprint', function() {
+    // Expandir secciones colapsadas para impresión
+    document.querySelectorAll('.collapse').forEach(el => {
+        el.classList.add('show');
+    });
+    
+    // Mostrar todos los elementos para impresión
+    document.querySelectorAll('[style*="display: none"]').forEach(el => {
+        el.setAttribute('data-hidden-for-print', 'true');
+        el.style.display = 'block';
+    });
+    
+    // Aplicar estilos de impresión
+    document.body.classList.add('printing');
+});
+
+window.addEventListener('afterprint', function() {
+    // Restaurar estado después de impresión
+    document.querySelectorAll('[data-hidden-for-print]').forEach(el => {
+        el.style.display = 'none';
+        el.removeAttribute('data-hidden-for-print');
+    });
+    
+    document.body.classList.remove('printing');
+});
+
+// ==========================================
+// GESTIÓN DE ERRORES GLOBAL
+// ==========================================
+window.addEventListener('error', function(e) {
+    console.error('Global error:', e.error);
+    
+    // Manejar errores de carga de imágenes
+    if (e.target.tagName === 'IMG' && e.target.classList.contains('chart-image')) {
+        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkVycm9yIGNhcmdhbmRvIGdyw6FmaWNvPC90ZXh0Pgo8L3N2Zz4=';
+        e.target.classList.remove('lazy');
+        e.target.alt = 'Error cargando gráfico';
+    }
+});
+
+// Manejar errores de red
+window.addEventListener('online', function() {
+    showNotification('Conexión restaurada', 'success');
+});
+
+window.addEventListener('offline', function() {
+    showNotification('Sin conexión a internet', 'warning', 10000);
+});
+
+// ==========================================
+// MONITOREO DE PERFORMANCE
+// ==========================================
+// Monitorear rendimiento cada 30 segundos
+setInterval(checkPerformance, 30000);
+
+// Monitorear tiempo de carga
+window.addEventListener('load', function() {
+    if ('performance' in window) {
+        const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+        console.log(`Page load time: ${loadTime}ms`);
+        
+        if (loadTime > 5000) {
+            showNotification('La página tardó en cargar. Verifica tu conexión.', 'info');
+        }
+    }
+});
+
+// ==========================================
+// FUNCIONES UTILITARIAS GLOBALES
+// ==========================================
+function debounce(func, wait, immediate) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            timeout = null;
+            if (!immediate) func(...args);
+        };
+        const callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow) func(...args);
+    };
+}
+
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    }
+}
+
+function formatNumber(num, decimals = 2) {
+    return parseFloat(num).toLocaleString('es-ES', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
+}
+
+function formatCurrency(amount, currency = 'BOB') {
+    return new Intl.NumberFormat('es-BO', {
+        style: 'currency',
+        currency: currency
+    }).format(amount);
+}
+
+// ==========================================
+// EXPORTAR FUNCIONES GLOBALES
+// ==========================================
+window.showNotification = showNotification;
+window.hideTutorial = hideTutorial;
+window.shareResults = shareResults;
+window.downloadChart = downloadChart;
+window.exportToPDF = exportToPDF;
+window.exportToExcel = exportToExcel;
+window.checkPerformance = checkPerformance;
+window.debounce = debounce;
+window.throttle = throttle;
+window.formatNumber = formatNumber;
+window.formatCurrency = formatCurrency;
+
+// ==========================================
+// MENSAJE FINAL DE INICIALIZACIÓN
+// ==========================================
+console.log('✅ Simulate Result Unified Script loaded successfully');
+console.log('📊 Ready for data visualization and interaction');
+
+// Verificar dependencias críticas
+if (typeof bootstrap === 'undefined') {
+    console.warn('⚠️ Bootstrap not loaded - some features may not work');
+}
+
+if (typeof Chart === 'undefined') {
+    console.warn('⚠️ Chart.js not loaded - charts may not display');
+}
+
+if (typeof jspdf === 'undefined') {
+    console.warn('⚠️ jsPDF not loaded - PDF export may not work');
+}
+</script>
+{% endblock extra_js %}

@@ -1,0 +1,717 @@
+<!-- Modal CRUD Universal para Decisiones Financieras -->
+<div class="modal fade" id="crudModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-light p-3">
+                <h5 class="modal-title" id="modalTitle">Agregar Decisión Financiera</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form id="crudForm" action="{% url 'finance:finance.create' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="decisionId" name="id" />
+                
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Nombre de la Decisión -->
+                        <div class="col-md-12 mb-3">
+                            <label for="decisionName" class="form-label">
+                                <i class="ri-file-text-line me-1"></i>
+                                Nombre de la Decisión <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="decisionName" 
+                                   name="name" 
+                                   placeholder="Ej: Inversión en equipos de oficina"
+                                   required 
+                                   maxlength="255">
+                            <div class="invalid-feedback">
+                                Por favor, ingresa un nombre para la decisión.
+                            </div>
+                            <small class="form-text text-muted">
+                                Proporciona un nombre descriptivo para la decisión financiera.
+                            </small>
+                        </div>
+                        
+                        <!-- Descripción -->
+                        <div class="col-md-12 mb-3">
+                            <label for="decisionDescription" class="form-label">
+                                <i class="ri-article-line me-1"></i>
+                                Descripción
+                            </label>
+                            <textarea class="form-control" 
+                                      id="decisionDescription" 
+                                      name="description" 
+                                      rows="3"
+                                      placeholder="Describe los detalles de esta decisión financiera...">{{ form.description.value|default:'' }}</textarea>
+                            <small class="form-text text-muted">
+                                Opcional. Proporciona detalles adicionales sobre la decisión.
+                            </small>
+                        </div>
+                        
+                        <!-- Monto y Empresa en la misma fila -->
+                        <div class="col-md-6 mb-3">
+                            <label for="decisionAmount" class="form-label">
+                                <i class="ri-money-dollar-circle-line me-1"></i>
+                                Monto ($)
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="decisionAmount" 
+                                       name="amount" 
+                                       step="0.01" 
+                                       min="0"
+                                       placeholder="0.00">
+                            </div>
+                            <small class="form-text text-muted">
+                                Monto asociado a la decisión (opcional).
+                            </small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="decisionBusiness" class="form-label">
+                                <i class="ri-building-line me-1"></i>
+                                Empresa <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="decisionBusiness" name="fk_business" required>
+                                <option value="">Seleccionar empresa...</option>
+                                {% for business in businesses %}
+                                <option value="{{ business.id }}">{{ business.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">
+                                Por favor, selecciona una empresa.
+                            </div>
+                        </div>
+                        
+                        <!-- Fecha y Estado -->
+                        <div class="col-md-6 mb-3">
+                            <label for="decisionDate" class="form-label">
+                                <i class="ri-calendar-line me-1"></i>
+                                Fecha de Decisión
+                            </label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="decisionDate" 
+                                   name="decision_date">
+                            <small class="form-text text-muted">
+                                Fecha en que se tomó la decisión (opcional).
+                            </small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="decisionStatus" class="form-label">
+                                <i class="ri-toggle-line me-1"></i>
+                                Estado
+                            </label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="decisionStatus" 
+                                       name="is_active" 
+                                       checked>
+                                <label class="form-check-label" for="decisionStatus">
+                                    Activo
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">
+                                Determina si la decisión está activa o inactiva.
+                            </small>
+                        </div>
+                        
+                        <!-- Categoría y Prioridad -->
+                        <div class="col-md-6 mb-3">
+                            <label for="decisionCategory" class="form-label">
+                                <i class="ri-price-tag-3-line me-1"></i>
+                                Categoría
+                            </label>
+                            <select class="form-select" id="decisionCategory" name="category">
+                                <option value="">Seleccionar categoría...</option>
+                                <option value="inversion">Inversión</option>
+                                <option value="gasto">Gasto</option>
+                                <option value="ingreso">Ingreso</option>
+                                <option value="financiamiento">Financiamiento</option>
+                                <option value="ahorro">Ahorro</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                            <small class="form-text text-muted">
+                                Categoriza el tipo de decisión financiera.
+                            </small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="decisionPriority" class="form-label">
+                                <i class="ri-flag-line me-1"></i>
+                                Prioridad
+                            </label>
+                            <select class="form-select" id="decisionPriority" name="priority">
+                                <option value="baja">Baja</option>
+                                <option value="media" selected>Media</option>
+                                <option value="alta">Alta</option>
+                                <option value="critica">Crítica</option>
+                            </select>
+                            <small class="form-text text-muted">
+                                Nivel de prioridad de la decisión.
+                            </small>
+                        </div>
+                        
+                        <!-- Notas adicionales -->
+                        <div class="col-md-12 mb-3">
+                            <label for="decisionNotes" class="form-label">
+                                <i class="ri-sticky-note-line me-1"></i>
+                                Notas Adicionales
+                            </label>
+                            <textarea class="form-control" 
+                                      id="decisionNotes" 
+                                      name="notes" 
+                                      rows="2"
+                                      placeholder="Observaciones, consideraciones especiales, etc..."></textarea>
+                            <small class="form-text text-muted">
+                                Información adicional relevante para la decisión.
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Información de ayuda -->
+                    <div class="alert alert-info" role="alert">
+                        <i class="ri-information-line me-2"></i>
+                        <strong>Consejos:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Usa nombres descriptivos que te ayuden a identificar fácilmente la decisión.</li>
+                            <li>La descripción puede incluir el contexto y los factores considerados.</li>
+                            <li>Asigna categorías y prioridades para mejor organización.</li>
+                            <li>Las decisiones inactivas no aparecerán en reportes principales.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="modal-footer bg-light">
+                    <div class="hstack gap-2 justify-content-end">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                            <i class="ri-close-line me-1"></i>
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                            <i class="ri-refresh-line me-1"></i>
+                            Limpiar
+                        </button>
+                        <button type="submit" class="btn btn-success" id="submitBtn">
+                            <i class="ri-save-line me-1"></i>
+                            Crear
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" 
+                           trigger="loop" 
+                           colors="primary:#f7b84b,secondary:#f06548" 
+                           style="width:90px;height:90px"></lord-icon>
+                <div class="mt-4">
+                    <h4 class="mb-3">¿Estás seguro?</h4>
+                    <p class="text-muted fs-15 mb-4">
+                        Esta acción eliminará la decisión financiera seleccionada. 
+                        <br>¿Deseas continuar?
+                    </p>
+                    <div class="hstack gap-2 justify-content-center">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                            Sí, Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Ayuda y Tutorial -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="ri-question-line me-2"></i>
+                    Ayuda - Gestión de Decisiones Financieras
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-primary mb-3">
+                            <i class="ri-guide-line me-1"></i>
+                            Funciones Principales
+                        </h6>
+                        
+                        <div class="accordion" id="helpAccordion">
+                            <!-- Crear Decisiones -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingCreate">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCreate">
+                                        <i class="ri-add-circle-line me-2 text-success"></i>
+                                        Crear Nueva Decisión
+                                    </button>
+                                </h2>
+                                <div id="collapseCreate" class="accordion-collapse collapse show" data-bs-parent="#helpAccordion">
+                                    <div class="accordion-body">
+                                        <p>Para crear una nueva decisión financiera:</p>
+                                        <ol>
+                                            <li>Haz clic en el botón <strong>"Agregar Decisión Financiera"</strong></li>
+                                            <li>Completa los campos obligatorios (marcados con *)</li>
+                                            <li>Asigna una categoría y prioridad apropiada</li>
+                                            <li>Haz clic en <strong>"Crear"</strong> para guardar</li>
+                                        </ol>
+                                        <div class="alert alert-info">
+                                            <i class="ri-lightbulb-line me-1"></i>
+                                            <strong>Tip:</strong> Usa nombres descriptivos para facilitar la búsqueda posterior.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Buscar y Filtrar -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingSearch">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSearch">
+                                        <i class="ri-search-line me-2 text-info"></i>
+                                        Buscar y Filtrar
+                                    </button>
+                                </h2>
+                                <div id="collapseSearch" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                    <div class="accordion-body">
+                                        <p>Utiliza las herramientas de búsqueda para encontrar decisiones específicas:</p>
+                                        <ul>
+                                            <li><strong>Búsqueda por texto:</strong> Busca por nombre, descripción o empresa</li>
+                                            <li><strong>Filtro por estado:</strong> Muestra solo decisiones activas o inactivas</li>
+                                            <li><strong>Búsqueda en tiempo real:</strong> Los resultados se actualizan mientras escribes</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Editar y Eliminar -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingEdit">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEdit">
+                                        <i class="ri-edit-line me-2 text-warning"></i>
+                                        Editar y Eliminar
+                                    </button>
+                                </h2>
+                                <div id="collapseEdit" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                    <div class="accordion-body">
+                                        <p>Gestiona tus decisiones existentes:</p>
+                                        <ul>
+                                            <li><strong>Ver detalles:</strong> <i class="ri-eye-fill text-info"></i> Haz clic en el ícono de ojo para ver información completa</li>
+                                            <li><strong>Editar:</strong> <i class="ri-pencil-fill text-primary"></i> Haz clic en el ícono de lápiz para modificar</li>
+                                            <li><strong>Eliminar:</strong> <i class="ri-delete-bin-5-fill text-danger"></i> Haz clic en el ícono de papelera para eliminar</li>
+                                            <li><strong>Eliminación múltiple:</strong> Selecciona varias decisiones y usa el botón "Eliminar Seleccionadas"</li>
+                                        </ul>
+                                        <div class="alert alert-warning">
+                                            <i class="ri-alert-line me-1"></i>
+                                            <strong>Nota:</strong> La eliminación es permanente y no se puede deshacer.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Categorías y Prioridades -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingCategories">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCategories">
+                                        <i class="ri-price-tag-3-line me-2 text-purple"></i>
+                                        Categorías y Prioridades
+                                    </button>
+                                </h2>
+                                <div id="collapseCategories" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                    <div class="accordion-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6>Categorías Disponibles:</h6>
+                                                <ul class="list-unstyled">
+                                                    <li><span class="badge bg-primary me-2">Inversión</span> Compra de activos, equipos, etc.</li>
+                                                    <li><span class="badge bg-danger me-2">Gasto</span> Gastos operacionales y administrativos</li>
+                                                    <li><span class="badge bg-success me-2">Ingreso</span> Fuentes de ingresos y ventas</li>
+                                                    <li><span class="badge bg-info me-2">Financiamiento</span> Préstamos, créditos, inversores</li>
+                                                    <li><span class="badge bg-warning me-2">Ahorro</span> Reservas y fondos de emergencia</li>
+                                                    <li><span class="badge bg-secondary me-2">Otro</span> Decisiones no categorizadas</li>
+                                                </ul>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6>Niveles de Prioridad:</h6>
+                                                <ul class="list-unstyled">
+                                                    <li><span class="badge bg-light text-dark me-2">Baja</span> No urgente, puede esperar</li>
+                                                    <li><span class="badge bg-primary me-2">Media</span> Importante pero no crítica</li>
+                                                    <li><span class="badge bg-warning me-2">Alta</span> Requiere atención pronta</li>
+                                                    <li><span class="badge bg-danger me-2">Crítica</span> Urgente, acción inmediata</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Atajos de Teclado -->
+                        <h6 class="text-primary mb-3">
+                            <i class="ri-keyboard-line me-1"></i>
+                            Atajos de Teclado
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><kbd>Ctrl + N</kbd> Nueva decisión</li>
+                                    <li><kbd>Ctrl + F</kbd> Buscar</li>
+                                    <li><kbd>Ctrl + A</kbd> Seleccionar todo</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><kbd>Delete</kbd> Eliminar seleccionadas</li>
+                                    <li><kbd>Escape</kbd> Cerrar modales</li>
+                                    <li><kbd>F1</kbd> Mostrar ayuda</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="startTutorial()" data-bs-dismiss="modal">
+                    <i class="ri-play-circle-line me-1"></i>
+                    Iniciar Tutorial Interactivo
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Función para resetear el formulario
+function resetForm() {
+    document.getElementById('crudForm').reset();
+    document.getElementById('decisionId').value = '';
+    
+    // Limpiar clases de validación
+    document.querySelectorAll('.is-invalid').forEach(el => {
+        el.classList.remove('is-invalid');
+    });
+    
+    // Restaurar estado activo por defecto
+    document.getElementById('decisionStatus').checked = true;
+    
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: 'Formulario limpiado',
+        showConfirmButton: false,
+        timer: 2000
+    });
+}
+
+// Atajos de teclado
+document.addEventListener('keydown', function(e) {
+    // Ctrl + N: Nueva decisión
+    if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        document.getElementById('create-btn').click();
+    }
+    
+    // Ctrl + F: Enfocar búsqueda
+    if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        document.querySelector('.search').focus();
+    }
+    
+    // F1: Mostrar ayuda
+    if (e.key === 'F1') {
+        e.preventDefault();
+        new bootstrap.Modal(document.getElementById('helpModal')).show();
+    }
+    
+    // Delete: Eliminar seleccionadas
+    if (e.key === 'Delete' && !e.target.matches('input, textarea')) {
+        e.preventDefault();
+        const checkedBoxes = document.querySelectorAll('.decision-checkbox:checked');
+        if (checkedBoxes.length > 0) {
+            deleteSelected();
+        }
+    }
+    
+    // Escape: Cerrar modales
+    if (e.key === 'Escape') {
+        const openModals = document.querySelectorAll('.modal.show');
+        openModals.forEach(modal => {
+            bootstrap.Modal.getInstance(modal)?.hide();
+        });
+    }
+});
+
+// Validación en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('crudForm');
+    const inputs = form.querySelectorAll('input[required], select[required]');
+    
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            validateField(this);
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                validateField(this);
+            }
+        });
+    });
+    
+    function validateField(field) {
+        const isValid = field.checkValidity();
+        
+        if (isValid) {
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+        } else {
+            field.classList.remove('is-valid');
+            field.classList.add('is-invalid');
+        }
+        
+        return isValid;
+    }
+    
+    // Validación antes de enviar
+    form.addEventListener('submit', function(e) {
+        let isFormValid = true;
+        
+        inputs.forEach(input => {
+            if (!validateField(input)) {
+                isFormValid = false;
+            }
+        });
+        
+        if (!isFormValid) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Formulario Incompleto',
+                text: 'Por favor, completa todos los campos obligatorios.',
+                icon: 'warning',
+                confirmButtonText: 'Entendido'
+            });
+        }
+    });
+    
+    // Auto-guardar borrador (opcional)
+    const draftKey = 'financeDecisionDraft';
+    let draftTimeout;
+    
+    // Cargar borrador si existe
+    const savedDraft = localStorage.getItem(draftKey);
+    if (savedDraft && document.getElementById('decisionId').value === '') {
+        const draft = JSON.parse(savedDraft);
+        
+        Swal.fire({
+            title: 'Borrador Encontrado',
+            text: '¿Deseas cargar el borrador guardado?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, cargar',
+            cancelButtonText: 'No, descartar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Object.keys(draft).forEach(key => {
+                    const field = document.querySelector(`[name="${key}"]`);
+                    if (field) {
+                        if (field.type === 'checkbox') {
+                            field.checked = draft[key];
+                        } else {
+                            field.value = draft[key];
+                        }
+                    }
+                });
+            } else {
+                localStorage.removeItem(draftKey);
+            }
+        });
+    }
+    
+    // Guardar borrador automáticamente
+    form.addEventListener('input', function() {
+        clearTimeout(draftTimeout);
+        draftTimeout = setTimeout(() => {
+            if (document.getElementById('decisionId').value === '') {
+                const formData = new FormData(form);
+                const draft = {};
+                
+                for (let [key, value] of formData.entries()) {
+                    draft[key] = value;
+                }
+                
+                localStorage.setItem(draftKey, JSON.stringify(draft));
+            }
+        }, 2000);
+    });
+    
+    // Limpiar borrador al enviar exitosamente
+    form.addEventListener('submit', function() {
+        localStorage.removeItem(draftKey);
+    });
+});
+
+// Función para mostrar tooltips informativos
+function showFieldTooltip(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tooltip bs-tooltip-top show';
+    tooltip.innerHTML = `
+        <div class="tooltip-arrow"></div>
+        <div class="tooltip-inner">${message}</div>
+    `;
+    
+    document.body.appendChild(tooltip);
+    
+    const rect = field.getBoundingClientRect();
+    tooltip.style.position = 'absolute';
+    tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+    tooltip.style.left = (rect.left + rect.width/2 - tooltip.offsetWidth/2) + 'px';
+    
+    setTimeout(() => {
+        tooltip.remove();
+    }, 3000);
+}
+
+// Contador de caracteres para campos de texto
+document.querySelectorAll('textarea, input[maxlength]').forEach(field => {
+    const maxLength = field.getAttribute('maxlength');
+    if (maxLength) {
+        const counter = document.createElement('small');
+        counter.className = 'form-text text-muted text-end';
+        counter.style.display = 'block';
+        field.parentNode.appendChild(counter);
+        
+        function updateCounter() {
+            const remaining = maxLength - field.value.length;
+            counter.textContent = `${field.value.length}/${maxLength} caracteres`;
+            
+            if (remaining < 10) {
+                counter.classList.add('text-warning');
+            } else {
+                counter.classList.remove('text-warning');
+            }
+        }
+        
+        field.addEventListener('input', updateCounter);
+        updateCounter();
+    }
+});
+</script>
+
+<style>
+/* Estilos adicionales para mejorar la experiencia visual */
+.accordion-button:not(.collapsed) {
+    background-color: rgba(13, 110, 253, 0.1);
+    border-color: rgba(13, 110, 253, 0.2);
+}
+
+.is-valid {
+    border-color: #198754;
+}
+
+.is-invalid {
+    border-color: #dc3545;
+}
+
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+kbd {
+    background-color: #212529;
+    border-radius: 3px;
+    border: 1px solid #495057;
+    color: #fff;
+    display: inline-block;
+    font-size: 0.75em;
+    font-weight: 700;
+    line-height: 1;
+    padding: 2px 4px;
+    white-space: nowrap;
+}
+
+.modal-lg {
+    max-width: 900px;
+}
+
+.alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: rgba(13, 202, 240, 0.2);
+    color: #055160;
+}
+
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+/* Animaciones suaves */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+}
+
+.btn {
+    transition: all 0.15s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Mejoras en la accesibilidad */
+.form-control:focus,
+.form-select:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Responsive design para móviles */
+@media (max-width: 768px) {
+    .modal-lg {
+        max-width: 95%;
+        margin: 1rem auto;
+    }
+    
+    .accordion-body {
+        padding: 1rem 0.75rem;
+    }
+    
+    .row.g-3 > [class*="col-"] {
+        margin-bottom: 1rem;
+    }
+}
+</style>

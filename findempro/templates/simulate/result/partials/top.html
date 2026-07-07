@@ -1,0 +1,337 @@
+    <!-- Results Tutorial -->
+    <div class="results-tutorial" id="resultsTutorial">
+    <h5><i class="bx bx-bulb me-2"></i>Guía de Interpretación de Resultados</h5>
+    <p>Sus resultados de simulación están listos. Aquí le explicamos cómo interpretarlos:</p>
+    <div class="tutorial-steps">
+        <div class="tutorial-step">
+            <i class="bx bx-bar-chart-alt-2"></i>
+            <h6>Métricas Clave</h6>
+            <p class="small">Revise los indicadores principales en la parte superior</p>
+        </div>
+        <div class="tutorial-step">
+            <i class="bx bx-line-chart"></i>
+            <h6>Análisis Visual</h6>
+            <p class="small">Explore los gráficos interactivos por categoría</p>
+        </div>
+        <div class="tutorial-step">
+            <i class="bx bx-bulb"></i>
+            <h6>Recomendaciones</h6>
+            <p class="small">Lea las sugerencias personalizadas basadas en IA</p>
+        </div>
+        <div class="tutorial-step">
+            <i class="bx bx-download"></i>
+            <h6>Exportar</h6>
+            <p class="small">Descargue reportes en PDF o Excel</p>
+        </div>
+    </div>
+    <button class="btn btn-sm btn-outline-primary mt-3" onclick="hideTutorial()">
+        <i class="bx bx-x me-1"></i>Entendido
+    </button>
+    </div>
+
+    <!-- Results Header -->
+    <div class="results-header">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h1 class="mb-3">
+                <i class="bx bx-bar-chart-alt-2 me-3"></i>
+                Resultados de Simulación
+            </h1>
+            <p class="fs-5 mb-0">
+                Análisis completo para {{ product_instance.name }} - {{ business_instance.name }}
+            </p>
+            <p class="opacity-75 mb-0">
+                Simulación ejecutada el {{ simulation_instance.date_created|date:"d/m/Y H:i" }}
+            </p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <div class="export-section">
+                <h5 class="mb-3">
+                    <i class="bx bx-download me-2"></i>
+                    Exportar Resultados
+                </h5>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="exportToPDF()">
+                        <i class="bx bx-file-pdf me-2"></i>
+                        Exportar PDF
+                    </button>
+                    <button class="btn btn-success" onclick="exportToExcel()">
+                        <i class="bx bx-file me-2"></i>
+                        Exportar Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Key Insights Panel -->
+    <div class="insights-panel">
+    <h5 class="mb-3"><i class="bx bx-bulb me-2"></i>Insights Principales</h5>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="insight-item">
+                <div class="insight-icon {% if growth_rate > 0 %}positive{% else %}negative{% endif %}">
+                    <i class="bx {% if growth_rate > 0 %}bx-trending-up{% else %}bx-trending-down{% endif %}"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">Tendencia de Demanda</h6>
+                    <p class="mb-0">
+                        La demanda muestra una tendencia 
+                        {% if growth_rate > 0 %}
+                            <strong class="text-success">creciente del {{ growth_rate|floatformat:"2" }}%</strong>
+                        {% else %}
+                            <strong class="text-danger">decreciente del {{ growth_rate|floatformat:"2" }}%</strong>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="insight-item">
+                <div class="insight-icon {% if error_permisible < 5 %}positive{% elif error_permisible < 10 %}warning{% else %}negative{% endif %}">
+                    <i class="bx bx-target-lock"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">Precisión del Modelo</h6>
+                    <p class="mb-0">
+                        Error total del <strong>{{ error_permisible|floatformat:"2" }}%</strong>
+                        {% if error_permisible < 1 %}
+                            <span class="text-success">(Excelente)</span>
+                        {% elif error_permisible < 3 %}
+                            <span class="text-warning">(Muy bueno)</span>
+                        {% elif error_permisible < 5 %}
+                            <span class="text-warning">(Bueno)</span>
+                        {% else %}
+                            <span class="text-danger">(Revisar modelo)</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+<style>
+/* ── Result top partials — Kapitalya dark ── */
+.results-tutorial {
+    background: var(--bg-elevated);
+    border-radius: var(--r-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--product);
+    position: relative;
+    overflow: hidden;
+    color: var(--text-primary);
+}
+
+.results-tutorial::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(0,212,200,0.05) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.results-tutorial h5 {
+    font: 600 15px/1 var(--font-brand);
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.results-tutorial p {
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.tutorial-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.tutorial-step {
+    background: var(--bg-surface);
+    border-radius: var(--r-md);
+    padding: 1.25rem;
+    text-align: center;
+    border: 1px solid var(--border);
+    transition: border-color 0.15s, transform 0.15s;
+}
+
+.tutorial-step:hover {
+    transform: translateY(-2px);
+    border-color: var(--product-border);
+}
+
+.tutorial-step i {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    display: block;
+    color: var(--product);
+}
+
+.tutorial-step h6 {
+    font: 600 13px/1 var(--font-ui);
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.tutorial-step p {
+    margin-bottom: 0;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.results-tutorial .btn {
+    background: var(--product-bg);
+    border: 1px solid var(--product-border);
+    color: var(--product);
+    font: 500 13px/1 var(--font-ui);
+    padding: 0.5rem 1.5rem;
+    border-radius: var(--r-md);
+    transition: background 0.15s, color 0.15s;
+}
+
+.results-tutorial .btn:hover {
+    background: var(--product);
+    color: #00211f;
+}
+
+/* Results Header */
+.results-header {
+    background: var(--bg-elevated);
+    border-radius: var(--r-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--product);
+}
+
+.results-header h1 {
+    font: 700 2rem/1.2 var(--font-brand);
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+.results-header h1 i { color: var(--product); }
+.results-header .fs-5 { color: var(--text-secondary); font-weight: 500; }
+.results-header .opacity-75 { color: var(--text-muted); font-size: 0.875rem; opacity: 1 !important; }
+
+/* Export Section */
+.export-section {
+    background: var(--bg-surface);
+    border-radius: var(--r-lg);
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+}
+
+.export-section h5 {
+    font: 600 14px/1 var(--font-ui);
+    color: var(--text-secondary);
+}
+
+.export-section .btn {
+    font: 500 13px/1 var(--font-ui);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--r-md);
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: none;
+}
+
+.export-section .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Insights Panel */
+.insights-panel {
+    background: var(--bg-elevated);
+    border-radius: var(--r-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+}
+
+.insights-panel h5 {
+    font: 600 15px/1 var(--font-brand);
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+.insights-panel h5 i { color: var(--warning); }
+
+.insight-item {
+    display: flex;
+    align-items: center;
+    background: var(--bg-surface);
+    border-radius: var(--r-md);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+    transition: border-color 0.15s, transform 0.15s;
+}
+
+.insight-item:hover {
+    transform: translateY(-1px);
+    border-color: var(--border-strong);
+}
+
+.insight-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.insight-icon.positive { background: rgba(0,200,150,0.12); color: var(--success); border: 1px solid rgba(0,200,150,0.25); }
+.insight-icon.negative { background: rgba(255,59,80,0.12);  color: var(--danger);  border: 1px solid rgba(255,59,80,0.25); }
+.insight-icon.warning  { background: rgba(255,182,39,0.12); color: var(--warning); border: 1px solid rgba(255,182,39,0.25); }
+
+.insight-icon i { font-size: 1.25rem; }
+
+.insight-item h6 {
+    font: 600 14px/1 var(--font-ui);
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.insight-item p {
+    color: var(--text-secondary);
+    margin-bottom: 0;
+    line-height: 1.5;
+    font-size: 0.875rem;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.results-tutorial, .results-header, .insights-panel { animation: fadeInUp 0.4s ease-out; }
+.tutorial-step:nth-child(1) { animation: fadeInUp 0.4s 0.1s ease-out both; }
+.tutorial-step:nth-child(2) { animation: fadeInUp 0.4s 0.2s ease-out both; }
+.tutorial-step:nth-child(3) { animation: fadeInUp 0.4s 0.3s ease-out both; }
+.tutorial-step:nth-child(4) { animation: fadeInUp 0.4s 0.4s ease-out both; }
+
+@media (max-width: 768px) {
+    .tutorial-steps { grid-template-columns: 1fr; }
+    .results-header { padding: 1.25rem; }
+    .results-header h1 { font-size: 1.5rem; }
+    .export-section { margin-top: 1.5rem; }
+    .insight-item { flex-direction: column; text-align: center; }
+    .insight-icon { margin-right: 0; margin-bottom: 0.75rem; }
+}
+</style>
