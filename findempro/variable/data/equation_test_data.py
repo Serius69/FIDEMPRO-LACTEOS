@@ -121,7 +121,7 @@ equations_data = [
   {
     "name": "Capacidad Producción Real",
     "description": "Capacidad basada en recursos disponibles",
-    "expression": "CPROD = min(NEPP * (MLP / max(TPE)) * 0.85, max(DPH * 1.2))",  # CORREGIDO
+    "expression": "CPROD = min(NEPP * (MLP / max(TPE, 1)) * 0.85, DPH * 1.2)",  # max()/min() bien formados: max de 1 arg divergía vec(xp.max)/escalar(TypeError->None) y forzaba fallback CPU
     "variable1": "CPROD",
     "variable2": "NEPP",
     "variable3": "MLP",
