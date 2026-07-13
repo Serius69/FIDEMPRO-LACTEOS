@@ -74,13 +74,112 @@ def _clamp(value, min_val, max_val, default):
 
 
 # ─────────────────────────────────────────────
+# Construcción de config Monte Carlo (compartida sync/async)
+# ─────────────────────────────────────────────
+
+def _build_simulation_config(data: Dict, user) -> tuple:
+    """
+    Valida el payload de simulación y construye el kwargs-dict para
+    ``SimulationConfig`` más un dict ``extra`` con metadata derivada.
+
+    Retorna ``(config_dict, extra, None)`` en éxito o
+    ``(None, None, error_response)`` (un ``Response`` DRF) en caso de error.
+
+    ``config_dict`` es JSON-serializable (los campos de ``SimulationConfig``
+    son int/float/str/list), por lo que puede viajar por Celery hacia un worker
+    y reconstruirse con ``SimulationConfig(**config_dict)``.
+    """
+    required = ['demand_mean', 'unit_price', 'unit_cost', 'fixed_costs']
+    ok, err = _require_fields(data, required)
+    if not ok:
+        return None, None, Response({"error": err}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Cargar CompanyProfile si se provee business_id
+    profile = None
+    if 'business_id' in data:
+        business, err_resp = _get_business(int(data['business_id']), user)
+        if err_resp:
+            return None, None, err_resp
+        profile = CompanyProfile.get_or_create_for_business(business)
+
+    # Parámetros con fallback a CompanyProfile o defaults
+    demand_mean = float(data['demand_mean'])
+    demand_std = float(data.get('demand_std', demand_mean * 0.15))
+    n_iter = int(_clamp(data.get('n_iterations', 10000), 1000, 100000, 10000))
+    time_periods = int(_clamp(data.get('time_periods', 30), 1, 365, 30))
+    confidence = _clamp(
+        data.get('confidence_level', profile.confidence_level if profile else 0.95),
+        0.80, 0.99, 0.95,
+    )
+    dist = data.get(
+        'distribution_type',
+        profile.distribution_preference if profile and profile.distribution_preference != 'auto' else 'normal'
+    )
+    seed = data.get('random_seed', None)
+    if seed is not None:
+        seed = int(seed)
+
+    seasonality = data.get('seasonality_factors', profile.get_seasonality_factors() if profile else [1.0] * 12)
+    if not isinstance(seasonality, list) or len(seasonality) != 12:
+        seasonality = [1.0] * 12
+
+    config_dict = {
+        'n_iterations': n_iter,
+        'confidence_level': confidence,
+        'time_periods': time_periods,
+        'random_seed': seed,
+        'distribution_type': dist,
+        'demand_mean': demand_mean,
+        'demand_std': demand_std,
+        'unit_price': float(data['unit_price']),
+        'unit_cost': float(data['unit_cost']),
+        'fixed_costs': float(data['fixed_costs']),
+        'seasonality_factors': [float(s) for s in seasonality],
+    }
+    extra = {
+        '_profile_used': bool(profile),
+        '_industry_sector': data.get(
+            'industry_sector',
+            profile.fk_business.industry_sector if profile else 'other',
+        ),
+    }
+    return config_dict, extra, None
+
+
+# ─────────────────────────────────────────────
 # POST /api/v1/simulate/
 # ─────────────────────────────────────────────
+
+# Presupuesto de celdas por request para los endpoints de simulacion directa
+# (n_iterations x periodos): evita materializar grillas enormes que revienten el
+# worker (OOM). Mismo limite que ``FullPipelineAPIView.MAX_CELLS``.
+MAX_SIMULATION_CELLS = 2_000_000
+
+
+def _cell_budget_exceeded(config_dict) -> Response | None:
+    """Devuelve un 400 si n_iterations x periodos supera el presupuesto de celdas.
+
+    Protege los endpoints de simulacion directa (sync y async), que ya acotan por
+    throttle (20/h) y clamps (n<=100k, periodos<=365) pero cuyo producto (hasta
+    36,5M celdas) aun puede agotar memoria. Aditivo; devuelve None si esta dentro.
+    """
+    cells = config_dict['n_iterations'] * config_dict['time_periods']
+    if cells > MAX_SIMULATION_CELLS:
+        return Response(
+            {"error": (
+                f"Presupuesto excedido: n_iterations ({config_dict['n_iterations']}) x "
+                f"periodos ({config_dict['time_periods']}) = {cells} celdas supera el "
+                f"maximo permitido de {MAX_SIMULATION_CELLS}."
+            )},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return None
+
 
 class SimulateAPIView(APIView):
     """
     Ejecuta una simulación Monte Carlo completa.
-    Rate limit: 20 simulaciones/hora (TensorFlow inference + Monte Carlo costosos).
+    Rate limit: 20 simulaciones/hora (motor Monte Carlo numpy/CuPy costoso).
 
     Body (JSON):
         business_id        int     — ID del negocio (opcional, para usar CompanyProfile)
@@ -105,66 +204,120 @@ class SimulateAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request) -> Response:
-        data = request.data
-        required = ['demand_mean', 'unit_price', 'unit_cost', 'fixed_costs']
-        ok, err = _require_fields(data, required)
-        if not ok:
-            return Response({"error": err}, status=status.HTTP_400_BAD_REQUEST)
+        config_dict, extra, err_resp = _build_simulation_config(request.data, request.user)
+        if err_resp is not None:
+            return err_resp
 
-        # Cargar CompanyProfile si se provee business_id
-        profile = None
-        if 'business_id' in data:
-            business, err_resp = _get_business(int(data['business_id']), request.user)
-            if err_resp:
-                return err_resp
-            profile = CompanyProfile.get_or_create_for_business(business)
-
-        # Parámetros con fallback a CompanyProfile o defaults
-        demand_mean = float(data['demand_mean'])
-        demand_std = float(data.get('demand_std', demand_mean * 0.15))
-        n_iter = int(_clamp(data.get('n_iterations', 10000), 1000, 100000, 10000))
-        time_periods = int(_clamp(data.get('time_periods', 30), 1, 365, 30))
-        confidence = _clamp(
-            data.get('confidence_level', profile.confidence_level if profile else 0.95),
-            0.80, 0.99, 0.95,
-        )
-        dist = data.get(
-            'distribution_type',
-            profile.distribution_preference if profile and profile.distribution_preference != 'auto' else 'normal'
-        )
-        seed = data.get('random_seed', None)
-        if seed is not None:
-            seed = int(seed)
-
-        seasonality = data.get('seasonality_factors', profile.get_seasonality_factors() if profile else [1.0] * 12)
-        if not isinstance(seasonality, list) or len(seasonality) != 12:
-            seasonality = [1.0] * 12
-
-        config = SimulationConfig(
-            n_iterations=n_iter,
-            confidence_level=confidence,
-            time_periods=time_periods,
-            random_seed=seed,
-            distribution_type=dist,
-            demand_mean=demand_mean,
-            demand_std=demand_std,
-            unit_price=float(data['unit_price']),
-            unit_cost=float(data['unit_cost']),
-            fixed_costs=float(data['fixed_costs']),
-            seasonality_factors=seasonality,
-        )
+        budget_err = _cell_budget_exceeded(config_dict)
+        if budget_err is not None:
+            return budget_err
 
         try:
-            engine = MonteCarloEngine(config)
+            engine = MonteCarloEngine(SimulationConfig(**config_dict))
             result = engine.to_dict()
-            result['_profile_used'] = bool(profile)
-            result['_industry_sector'] = data.get('industry_sector', profile.fk_business.industry_sector if profile else 'other')
+            result.update(extra)
             return Response(result, status=status.HTTP_200_OK)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
+        except Exception:
             logger.exception("Error en SimulateAPIView")
             return Response({"error": "Error interno en la simulación."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ─────────────────────────────────────────────
+# POST /api/v1/simulate/async/  — encola la simulación (no bloquea gunicorn)
+# ─────────────────────────────────────────────
+
+class SimulateAsyncAPIView(APIView):
+    """
+    Variante asíncrona de :class:`SimulateAPIView`.
+
+    En vez de correr el motor Monte Carlo dentro del request (bloqueando el
+    worker gunicorn), valida el payload, encola la simulación en Celery y
+    responde de inmediato con **202 Accepted** y un ``task_id`` para hacer
+    polling en ``/api/v1/simulate/status/<task_id>/``.
+
+    Mismo contrato de validación y rate-limit que el endpoint síncrono.
+
+    Returns (202):
+        {"task_id": str, "status": "queued", "status_url": str}
+    """
+
+    throttle_classes = [SimulateThrottle]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request) -> Response:
+        from django.urls import reverse
+        from simulate.tasks import run_stateless_simulation
+
+        config_dict, extra, err_resp = _build_simulation_config(request.data, request.user)
+        if err_resp is not None:
+            return err_resp
+
+        budget_err = _cell_budget_exceeded(config_dict)
+        if budget_err is not None:
+            return budget_err
+
+        async_result = run_stateless_simulation.delay(config_dict, extra)
+        task_id = async_result.id
+        return Response(
+            {
+                "task_id": task_id,
+                "status": "queued",
+                "status_url": reverse('simulate:api.v1.simulate_status', args=[task_id]),
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+
+# ─────────────────────────────────────────────
+# GET /api/v1/simulate/status/<task_id>/  — estado/resultado de la tarea
+# ─────────────────────────────────────────────
+
+class SimulateTaskStatusAPIView(APIView):
+    """
+    Consulta el estado de una simulación encolada por
+    :class:`SimulateAsyncAPIView`.
+
+    Mapea los estados Celery a un contrato estable para el frontend:
+      - PENDING / STARTED / PROGRESS / RETRY  → ``{"state": "pending", ...}``
+      - SUCCESS                               → ``{"state": "SUCCESS", "result": {...}}``
+      - FAILURE                               → ``{"state": "FAILURE", "error": str}``
+
+    Nunca expone trazas internas: en FAILURE sólo se devuelve el ``str`` de la
+    excepción.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    _PENDING_STATES = {'PENDING', 'STARTED', 'PROGRESS', 'RETRY', 'RECEIVED'}
+
+    def get(self, request, task_id: str) -> Response:
+        from celery.result import AsyncResult
+
+        result = AsyncResult(str(task_id))
+        state = result.state
+
+        if state == 'SUCCESS':
+            return Response({"state": "SUCCESS", "progress": 100, "result": result.result},
+                            status=status.HTTP_200_OK)
+
+        if state == 'FAILURE':
+            err = result.result
+            return Response(
+                {"state": "FAILURE", "progress": 0, "error": str(err) if err else "La simulación falló."},
+                status=status.HTTP_200_OK,
+            )
+
+        # Estados intermedios (incl. PENDING = desconocido/aún en cola).
+        progress = 0
+        info = result.info if isinstance(result.info, dict) else {}
+        if isinstance(info, dict):
+            progress = int(info.get('current', 0) or 0)
+        return Response(
+            {"state": "pending", "celery_state": state, "progress": progress},
+            status=status.HTTP_200_OK,
+        )
 
 
 # ─────────────────────────────────────────────
@@ -187,6 +340,7 @@ class ForecastAPIView(APIView):
         {forecast, analysis (opcional), simulation_params}
     """
 
+    throttle_classes = [SimulateThrottle]
     permission_classes = [IsAuthenticated]
 
     def post(self, request) -> Response:
@@ -662,7 +816,12 @@ class FullPipelineAPIView(APIView):
         }
     """
 
+    throttle_classes = [SimulateThrottle]
     permission_classes = [IsAuthenticated]
+
+    # Presupuesto de celdas por request: n_monte_carlo × períodos.
+    # Evita que un solo request materialice grillas enormes (p.ej. 50k × 365 = 18,25M).
+    MAX_CELLS = 2_000_000
 
     def post(self, request, simulation_id: int) -> Response:
         from simulate.models import Simulation
@@ -688,6 +847,19 @@ class FullPipelineAPIView(APIView):
         n_mc = int(_clamp(data.get('n_monte_carlo', 5000), 100, 50000, 5000))
         risk_av = _clamp(data.get('risk_aversion', 0.001), 1e-6, 1.0, 0.001)
         persist = str(data.get('persist', 'false')).lower() in ('true', '1', 'yes')
+
+        # Presupuesto conjunto: n_monte_carlo × períodos (celdas de la grilla).
+        periods = max(int(getattr(simulation, 'duration_in_days', 0) or 0), 1)
+        if n_mc * periods > self.MAX_CELLS:
+            return Response(
+                {
+                    "error": (
+                        f"Presupuesto excedido: n_monte_carlo ({n_mc}) × períodos ({periods}) "
+                        f"= {n_mc * periods} celdas supera el máximo permitido de {self.MAX_CELLS}."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             service = SimulationService()
