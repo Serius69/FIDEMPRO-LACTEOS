@@ -69,6 +69,7 @@ class SimulationCore:
                 unit_time=validated_data['unit_time'],
                 demand_history=json.dumps(validated_data['demand_history']),
                 fk_fdp=fk_fdp_instance,
+                demand_distribution=validated_data.get('demand_distribution', ''),
                 is_active=True
             )
             

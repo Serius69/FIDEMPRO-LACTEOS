@@ -103,11 +103,21 @@ class MonteCarloConfig:
         demand_stats   = simulation.get_demand_statistics()
         demand_history = simulation.get_demand_history_array()
 
-        distribution = cls._resolve_distribution(
-            dist_type=getattr(simulation.fk_fdp, 'distribution_type', 1),
-            demand_history=demand_history,
-            company_profile=company_profile,
-        )
+        # Override explícito desde la UI (Simulation.demand_distribution): si el
+        # usuario eligió un proceso concreto (p. ej. 'gbm'), tiene prioridad sobre
+        # la FDP y sobre la preferencia 'auto'. Vacío = comportamiento por defecto.
+        override = (getattr(simulation, 'demand_distribution', '') or '').strip().lower()
+        _VALID_OVERRIDES = {'normal', 'lognormal', 'gamma', 'uniform',
+                            'exponential', 'poisson', 'gbm'}
+        if override in _VALID_OVERRIDES:
+            distribution = override
+            logger.info("Distribución forzada desde la UI: %s", distribution)
+        else:
+            distribution = cls._resolve_distribution(
+                dist_type=getattr(simulation.fk_fdp, 'distribution_type', 1),
+                demand_history=demand_history,
+                company_profile=company_profile,
+            )
 
         seasonality = (
             company_profile.get_seasonality_factors()

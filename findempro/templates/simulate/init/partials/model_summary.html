@@ -313,7 +313,29 @@
                 <input type="hidden" name="unit_time" value="days">
                 <input type="hidden" name="demand_history" value="{{ demand_history }}">
                 <input type="hidden" name="fk_fdp" value="{{ selected_fdp }}">
-                
+
+                <!-- Proceso de demanda (Monte Carlo) -->
+                <div class="form-group mb-3 text-start">
+                    <label for="demand_distribution" class="form-label fw-semibold">
+                        <i class="bx bx-git-branch text-primary me-1"></i>
+                        Proceso de demanda
+                    </label>
+                    <select id="demand_distribution" name="demand_distribution" class="form-select shadow-sm">
+                        <option value="" {% if selected_demand_distribution|default:'' == '' %}selected{% endif %}>
+                            Automático (según la FDP seleccionada)
+                        </option>
+                        <option value="gbm" {% if selected_demand_distribution == 'gbm' %}selected{% endif %}>
+                            GBM — Movimiento Browniano Geométrico (con memoria y tendencia)
+                        </option>
+                    </select>
+                    <div class="form-text">
+                        <i class="bx bx-info-circle me-1"></i>
+                        <strong>Automático</strong>: muestreo i.i.d. por período según la función de densidad.
+                        <strong>GBM</strong>: trayectoria con deriva y volatilidad calibradas desde la
+                        demanda histórica (log-retornos), con memoria temporal y valores siempre positivos.
+                    </div>
+                </div>
+
                 <div class="d-grid">
                     <button type="submit" class="btn btn-success btn-lg pulse-animation shadow" id="startSimulationBtn">
                         <i class="bx bx-play me-2"></i>

@@ -71,6 +71,7 @@ class SimulateAddView(LoginRequiredMixin, View):
                 'unit_time': request.POST.get('unit_time', 'days'),
                 'demand_history': demand_history,
                 'fk_fdp_id': int(request.POST.get('fk_fdp')),
+                'demand_distribution': request.POST.get('demand_distribution', ''),
             }
             
             simulation_service = SimulationCore()

@@ -253,7 +253,18 @@ class SimulationValidator:
                         errors.append(f"Error al validar FDP: {str(e)}")
             except (ValueError, TypeError):
                 errors.append("ID de FDP debe ser un número válido")
-        
+
+        # Validar proceso de demanda (opcional): vacío = derivar de la FDP.
+        demand_distribution = (simulation_data.get('demand_distribution') or '').strip().lower()
+        _valid_processes = {'', 'normal', 'lognormal', 'gamma', 'uniform',
+                            'exponential', 'poisson', 'gbm'}
+        if demand_distribution not in _valid_processes:
+            errors.append(
+                f"Proceso de demanda inválido: '{demand_distribution}'. "
+                f"Use uno de: {', '.join(sorted(p for p in _valid_processes if p))}")
+        else:
+            validated_data['demand_distribution'] = demand_distribution
+
         # Raise error if any validation failed
         if errors:
             raise ValidationError("; ".join(errors))

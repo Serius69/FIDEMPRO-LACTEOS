@@ -366,6 +366,21 @@ class Simulation(models.Model):
         blank=True,
         help_text='Random seed for reproducible results'
     )
+    DEMAND_PROCESS_CHOICES = [
+        ('', 'Automático (según la FDP seleccionada)'),
+        ('gbm', 'GBM — Movimiento Browniano Geométrico (con memoria y tendencia)'),
+    ]
+    demand_distribution = models.CharField(
+        max_length=20,
+        blank=True,
+        default='',
+        choices=DEMAND_PROCESS_CHOICES,
+        help_text=(
+            'Proceso de demanda a usar en el Monte Carlo. Vacío = derivar de la '
+            'FDP (comportamiento por defecto i.i.d.); "gbm" = trayectoria con '
+            'deriva/volatilidad calibradas desde la demanda histórica.'
+        ),
+    )
     is_completed = models.BooleanField(
         default=False,
         help_text='Whether the simulation has been completed'
