@@ -2,6 +2,48 @@
 
 ## [Unreleased] — 2026-07-15
 
+### Simulación — Modo GBM elegible desde la UI
+- **`Simulation.demand_distribution`** (NUEVO campo opcional, migración `simulate/
+  0021`): override del proceso de demanda. Cuando el usuario elige **GBM** en el
+  formulario de lanzamiento, gana sobre la FDP y sobre el modo `'auto'` del
+  `CompanyProfile`; vacío (`''`) = comportamiento i.i.d. previo por FDP →
+  **retrocompatibilidad total**. El branch GBM del motor (escalar + vectorizado)
+  ya existía (sesión 2026-07-12); solo hubo que alimentarlo desde
+  `MonteCarloConfig.from_simulation()`. Cierra el pendiente "exponer GBM en la UI".
+- **Selector "Proceso de demanda"** (Automático / GBM) en el form real de
+  lanzamiento (`templates/simulate/init/partials/model_summary.html`), cableado
+  por `simulate_add_view` → validador (lista blanca) → `create_simulation` →
+  persistencia → `from_simulation`.
+- **Tests**: `simulate/tests/test_gbm_ui.py` (9: GBM activa el branch calibrado y
+  gana sobre FDP/`auto`; vacío conserva i.i.d. parametrizado normal/lognormal/
+  gamma/poisson; e2e por la cadena real); `simulate/` completo **422 passed**.
+
+### Datos — Mezcla estacional (perfil sector × picos del producto) + variantes regionales
+- **(b) Realce estacional mixto** en `seed_service._blended_seasonal_profile()`:
+  el perfil del TIPO (`bolivia_sector_series`, media 1.0) se realza un **+10%**
+  (`_PEAK_BOOST`) en los `peak_months` propios del producto y se **renormaliza a
+  media 1.0**. Corrige el caso Tour Turístico (tipo 16 hotelería): jun/jul/ago
+  suben de `[0.95, 0.99, 1.05]` a `[1.02, 1.06, 1.12]` — su temporada alta de
+  invierno ahora es visible sobre 1.0, sin destruir la forma del sector. Sin
+  `peak_months` (o sin `business_type`) → comportamiento previo intacto.
+- **(c) Variantes regionales por ciudad**: `bolivia_regions.py` (NUEVO) mapea
+  ciudad→región del IPC y expone `city_price_factor()` (fallback 1.0 seguro).
+  `seed_bolivia --regions "El Alto,Cochabamba,Oruro,…"` (rama separada, vía
+  `IndustrySeeder.seed_regional()`) siembra un negocio por (tipo × ciudad) con
+  nombre sufijado — "Panadería San Jorge (El Alto)" — evitando el UNIQUE(name,
+  fk_user), y escala `price`/`unit_cost` por el factor de presión de precios de
+  la ciudad (de `regional_price_pressure()`, señal IPC en vivo). Mapeo: La Paz y
+  El Alto → "Conurbación La Paz"; **Cochabamba → "Región Metropolitana Kanata"**
+  (su conurbación real, factor 1.0128 jun-2026); Santa Cruz sin dato → 1.0.
+  Degrada a 1.0 si no hay señal IPC.
+- **Tests**: `test_sector_series.py` (+2 mezcla estacional) y
+  `test_regional_variants.py` (NUEVO, 12: mapeo/fallback incl. Cochabamba→Kanata,
+  escalado, no-colisión unique, idempotencia, e2e por el motor, comando);
+  `business/` completo **90 passed**.
+- **Verificación conjunta**: `business/` + `simulate/` = **512 passed**, `check`
+  limpio, cero contaminación cruzada entre apps.
+- **Sin commitear/desplegar todavía.**
+
 ### Validación — Smoke de simulación del catálogo COMPLETO (49/49 ✓)
 - **`manage.py validate_catalog`** (NUEVO): corre el pipeline Monte Carlo real
   (`SimulationService.run_full_pipeline`) sobre **cada producto activo** del

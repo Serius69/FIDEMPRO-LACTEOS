@@ -15,6 +15,9 @@ Ejemplos:
     python manage.py seed_bolivia --user sergio        # asignar a un usuario existente
     python manage.py seed_bolivia --run-sim            # además ejecuta 1 simulación por negocio
     python manage.py seed_bolivia --force              # recrea aunque ya existan
+    python manage.py seed_bolivia --types 4 --regions "El Alto,Santa Cruz,Oruro"
+                                                       # variantes regionales de panadería
+                                                       # con precios escalados por ciudad (IPC)
 """
 import logging
 
@@ -44,6 +47,10 @@ class Command(BaseCommand):
                             help="Escenarios Monte Carlo si se usa --run-sim (default: 200).")
         parser.add_argument("--force", action="store_true",
                             help="Recrea el negocio aunque ya exista para ese usuario/tipo.")
+        parser.add_argument("--regions", type=str, default="",
+                            help="Ciudades (separadas por coma) para sembrar VARIANTES "
+                                 "regionales por tipo, con precios escalados por la "
+                                 "presión de precios del IPC (p.ej. 'El Alto,Santa Cruz').")
 
     def handle(self, *args, **opts):
         user = self._get_or_create_user(opts["user"])
@@ -64,6 +71,10 @@ class Command(BaseCommand):
         ))
 
         seeder = IndustrySeeder(user)
+
+        if opts["regions"].strip():
+            return self._seed_regional(seeder, wanted, opts)
+
         seeded, skipped, failed = [], [], []
 
         for bt in wanted:
@@ -100,6 +111,54 @@ class Command(BaseCommand):
         ))
         if failed:
             self.stdout.write(self.style.WARNING(f"Tipos fallidos: {failed}"))
+
+    # ── variantes regionales ──────────────────────────────────────────────────
+    def _seed_regional(self, seeder, wanted, opts):
+        """Siembra variantes por ciudad (tipo × ciudad) con precios escalados IPC."""
+        from business.data.bolivia_regions import city_price_factor
+        from business.data.bolivia_sector_series import regional_price_pressure
+
+        cities = [c.strip() for c in opts["regions"].split(",") if c.strip()]
+        pressures = regional_price_pressure()
+        if not pressures:
+            self.stdout.write(self.style.WARNING(
+                "Sin señal IPC persistida (corre ingest_ine_series): todas las "
+                "ciudades usan factor 1.0 (sin sesgo de precios)."))
+
+        seeded, skipped, failed = [], [], []
+        for bt in wanted:
+            spec = INDUSTRIES.get(bt)
+            if spec is None:
+                self.stderr.write(self.style.WARNING(f"  tipo {bt}: sin catálogo, se omite"))
+                continue
+            for city in cities:
+                factor = city_price_factor(city, pressures)
+                name = f"{spec.business_name} ({city})"
+                try:
+                    before = seeder.user.businesses.filter(name__iexact=name, is_active=True).exists()
+                    business = seeder.seed_regional(
+                        spec, city, price_factor=factor, force=opts["force"])
+                    if business is None:
+                        failed.append((bt, city))
+                        continue
+                    if before and not opts["force"]:
+                        skipped.append((bt, city))
+                        self.stdout.write(f"  · {name:44} ya existía (omitido)")
+                    else:
+                        seeded.append((bt, city, business.id))
+                        self.stdout.write(self.style.SUCCESS(
+                            f"  ✓ {name:44} id={business.id}  factor={factor:.4f}"))
+                except Exception as exc:  # noqa: BLE001
+                    logger.exception("Fallo variante tipo %s ciudad %s", bt, city)
+                    failed.append((bt, city))
+                    self.stderr.write(self.style.ERROR(f"  ✗ {name}: {exc}"))
+
+        self.stdout.write("")
+        self.stdout.write(self.style.SUCCESS(
+            f"Listo (regional). Variantes sembradas: {len(seeded)} · "
+            f"Omitidas: {len(skipped)} · Fallidas: {len(failed)}"))
+        if failed:
+            self.stdout.write(self.style.WARNING(f"Fallidas: {failed}"))
 
     # ── helpers ──────────────────────────────────────────────────────────────
     def _get_or_create_user(self, username: str) -> User:

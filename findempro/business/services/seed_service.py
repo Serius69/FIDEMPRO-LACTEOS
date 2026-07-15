@@ -24,8 +24,9 @@ from __future__ import annotations
 import ast
 import logging
 import math
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from dataclasses import dataclass, field, replace
+from functools import lru_cache
+from typing import Dict, List, Optional, Tuple
 
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -75,6 +76,24 @@ class ProductBaseline:
         return self.price
 
 
+def scale_baseline(baseline: ProductBaseline, factor: float) -> ProductBaseline:
+    """
+    Clona un baseline escalando **precio y costo unitario** por ``factor``
+    (presión de precios regional; ver ``business.data.bolivia_regions``).
+
+    No muta el catálogo global (usa ``dataclasses.replace``). ``factor == 1.0``
+    devuelve el mismo objeto sin costo. La demanda/estacionalidad NO se tocan:
+    la variante regional cambia el nivel de precios, no la forma de la demanda.
+    """
+    if not factor or factor == 1.0:
+        return baseline
+    return replace(
+        baseline,
+        price=round(baseline.price * factor, 2),
+        unit_cost=round(baseline.unit_cost * factor, 2),
+    )
+
+
 @dataclass
 class IndustrySpec:
     business_type: int             # business.models.Business.BusinessType
@@ -119,6 +138,38 @@ def _load_structural_defaults() -> Dict[str, object]:
     return defaults
 
 
+# Realce de los meses pico propios del producto sobre el perfil del sector.
+# Modesto a propósito: sube los picos del producto sin destruir la correlación
+# con el perfil del rubro (los tests exigen corr > 0.9). Ajustar con cuidado.
+_PEAK_BOOST = 0.10
+
+
+@lru_cache(maxsize=256)
+def _blended_seasonal_profile(business_type: int,
+                              peak_months: Tuple[int, ...],
+                              boost: float = _PEAK_BOOST) -> Tuple[float, ...]:
+    """
+    Perfil estacional de 12 meses (media 1.0) que **combina** la forma real del
+    sector (``bolivia_sector_series.seasonal_factors``) con un realce modesto en
+    los ``peak_months`` propios del producto, renormalizando a media 1.0.
+
+    Así un arquetipo respeta la estacionalidad de su rubro pero además levanta su
+    temporada alta específica: p.ej. un "Tour Turístico" (tipo 16 = hotelería,
+    pico Carnaval/dic) con ``peak_months=[6,7,8]`` queda por encima del perfil de
+    hotelería solo en jun-ago. Sin ``peak_months`` el perfil es el del sector tal
+    cual (retrocompatible con el cableado previo). Cacheado por (tipo, picos).
+    """
+    from business.data.bolivia_sector_series import seasonal_factors
+    base = seasonal_factors(business_type)          # 12 factores, media 1.0
+    peaks = set(peak_months)
+    if not peaks:
+        return tuple(base)
+    blended = [f * (1.0 + boost) if (i + 1) in peaks else f
+               for i, f in enumerate(base)]
+    mean = sum(blended) / 12
+    return tuple(round(f / mean, 4) for f in blended)
+
+
 def _seasonality_multiplier(index: int, baseline: ProductBaseline,
                             business_type: Optional[int] = None) -> float:
     """
@@ -126,13 +177,15 @@ def _seasonality_multiplier(index: int, baseline: ProductBaseline,
     empezando en enero → un ciclo anual completo cada 360 puntos).
 
     Con ``business_type`` usa el **perfil estacional REAL del sector** boliviano
-    (``bolivia_sector_series``, media 1.0). Sin él, cae al comportamiento legacy
-    (onda ±25 % sobre ``peak_months``).
+    (``bolivia_sector_series``, media 1.0) **combinado** con un realce modesto en
+    los ``peak_months`` propios del producto (ver ``_blended_seasonal_profile``).
+    Sin él, cae al comportamiento legacy (onda ±25 % sobre ``peak_months``).
     """
     month = (index // 30) % 12 + 1
     if business_type is not None:
-        from business.data.bolivia_sector_series import monthly_factor
-        return monthly_factor(business_type, month)
+        profile = _blended_seasonal_profile(
+            business_type, tuple(sorted(baseline.peak_months or ())))
+        return profile[month - 1]
     if not baseline.seasonal or not baseline.peak_months:
         return 1.0
     return 1.25 if month in baseline.peak_months else 0.95
@@ -209,39 +262,82 @@ class IndustrySeeder:
             return existing
 
         if force:
-            # `Business` tiene UNIQUE(name, fk_user) con collation NOCASE: para
-            # recrear hay que liberar el nombre. Renombramos+desactivamos los
-            # negocios previos con ese nombre (case-insensitive; el modelo title-casea
-            # al guardar, así que un match exacto no basta), incluyendo restos de una
-            # corrida parcial, sin borrado en cascada.
-            for old in Business.objects.filter(fk_user=self.user, name__iexact=spec.business_name):
-                old.name = f"{spec.business_name} (reemplazado #{old.id})"
-                old.is_active = False
-                old.save(update_fields=["name", "is_active"])
+            self._free_name(spec.business_name)
 
-        business = Business.objects.create(
-            name=spec.business_name,
-            type=spec.business_type,
-            location=spec.location,
-            fk_user=self.user,
-            is_active=True,
-        )
-        # Perfil de simulación con defaults por sector (ya existente en el modelo).
-        CompanyProfile.get_or_create_for_business(business)
-
-        anchor_demand = spec.products[0].daily_demand if spec.products else 1000
-        self._create_pdf(business, anchor_demand)
-
-        for baseline in spec.products:
-            self._create_product_with_data(business, baseline)
-
+        business = self._instantiate_business(
+            name=spec.business_name, business_type=spec.business_type,
+            location=spec.location, products=spec.products)
         logger.info(
             "Sembrado negocio '%s' (tipo=%s) con %d productos",
             business.name, spec.business_type, len(spec.products),
         )
         return business
 
+    @transaction.atomic
+    def seed_regional(self, spec: IndustrySpec, city: str, *,
+                      price_factor: float = 1.0, force: bool = False) -> Optional[Business]:
+        """
+        Siembra una **variante regional** del negocio para ``city``: nombre con
+        la ciudad (``"<negocio> (<ciudad>)"``, obligatorio porque
+        ``Business`` tiene UNIQUE(name, fk_user) activo — el nombre DEBE variar
+        por ciudad), ``location=city`` y precios/costos escalados por
+        ``price_factor`` (presión de precios regional del IPC).
+
+        A diferencia de ``seed_business`` (idempotente por *tipo*), es idempotente
+        por **nombre**: así conviven varias ciudades del mismo tipo para un
+        usuario sin violar el unique constraint.
+        """
+        name = f"{spec.business_name} ({city})"
+        existing = Business.objects.filter(
+            fk_user=self.user, name__iexact=name, is_active=True
+        ).first()
+        if existing and not force:
+            logger.info("Variante regional '%s' ya existe (id=%s) — se omite",
+                        name, existing.id)
+            return existing
+        if force:
+            self._free_name(name)
+
+        products = [scale_baseline(b, price_factor) for b in spec.products]
+        business = self._instantiate_business(
+            name=name, business_type=spec.business_type,
+            location=city, products=products)
+        logger.info(
+            "Sembrada variante '%s' (tipo=%s, factor=%.4f) con %d productos",
+            business.name, spec.business_type, price_factor, len(products),
+        )
+        return business
+
     # ── Internos ──────────────────────────────────────────────────────────────
+    def _free_name(self, name: str) -> None:
+        """
+        Libera un nombre de negocio para poder recrearlo: renombra+desactiva los
+        negocios previos con ese nombre (``Business`` tiene UNIQUE(name, fk_user)
+        activo con collation NOCASE; el modelo title-casea al guardar, así que un
+        match exacto no basta), incluyendo restos de una corrida parcial, sin
+        borrado en cascada.
+        """
+        for old in Business.objects.filter(fk_user=self.user, name__iexact=name):
+            old.name = f"{old.name} (reemplazado #{old.id})"
+            old.is_active = False
+            old.save(update_fields=["name", "is_active"])
+
+    def _instantiate_business(self, *, name: str, business_type: int,
+                             location: str, products: List[ProductBaseline]) -> Business:
+        """Crea el Business + perfil + PDF + productos con datos (núcleo común)."""
+        business = Business.objects.create(
+            name=name, type=business_type, location=location,
+            fk_user=self.user, is_active=True,
+        )
+        # Perfil de simulación con defaults por sector (ya existente en el modelo).
+        CompanyProfile.get_or_create_for_business(business)
+
+        anchor_demand = products[0].daily_demand if products else 1000
+        self._create_pdf(business, anchor_demand)
+
+        for baseline in products:
+            self._create_product_with_data(business, baseline)
+        return business
     def _create_pdf(self, business: Business, mean: float) -> None:
         ProbabilisticDensityFunction.objects.get_or_create(
             distribution_type=1,  # Normal

@@ -81,6 +81,47 @@ def test_without_business_type_is_legacy():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Mezcla perfil del sector × meses pico del producto
+# ─────────────────────────────────────────────────────────────────────────────
+def test_blended_profile_lifts_product_peaks_over_sector():
+    """
+    Un producto con peak_months propios (que difieren del perfil del tipo) debe
+    quedar POR ENCIMA del perfil del sector solo en esos meses, y renormalizado
+    a media 1.0. Caso: Tour Turístico (tipo 16 = hotelería, pico Carnaval/dic)
+    con temporada alta real jun-ago.
+    """
+    from business.services.seed_service import _blended_seasonal_profile
+
+    bt = 16
+    peaks = (6, 7, 8)
+    sector = ss.seasonal_factors(bt)
+    blended = _blended_seasonal_profile(bt, peaks)
+
+    assert len(blended) == 12
+    assert abs(sum(blended) / 12 - 1.0) < 0.01                 # media ≈ 1.0
+    for m in peaks:
+        assert blended[m - 1] > sector[m - 1], f"mes {m} no quedó realzado"
+    # Sin peak_months propios, el perfil es exactamente el del sector.
+    assert _blended_seasonal_profile(bt, ()) == tuple(sector)
+
+
+def test_blended_profile_preserves_sector_correlation():
+    """El realce es modesto: la demanda con picos propios sigue correlacionando
+    fuerte con el perfil del sector (no lo destruye)."""
+    baseline = ProductBaseline(
+        name="TourTest", unit="servicios", price=320, unit_cost=190,
+        daily_demand=9, daily_clients=9, employees=4, monthly_salaries=12200,
+        daily_fixed_cost=220, transport_unit_cost=15.0, marketing_monthly=1800,
+        demand_cv=0.02, seasonal=True, peak_months=[6, 7, 8])
+    ans = generate_answers(baseline, n_history=360, business_type=16)
+    monthly = [statistics.mean(ans["DH"][m * 30:(m + 1) * 30]) for m in range(12)]
+    assert _corr(monthly, ss.seasonal_factors(16)) > 0.6      # sigue el sector
+    # jun-ago por encima del promedio anual (temporada alta propia visible).
+    annual_mean = statistics.mean(monthly)
+    assert statistics.mean(monthly[5:8]) > annual_mean
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Comando ingest_ine_series
 # ─────────────────────────────────────────────────────────────────────────────
 def test_ingest_offline_writes_valid_json(tmp_path, monkeypatch):
