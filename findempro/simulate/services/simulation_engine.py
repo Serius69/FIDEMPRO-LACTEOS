@@ -130,8 +130,10 @@ class MonteCarloEngine:
 
     def __init__(self, config: SimulationConfig):
         self.config = config
-        if config.random_seed is not None:
-            np.random.seed(config.random_seed)
+        # RNG de instancia (thread-safe): evita el estado global de np.random.seed,
+        # que correlaciona resultados entre requests concurrentes. default_rng(None)
+        # produce una semilla aleatoria; con seed fija es reproducible.
+        self.rng = np.random.default_rng(config.random_seed)
 
     # ── Distribuciones ─────────────────────────────────────────────────────────
 
@@ -176,7 +178,7 @@ class MonteCarloEngine:
     def _sample_demand(self, size: int) -> np.ndarray:
         """Genera muestras de demanda asegurando no-negatividad."""
         dist = self._get_distribution()
-        samples = dist.rvs(size=size)
+        samples = dist.rvs(size=size, random_state=self.rng)
         # Asegurar no-negatividad (la demanda no puede ser negativa)
         return np.maximum(samples, 0.0)
 

@@ -31,33 +31,47 @@ def register_elements_create(request):
         return redirect("dashboard:index")
     
     try:
-        # Verificar si el usuario ya tiene un negocio configurado
-        if hasattr(request.user, 'business') and request.user.business.exists():
-            messages.warning(request, _('Ya tiene una configuración de negocio existente.'))
-            return redirect("dashboard:index")
-        
-        # Crear el negocio y sus elementos
+        # Tipo de empresa elegido en el onboarding (opcional). Si es un tipo con
+        # catálogo de datos bolivianos, se usa el sembrado multi-industria; si no,
+        # se cae al camino lácteo legacy (retrocompatible).
+        spec = _resolve_industry_spec(request.POST.get('business_type'))
+
         logger.info(f"Iniciando creación de negocio para usuario {request.user.id}")
-        
-        business = create_and_save_business(request.user)
-        logger.info(f"Negocio creado con ID: {business.id}")
-        
-        # Crear funciones de densidad probabilística
-        create_probability_density_functions(business)
-        
-        # Registrar elementos de simulación
-        simulations_created = register_elements_simulation(request, request.user)
-        logger.info(f"Elementos de simulación registrados: {simulations_created} para usuario {request.user.id}")
-        
-        messages.success(
-            request, 
-            _(
-                'Configuración creada exitosamente. '
-                'Su negocio lácteo ha sido configurado con todos los elementos iniciales. '
-                'Puede personalizar la información desde el panel de control.'
+
+        if spec is not None:
+            from business.models import Business
+            from business.services.seed_service import IndustrySeeder
+
+            business = IndustrySeeder(request.user).seed_business(spec)
+            logger.info(f"Negocio '{spec.business_name}' (tipo {spec.business_type}) creado con ID: {business.id}")
+
+            label = dict(Business.BusinessType.choices).get(spec.business_type, spec.business_name)
+            messages.success(
+                request,
+                _(
+                    'Configuración creada exitosamente. Su negocio "%(name)s" (%(label)s) '
+                    'ha sido configurado con productos, variables y datos reales del mercado '
+                    'boliviano, listos para simular. Puede personalizarlo desde el panel.'
+                ) % {'name': spec.business_name, 'label': str(label)}
             )
-        )
-        
+        else:
+            # Camino lácteo legacy (sin tipo elegido o tipo sin catálogo).
+            business = create_and_save_business(request.user)
+            logger.info(f"Negocio lácteo (legacy) creado con ID: {business.id}")
+
+            create_probability_density_functions(business)
+            simulations_created = register_elements_simulation(request, request.user)
+            logger.info(f"Elementos de simulación registrados: {simulations_created} para usuario {request.user.id}")
+
+            messages.success(
+                request,
+                _(
+                    'Configuración creada exitosamente. '
+                    'Su negocio lácteo ha sido configurado con todos los elementos iniciales. '
+                    'Puede personalizar la información desde el panel de control.'
+                )
+            )
+
     except Exception as e:
         logger.error(f"Error creating business for user {request.user.id}: {str(e)}")
         messages.error(
@@ -68,5 +82,21 @@ def register_elements_create(request):
             )
         )
         return redirect("dashboard:index")
-    
+
     return redirect("dashboard:index")
+
+
+def _resolve_industry_spec(business_type_raw):
+    """
+    Traduce el valor 'business_type' del POST a un IndustrySpec del catálogo
+    boliviano. Devuelve None si no se envió o no es un tipo válido (→ camino
+    lácteo legacy).
+    """
+    if not business_type_raw:
+        return None
+    try:
+        from business.data.bolivia_industries import get_spec
+        return get_spec(int(business_type_raw))
+    except (ValueError, TypeError):
+        logger.warning("business_type inválido en onboarding: %r", business_type_raw)
+        return None

@@ -34,6 +34,34 @@ class SimulationTask(Task):
         logger.info(f"Task {task_id} completed successfully")
 
 
+@shared_task
+def run_stateless_simulation(config_dict: Dict[str, Any], extra: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    """
+    Ejecuta una simulación Monte Carlo *stateless* en segundo plano.
+
+    Reconstruye ``SimulationConfig`` desde ``config_dict`` (payload ya validado
+    por ``SimulateAsyncAPIView``), corre el motor y devuelve el ``to_dict()``
+    fusionado con ``extra`` (metadata como ``_profile_used`` / ``_industry_sector``).
+
+    No persiste nada en BD: Celery guarda el valor de retorno en el result
+    backend (Redis en prod), de donde el endpoint de status lo recupera.
+
+    Los errores se propagan para que la tarea quede en estado FAILURE con el
+    mensaje de la excepción (sin trazas hacia el cliente).
+    """
+    from simulate.services.simulation_engine import MonteCarloEngine, SimulationConfig
+
+    try:
+        config = SimulationConfig(**config_dict)
+        result = MonteCarloEngine(config).to_dict()
+        if extra:
+            result.update(extra)
+        return result
+    except Exception as exc:
+        logger.error("Error en run_stateless_simulation: %s", exc)
+        raise
+
+
 @shared_task(base=SimulationTask, bind=True, max_retries=3)
 def execute_simulation_async(self, simulation_id: int) -> Dict[str, Any]:
     """Execute simulation asynchronously with real per-period progress tracking."""

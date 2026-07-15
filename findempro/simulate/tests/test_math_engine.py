@@ -677,3 +677,60 @@ class TestIntegration:
         assert 'demand' in mc_dict
         assert report.score_overall >= 0
         assert len(report.recommendations) > 0
+
+
+# ═════════════════════════════════════════════
+# RNG de instancia (item 29): reproducibilidad y thread-safety
+# ═════════════════════════════════════════════
+
+class TestMonteCarloEngineRNG:
+    """
+    Verifica que MonteCarloEngine use un RNG de instancia (np.random.default_rng)
+    en vez del estado global np.random.seed. Misma semilla → resultados idénticos;
+    semillas distintas → resultados distintos.
+    """
+
+    def _make(self, seed):
+        return MonteCarloEngine(SimulationConfig(
+            n_iterations=5000,
+            confidence_level=0.95,
+            time_periods=12,
+            random_seed=seed,
+            distribution_type='normal',
+            demand_mean=1000.0,
+            demand_std=150.0,
+            unit_price=10.0,
+            unit_cost=6.0,
+            fixed_costs=2000.0,
+        ))
+
+    def test_uses_instance_generator_not_global_seed(self):
+        engine = self._make(42)
+        assert isinstance(engine.rng, np.random.Generator)
+
+    def test_same_seed_identical_samples(self):
+        s1 = self._make(42)._sample_demand(4000)
+        s2 = self._make(42)._sample_demand(4000)
+        assert np.array_equal(s1, s2)
+
+    def test_same_seed_identical_results(self):
+        r1 = self._make(7).run()
+        r2 = self._make(7).run()
+        assert r1.demand_mean == r2.demand_mean
+        assert r1.profit_mean == r2.profit_mean
+        assert r1.value_at_risk_95 == r2.value_at_risk_95
+        assert r1.profit_ci_lower == r2.profit_ci_lower
+        assert r1.profit_ci_upper == r2.profit_ci_upper
+
+    def test_different_seed_different_results(self):
+        r1 = self._make(1).run()
+        r2 = self._make(2).run()
+        assert r1.profit_mean != r2.profit_mean
+
+    def test_global_seed_not_mutated(self):
+        """El engine NO debe tocar el estado global de np.random."""
+        np.random.seed(12345)
+        before = np.random.get_state()[1].copy()
+        self._make(999).run()
+        after = np.random.get_state()[1].copy()
+        assert np.array_equal(before, after)

@@ -50,9 +50,10 @@ def register_elements(request):
         
         context = {
             'preview_data': preview_data,
-            'title': 'Vista Previa Completa - Configuración Inicial'
+            'title': 'Vista Previa Completa - Configuración Inicial',
+            'business_types': _get_business_type_choices(),
         }
-        
+
         logger.info("Context prepared, rendering template")
         return render(request, 'pages/register_elements.html', context)
         
@@ -103,6 +104,25 @@ def register_elements(request):
             'title': 'Vista Previa - Error'
         }
         return render(request, 'pages/register_elements.html', context)
+
+
+def _get_business_type_choices():
+    """
+    Lista de tipos de empresa disponibles para el onboarding, restringida a los
+    que tienen catálogo de datos bolivianos (business.data.bolivia_industries).
+    Devuelve [{'value': int, 'label': str}] ordenada por value.
+    """
+    try:
+        from business.models import Business
+        from business.data.bolivia_industries import INDUSTRIES
+        labels = dict(Business.BusinessType.choices)
+        return [
+            {'value': bt, 'label': labels.get(bt, f'Tipo {bt}')}
+            for bt in sorted(INDUSTRIES.keys())
+        ]
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"No se pudieron cargar los tipos de empresa: {e}")
+        return []
 
 
 def _create_minimal_preview_data():

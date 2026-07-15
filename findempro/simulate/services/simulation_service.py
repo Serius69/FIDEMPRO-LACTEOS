@@ -10,6 +10,7 @@ Capa de servicios que orquesta los tres módulos core:
 import hashlib
 import json
 import logging
+import os
 import time
 
 import numpy as np
@@ -36,6 +37,17 @@ from simulate.services.validation_service import SimulationValidationService
 from simulate.validators.simulation_validators import SimulationValidator
 
 logger = logging.getLogger(__name__)
+
+
+def _use_vectorized_engine() -> bool:
+    """
+    Flag del motor Monte Carlo vectorizado (CPU/GPU). Activo por defecto.
+
+    Desactivar con ``FINDEMPRO_MC_ENGINE=scalar`` para forzar el motor escalar
+    clásico (p. ej. depuración o comparación). La selección CPU vs GPU la maneja
+    ``FINDEMPRO_GPU`` (auto|on|off) en ``simulate.core.gpu_backend``.
+    """
+    return os.environ.get("FINDEMPRO_MC_ENGINE", "vectorized").strip().lower() != "scalar"
 
 
 class SimulationService:
@@ -203,9 +215,15 @@ class SimulationService:
         _sector = getattr(company_config, 'sector', 'other') or 'other'
         _n_bucket = scenarios_bucket(n_monte_carlo)
 
-        # Variables exógenas del cuestionario (invariantes entre períodos)
+        # Variables exógenas del cuestionario (invariantes entre períodos).
+        # El motor de ecuaciones espera exógenas ESCALARES; se descartan las series
+        # (p. ej. DH = demanda histórica), que se manejan vía mc_config/escenarios,
+        # no como entrada por período de las ecuaciones.
         from simulate.utils.variable_mapper import VariableMapper
-        exogenous = VariableMapper().extract_all_variables(sim.fk_questionary_result)
+        exogenous = {
+            k: v for k, v in VariableMapper().extract_all_variables(sim.fk_questionary_result).items()
+            if isinstance(v, (int, float)) and not isinstance(v, bool)
+        }
 
         # ── 5. Ejecutar simulación: un engine reutilizado, reseteado por escenario
         #
@@ -219,54 +237,98 @@ class SimulationService:
         #  la distribución de resultados importa más que la trayectoria temporal
         #  (caso típico de PyMEs en planificación operativa de corto plazo).
         # ─────────────────────────────────────────────────────────────────────
-        engine = DiscreteEventEngine(company_config)
-
-        all_profits: list = []
-        all_demands: list = []
-        all_revenues: list = []
-        period_results: list = []
-
         total_periods = sim.duration_in_days
-        with ACTIVE_SIMULATIONS.labels(sector=_sector).track_inprogress():
-            for period_idx in range(total_periods):
-                if _progress_callback is not None:
-                    _progress_callback(period_idx + 1, total_periods)
+        period_results: list = []
+        profit_arr = demand_arr = revenue_arr = None
 
-                scenarios = generator.generate_for_period(
-                    period_idx, n_scenarios=n_monte_carlo
-                )
+        # ── 5-fast. Ruta vectorizada (CPU NumPy / GPU CuPy) ───────────────────
+        #  Reemplaza el bucle T×N objeto-por-objeto por operaciones de array sobre
+        #  toda la grilla (válido porque cada escenario corre stateless-per-scenario).
+        #  Numéricamente equivalente al motor escalar; ~100–1000× más rápido en CPU
+        #  y con aceleración adicional en GPU. Cae al motor escalar si el modelo de
+        #  ecuaciones no es vectorizable (ver can_vectorize) o si está deshabilitado.
+        if _use_vectorized_engine():
+            try:
+                from simulate.core.vectorized_engine import VectorizedMonteCarlo, can_vectorize
+                from simulate.core.gpu_backend import backend_name
+                if can_vectorize(company_config, exogenous):
+                    _t_vec = time.perf_counter()
+                    with ACTIVE_SIMULATIONS.labels(sector=_sector).track_inprogress():
+                        d_grid, r_grid, _c_grid, p_grid = VectorizedMonteCarlo(
+                            mc_config, company_config, exogenous
+                        ).run_grid()
+                    for t in range(total_periods):
+                        pd_, pr_, pp_ = d_grid[t], r_grid[t], p_grid[t]
+                        period_results.append({
+                            'period':       t + 1,
+                            'demand_mean':  float(pd_.mean()),
+                            'demand_p5':    float(np.percentile(pd_, 5)),
+                            'demand_p95':   float(np.percentile(pd_, 95)),
+                            'revenue_mean': float(pr_.mean()),
+                            'profit_mean':  float(pp_.mean()),
+                            'profit_p5':    float(np.percentile(pp_, 5)),
+                            'profit_p95':   float(np.percentile(pp_, 95)),
+                            'prob_loss':    float((pp_ < 0).mean()),
+                        })
+                    demand_arr  = d_grid.reshape(-1)
+                    revenue_arr = r_grid.reshape(-1)
+                    profit_arr  = p_grid.reshape(-1)
+                    logger.info(
+                        "Pipeline MC vectorizado [%s]: %d×%d celdas en %.3fs",
+                        backend_name(), total_periods, n_monte_carlo,
+                        time.perf_counter() - _t_vec,
+                    )
+            except Exception as exc:  # cualquier fallo → ruta escalar segura
+                logger.warning("MC vectorizado falló (%s); usando motor escalar.", exc)
+                profit_arr = None
 
-                period_profits: list = []
-                period_demands: list = []
-                period_revenues: list = []
+        # ── 5-slow. Ruta escalar clásica (fallback, objeto-por-objeto) ────────
+        if profit_arr is None:
+            engine = DiscreteEventEngine(company_config)
+            all_profits: list = []
+            all_demands: list = []
+            all_revenues: list = []
+            period_results = []
 
-                for scenario in scenarios:
-                    engine.reset_state()          # ← clave: cada escenario es independiente
-                    result = engine.run_period(scenario, exogenous)
-                    period_profits.append(result.profit)
-                    period_demands.append(result.demand)
-                    period_revenues.append(result.revenue)
+            with ACTIVE_SIMULATIONS.labels(sector=_sector).track_inprogress():
+                for period_idx in range(total_periods):
+                    if _progress_callback is not None:
+                        _progress_callback(period_idx + 1, total_periods)
 
-                all_profits.extend(period_profits)
-                all_demands.extend(period_demands)
-                all_revenues.extend(period_revenues)
+                    scenarios = generator.generate_for_period(
+                        period_idx, n_scenarios=n_monte_carlo
+                    )
 
-                period_results.append({
-                    'period': period_idx + 1,
-                    'demand_mean':  float(np.mean(period_demands)),
-                    'demand_p5':    float(np.percentile(period_demands, 5)),
-                    'demand_p95':   float(np.percentile(period_demands, 95)),
-                    'revenue_mean': float(np.mean(period_revenues)),
-                    'profit_mean':  float(np.mean(period_profits)),
-                    'profit_p5':    float(np.percentile(period_profits, 5)),
-                    'profit_p95':   float(np.percentile(period_profits, 95)),
-                    'prob_loss':    float(np.mean(np.array(period_profits) < 0)),
-                })
+                    period_profits: list = []
+                    period_demands: list = []
+                    period_revenues: list = []
 
-        # ── 6. Agregar resultados ─────────────────────────────────────────────
-        profit_arr  = np.array(all_profits,   dtype=float)
-        demand_arr  = np.array(all_demands,   dtype=float)
-        revenue_arr = np.array(all_revenues,  dtype=float)
+                    for scenario in scenarios:
+                        engine.reset_state()          # ← clave: cada escenario es independiente
+                        result = engine.run_period(scenario, exogenous)
+                        period_profits.append(result.profit)
+                        period_demands.append(result.demand)
+                        period_revenues.append(result.revenue)
+
+                    all_profits.extend(period_profits)
+                    all_demands.extend(period_demands)
+                    all_revenues.extend(period_revenues)
+
+                    period_results.append({
+                        'period': period_idx + 1,
+                        'demand_mean':  float(np.mean(period_demands)),
+                        'demand_p5':    float(np.percentile(period_demands, 5)),
+                        'demand_p95':   float(np.percentile(period_demands, 95)),
+                        'revenue_mean': float(np.mean(period_revenues)),
+                        'profit_mean':  float(np.mean(period_profits)),
+                        'profit_p5':    float(np.percentile(period_profits, 5)),
+                        'profit_p95':   float(np.percentile(period_profits, 95)),
+                        'prob_loss':    float(np.mean(np.array(period_profits) < 0)),
+                    })
+
+            profit_arr  = np.array(all_profits,   dtype=float)
+            demand_arr  = np.array(all_demands,   dtype=float)
+            revenue_arr = np.array(all_revenues,  dtype=float)
 
         aggregated = aggregate_results(profit_arr, demand_arr, revenue_arr, mc_config)
 

@@ -81,9 +81,18 @@ ACCOUNT_LOGOUT_ON_GET = True
 
 # ─────────────────────────────────────────────
 # Celery — síncrono (no requiere broker)
+# El app Celery usa namespace='CELERY' (django.conf:settings), por lo que los
+# nombres modernos (task_always_eager, …) son los que realmente surten efecto;
+# se conservan los nombres legacy por compatibilidad.
 # ─────────────────────────────────────────────
 CELERY_ALWAYS_EAGER = True
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
+CELERY_TASK_ALWAYS_EAGER = True
+CELERY_TASK_EAGER_PROPAGATES = True
+# Guardar el retorno de las tareas eager en el backend, para poder recuperarlo
+# vía AsyncResult(task_id) desde el endpoint de status (flujo async stateless).
+CELERY_TASK_STORE_EAGER_RESULT = True
+CELERY_RESULT_BACKEND = 'cache+memory://'
 
 # ─────────────────────────────────────────────
 # REST Framework — permisivo para tests
@@ -95,6 +104,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    # Los throttles con scope propio (SimulateThrottle, etc.) exigen una tasa
+    # declarada aunque las vistas los referencien vía throttle_classes; sin
+    # esto DRF lanza ImproperlyConfigured. Tasas holgadas para no interferir.
+    'DEFAULT_THROTTLE_RATES': {
+        'simulate': '1000/hour',
+        'report_pdf': '1000/hour',
+        'export': '1000/hour',
+    },
 }
 
 # ─────────────────────────────────────────────

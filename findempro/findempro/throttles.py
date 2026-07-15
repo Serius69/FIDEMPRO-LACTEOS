@@ -3,7 +3,7 @@ from rest_framework.throttling import UserRateThrottle
 
 
 class SimulateThrottle(UserRateThrottle):
-    """20 simulaciones/hora — TensorFlow inference + Monte Carlo."""
+    """20 simulaciones/hora — motor Monte Carlo (numpy/CuPy) costoso."""
     scope = 'simulate'
 
 

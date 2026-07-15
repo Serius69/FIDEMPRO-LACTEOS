@@ -569,7 +569,25 @@
                                 <form method="post" id="confirmForm" action="{% url 'pages:pages.register_elements_create' %}">
                                     {% csrf_token %}
                                     <input type="hidden" name="confirm_setup" value="true">
-                                    
+
+                                    {% if business_types %}
+                                    <div class="row justify-content-center mb-4">
+                                        <div class="col-md-6 col-lg-5 text-start">
+                                            <label for="business_type" class="form-label fw-semibold">
+                                                <i class="ri-store-2-line me-1"></i> Tipo de empresa
+                                            </label>
+                                            <select class="form-select" name="business_type" id="business_type">
+                                                {% for bt in business_types %}
+                                                <option value="{{ bt.value }}"{% if bt.value == 1 %} selected{% endif %}>{{ bt.label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="form-text">
+                                                Se sembrarán productos y variables reales del mercado boliviano para el rubro elegido.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
                                     <div class="d-flex gap-2 justify-content-center flex-wrap">
                                         <a href="{% url 'dashboard:index' %}" class="btn btn-light">
                                             <i class="ri-arrow-left-line me-1"></i> Volver al Dashboard

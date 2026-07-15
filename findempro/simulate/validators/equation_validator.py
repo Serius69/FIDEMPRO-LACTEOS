@@ -11,6 +11,36 @@ import ast
 logger = logging.getLogger(__name__)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Whitelist AST para validación de ecuaciones (item 16)
+# ─────────────────────────────────────────────────────────────────────────────
+# Solo se permiten nodos aritméticos/comparativos y llamadas a funciones
+# matemáticas conocidas. Se RECHAZAN explícitamente `Attribute` y `Subscript`
+# (p.ej. `().__class__`, `obj[...]`) para cerrar vectores de escape aunque el
+# eval corra con `__builtins__={}`. Alineado con los namespaces seguros de
+# discrete_engine._SAFE_MATH y gpu_backend.build_safe_namespace.
+_ALLOWED_CALL_NAMES = frozenset({
+    'max', 'min', 'abs', 'round', 'pow', 'sum',
+    'sqrt', 'log', 'exp', 'ceil', 'floor',
+})
+
+_ALLOWED_AST_NODES = tuple(
+    n for n in (
+        ast.Expression,
+        ast.BinOp, ast.UnaryOp, ast.BoolOp, ast.Compare, ast.IfExp,
+        ast.Call, ast.keyword, ast.Name, ast.Load, ast.Constant,
+        # operadores binarios / unarios / booleanos / de comparación
+        ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv, ast.Mod, ast.Pow,
+        ast.UAdd, ast.USub, ast.Not, ast.And, ast.Or,
+        ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE,
+        # compat < py3.8 (Num/Str/NameConstant) si el runtime aún los expone
+        getattr(ast, 'Num', None), getattr(ast, 'Str', None),
+        getattr(ast, 'NameConstant', None),
+    )
+    if n is not None
+)
+
+
 class EquationValidator:
     """Enhanced validator for simulation equations"""
     
@@ -222,14 +252,31 @@ class EquationValidator:
             for var in self._extract_variables(expression):
                 test_expr = test_expr.replace(var, '1')
             
-            # Replace functions
-            test_expr = test_expr.replace('max', 'max')
-            test_expr = test_expr.replace('min', 'min')
-            
-            ast.parse(test_expr, mode='eval')
+            tree = ast.parse(test_expr, mode='eval')
         except SyntaxError as e:
             errors.append(f"Syntax error: {str(e)}")
-        
+            return errors
+
+        # Whitelist de nodos AST: rechaza construcciones peligrosas aunque el
+        # eval corra con __builtins__ vacío (item 16).
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.Attribute, ast.Subscript)):
+                errors.append(
+                    "Acceso a atributos/índices no permitido en ecuaciones "
+                    f"(nodo {type(node).__name__})"
+                )
+                continue
+            if not isinstance(node, _ALLOWED_AST_NODES):
+                errors.append(
+                    f"Construcción no permitida en ecuación: {type(node).__name__}"
+                )
+                continue
+            if isinstance(node, ast.Call):
+                func = node.func
+                if not isinstance(func, ast.Name) or func.id not in _ALLOWED_CALL_NAMES:
+                    fname = getattr(func, 'id', type(func).__name__)
+                    errors.append(f"Llamada a función no permitida: {fname}")
+
         return errors
     
     def _check_daily_variable_usage(self, lhs: str, rhs: str) -> List[str]:

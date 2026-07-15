@@ -1,0 +1,67 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.gpu.yml — Override OPCIONAL: worker de simulaciones en GPU
+# ─────────────────────────────────────────────────────────────────────────────
+# Corre el Monte Carlo pesado (cola `simulations`) en un worker con GPU NVIDIA,
+# dejando el worker normal solo con la cola `default`. Pensado para un host Linux
+# con GPU (p. ej. la RTX 5070 Ti) — el cluster K8s Docker Desktop/Windows NO
+# soporta GPU, por eso este path es host-local.
+#
+# Requisitos del host: driver NVIDIA + nvidia-container-toolkit instalados.
+#
+# Uso:
+#   docker compose -f docker-compose.prod.yml -f docker-compose.gpu.yml up -d
+#   # verificar que tomó la GPU:
+#   docker compose -f docker-compose.prod.yml -f docker-compose.gpu.yml \
+#     exec findempro_celery_gpu python -c \
+#     "from simulate.core import gpu_backend as g; print(g.backend_name())"
+#   # → debe imprimir 'cupy/gpu'
+
+services:
+  # El worker CPU normal deja de atender `simulations` (lo hace el GPU).
+  findempro_celery:
+    command: celery -A findempro worker --loglevel=info --concurrency=4 -Q default
+
+  # Worker dedicado a la cola de simulaciones, con GPU.
+  findempro_celery_gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+      target: runtime
+    image: kapitalya/findemproai-gpu:latest
+    container_name: findempro_celery_gpu
+    restart: unless-stopped
+    command: celery -A findempro worker --loglevel=info --concurrency=1 -Q simulations -n gpu-worker@%h
+    environment:
+      DJANGO_ENV: production
+      DJANGO_SETTINGS_MODULE: findempro.settings.production
+      DB_HOST: findempro_db
+      REDIS_URL: redis://findempro_redis:6379/1
+      CELERY_BROKER_URL: redis://findempro_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://findempro_redis:6379/0
+      CELERY_ALWAYS_EAGER: "false"
+      FINDEMPRO_GPU: "on"          # forzar GPU; si falla, cae a CPU con warning
+      FINDEMPRO_MC_ENGINE: "vectorized"
+    env_file:
+      - .env
+    volumes:
+      - logs_volume:/app/logs
+      - media_volume:/app/media
+    depends_on:
+      findempro_db:
+        condition: service_healthy
+      findempro_redis:
+        condition: service_healthy
+    networks:
+      - findempro_network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "15m"
+        max-file: "3"

@@ -329,13 +329,19 @@ class VariableMapper:
         
         extracted_vars = {}
         
-        # 1. Extraer desde respuestas del cuestionario
+        # 1. Extraer desde respuestas del cuestionario (FUENTE DE VERDAD)
         questionary_vars = self._extract_from_questionary(questionary_result)
         extracted_vars.update(questionary_vars)
-        
-        # 2. Extraer desde variables del sistema (SIN fk_business)
+
+        # 2. Extraer desde variables del sistema (SIN fk_business).
+        #    Sólo RELLENA las que falten: las respuestas reales del cuestionario
+        #    (precio, costo, empleados…) NUNCA deben ser pisadas por los valores
+        #    por defecto de variable_test_data (que son ejemplos lácteos). Antes
+        #    se usaba .update(), lo que sobre-escribía PVP/CUIP/NEPP con 15.5/7.5/25
+        #    para toda empresa, haciendo que cada industria simulara idéntico.
         system_vars = self._extract_from_variable_system_fixed(questionary_result)
-        extracted_vars.update(system_vars)
+        for _k, _v in system_vars.items():
+            extracted_vars.setdefault(_k, _v)
         
         # 3. Calcular variables derivadas
         derived_vars = self._calculate_derived_variables(extracted_vars)
@@ -591,7 +597,10 @@ class VariableMapper:
         
         for var_code, default_value in self.enhanced_defaults.items():
             value_from_db = extracted_variables.get(var_code)
-            if value_from_db is not None and value_from_db > 0:
+            # Sólo comparar >0 sobre escalares numéricos: variables de serie
+            # (p. ej. DH, demanda histórica) llegan como lista y deben conservarse
+            # tal cual, sin romper el chequeo numérico.
+            if isinstance(value_from_db, (int, float, Decimal)) and value_from_db > 0:
                 complete_vars[var_code] = value_from_db  # ✅ PRIORIZAR BD
             elif var_code not in complete_vars:
                 complete_vars[var_code] = default_value  # Solo default si BD vacía

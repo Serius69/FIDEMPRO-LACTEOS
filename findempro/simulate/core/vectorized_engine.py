@@ -45,6 +45,7 @@ from simulate.core.discrete_engine import (
     _preprocess_rhs,
     _topological_sort,
 )
+from simulate.core.gbm import simular_gbm_grid
 from simulate.core.gpu_backend import (
     asnumpy,
     backend_name,
@@ -93,6 +94,12 @@ def _sample_demand_grid(mc: MonteCarloConfig, T: int, N: int, xp: Any, rng: Any)
             out = rng.exponential(max(mu, 1e-6), size=shape)
         elif dist == "poisson":
             out = rng.poisson(max(abs(mu), 0.1), size=shape).astype(xp.float64)
+        elif dist == "gbm":
+            # GBM: trayectorias con memoria (cumsum sobre el eje de períodos),
+            # no draws i.i.d. Cada columna n es un path coherente sobre los T
+            # períodos. Usa el mismo xp/rng del backend activo (CPU o GPU).
+            s0, media_d, sigma_d = mc.resolve_gbm_params()
+            out = simular_gbm_grid(s0, media_d, sigma_d, T, N, xp=xp, rng=rng)
         else:
             raise ValueError(f"distribución no soportada: {dist}")
     except (AttributeError, TypeError, NotImplementedError):

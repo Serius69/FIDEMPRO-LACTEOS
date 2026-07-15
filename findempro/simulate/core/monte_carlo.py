@@ -29,6 +29,12 @@ from scipy import stats
 from scipy.stats import norm, lognorm, gamma, uniform, expon
 
 from simulate.core.discrete_engine import OperationScenario
+from simulate.core.gbm import (
+    calibrar_gbm_desde_niveles,
+    gbm_marginal,
+    params_gbm_desde_momentos,
+    simular_gbm_grid,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,11 +55,20 @@ class MonteCarloConfig:
     random_seed: Optional[int] = None
 
     # Distribución de demanda
-    distribution: str = 'normal'        # normal | lognormal | gamma | uniform | exponential
+    # normal | lognormal | gamma | uniform | exponential | poisson  → muestreo i.i.d. por período
+    # gbm                                                            → trayectoria con memoria (ver gbm.py)
+    distribution: str = 'normal'
     demand_mean: float = 1_000.0
     demand_std: float = 150.0
     demand_min: Optional[float] = None  # para distribución uniforme
     demand_max: Optional[float] = None  # para distribución uniforme
+
+    # GBM (movimiento browniano geométrico) — solo cuando distribution == 'gbm'.
+    # Si se dejan en None se derivan de demand_mean/demand_std (proceso sin tendencia);
+    # from_simulation() los calibra desde la demanda histórica (log-retornos + Itô).
+    gbm_drift: Optional[float] = None       # deriva log por período (media de log-retornos)
+    gbm_volatility: Optional[float] = None  # volatilidad log por período (σ de log-retornos)
+    gbm_s0: Optional[float] = None          # nivel inicial de las trayectorias
 
     # Estacionalidad (12 factores mensuales)
     seasonality_factors: List[float] = field(default_factory=lambda: [1.0] * 12)
@@ -100,6 +115,22 @@ class MonteCarloConfig:
             else [1.0] * 12
         )
 
+        # GBM: calibrar deriva/volatilidad desde los log-retornos de la demanda
+        # histórica (más fiel que derivarlos solo de μ/σ del nivel).
+        gbm_drift = gbm_vol = gbm_s0 = None
+        if distribution == 'gbm':
+            cal = calibrar_gbm_desde_niveles(demand_history)
+            if cal['n'] >= 2:
+                gbm_drift, gbm_vol, gbm_s0 = cal['media_d'], cal['sigma_d'], cal.get('s0')
+                logger.info(
+                    "GBM calibrado desde %d obs.: media_d=%.5f σ_d=%.5f s0=%.2f "
+                    "(μ_a=%.4f σ_a=%.4f)",
+                    cal['n'], cal['media_d'], cal['sigma_d'], cal.get('s0', 0.0),
+                    cal['mu_a'], cal['sigma_a'],
+                )
+            else:
+                logger.info("GBM: historia insuficiente; se derivará de μ/σ del nivel.")
+
         return cls(
             n_scenarios=n_scenarios,
             confidence_level=getattr(simulation, 'confidence_level', 0.95),
@@ -108,6 +139,9 @@ class MonteCarloConfig:
             distribution=distribution,
             demand_mean=demand_stats['mean'],
             demand_std=max(demand_stats['std'], 1e-6),
+            gbm_drift=gbm_drift,
+            gbm_volatility=gbm_vol,
+            gbm_s0=gbm_s0,
             seasonality_factors=seasonality,
         )
 
@@ -136,8 +170,32 @@ class MonteCarloConfig:
             return best_dist
 
         _MAP = {1: 'normal', 2: 'exponential', 3: 'lognormal',
-                4: 'gamma',  5: 'uniform',      6: 'poisson'}
+                4: 'gamma',  5: 'uniform',      6: 'poisson',
+                7: 'gbm'}
         return _MAP.get(dist_type, 'normal')
+
+    def resolve_gbm_params(self) -> Tuple[float, float, float]:
+        """
+        Devuelve ``(s0, media_d, sigma_d)`` del proceso GBM de demanda.
+
+        Prioridad:
+          1. Campos ``gbm_*`` explícitos (p. ej. calibrados en ``from_simulation``
+             desde la demanda histórica).
+          2. Derivación desde ``demand_mean``/``demand_std`` vía la relación
+             log-normal (proceso **sin tendencia**; ver ``params_gbm_desde_momentos``).
+
+        Ambos motores (escalar y vectorizado) usan este método para garantizar
+        parámetros idénticos.
+        """
+        if self.gbm_volatility is not None:
+            s0 = self.gbm_s0 if self.gbm_s0 is not None else self.demand_mean
+            media_d = self.gbm_drift if self.gbm_drift is not None else 0.0
+            return float(s0), float(media_d), max(float(self.gbm_volatility), 0.0)
+
+        p = params_gbm_desde_momentos(self.demand_mean, self.demand_std)
+        s0 = self.gbm_s0 if self.gbm_s0 is not None else p['s0']
+        media_d = self.gbm_drift if self.gbm_drift is not None else p['media_d']
+        return float(s0), float(media_d), float(p['sigma_d'])
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -316,8 +374,11 @@ class ScenarioGenerator:
         self.config = config
         # RNG encapsulado por instancia — no afecta el estado global de numpy
         self._rng = np.random.default_rng(config.random_seed)
-        # Distribución scipy frozen (construida una sola vez)
-        self._distribution = DistributionFactory.build(config)
+        self._is_gbm = config.distribution.lower() == 'gbm'
+        # Distribución scipy frozen (construida una sola vez). El GBM no es una
+        # distribución scipy sino un proceso con memoria temporal: se genera
+        # aparte con simular_gbm_grid()/gbm_marginal().
+        self._distribution = None if self._is_gbm else DistributionFactory.build(config)
 
     def _get_seasonality(self, period_idx: int) -> float:
         factors = self.config.seasonality_factors
@@ -354,7 +415,11 @@ class ScenarioGenerator:
             Lista de OperationScenario listos para DiscreteEventEngine.run_period().
         """
         n = n_scenarios or self.config.n_scenarios
-        demands  = self._sample_demand(n)
+        if self._is_gbm:
+            s0, media_d, sigma_d = self.config.resolve_gbm_params()
+            demands = gbm_marginal(s0, media_d, sigma_d, period_idx, n, xp=np, rng=self._rng)
+        else:
+            demands = self._sample_demand(n)
         seasonal = self._get_seasonality(period_idx)
 
         price_vars = (
@@ -394,8 +459,13 @@ class ScenarioGenerator:
         T = self.config.n_periods
         N = self.config.n_scenarios
 
-        # ── 1 llamada scipy para todos los períodos ──────────────────────────
-        all_demands = self._sample_demand(T * N).reshape(T, N)
+        if self._is_gbm:
+            # Trayectorias GBM (T,N): cada escenario/columna es un path con memoria.
+            s0, media_d, sigma_d = self.config.resolve_gbm_params()
+            all_demands = simular_gbm_grid(s0, media_d, sigma_d, T, N, xp=np, rng=self._rng)
+        else:
+            # ── 1 llamada scipy para todos los períodos ──────────────────────
+            all_demands = self._sample_demand(T * N).reshape(T, N)
 
         # ── 1 llamada numpy por variable estocástica ─────────────────────────
         if self.config.price_volatility > 0:
@@ -451,18 +521,32 @@ def aggregate_results(
     alpha = 1 - cl
     half_alpha = alpha / 2
 
-    def pct(arr: np.ndarray, p: float) -> float:
-        return float(np.percentile(arr, p * 100))
+    # ── Percentiles: UNA sola llamada np.percentile por array (item 31) ──────────
+    # Antes había ~14 llamadas np.percentile O(n log n) sobre los mismos 3 arrays.
+    # Agrupamos todas las fracciones necesarias por array en una única llamada
+    # vectorizada y repartimos por índice. Resultados numéricamente idénticos.
+    def _batch_pct(arr: np.ndarray, fracs: List[float]) -> Dict[float, float]:
+        vals = np.atleast_1d(np.percentile(arr, [f * 100 for f in fracs]))
+        return {f: float(v) for f, v in zip(fracs, vals)}
+
+    demand_fracs = [half_alpha, 0.05, 0.25, 0.50, 0.75, 0.95, 1 - half_alpha]
+    revenue_fracs = [0.05, 0.95]
+    profit_fracs = [alpha, half_alpha, 0.05, 0.95, 1 - half_alpha]
+
+    d_pct = _batch_pct(demand_samples, demand_fracs)
+    r_pct = _batch_pct(revenue_samples, revenue_fracs)
+    p_pct = _batch_pct(profit_samples, profit_fracs)
 
     # Riesgo
     prob_loss = float(np.mean(profit_samples < 0))
-    var_threshold = pct(profit_samples, alpha)
+    var_threshold = p_pct[alpha]
     tail = profit_samples[profit_samples <= var_threshold]
     es = float(np.mean(tail)) if len(tail) > 0 else float(var_threshold)
 
     # Escenarios descriptivos (percentiles clave)
     def _build_scenario(pct_val: float) -> Dict:
-        idx = int(np.argmin(np.abs(demand_samples - np.percentile(demand_samples, pct_val))))
+        target = d_pct[pct_val / 100]
+        idx = int(np.argmin(np.abs(demand_samples - target)))
         return {
             'demand': float(demand_samples[idx]),
             'revenue': float(revenue_samples[idx]),
@@ -474,30 +558,30 @@ def aggregate_results(
         # Demanda
         demand_mean=float(np.mean(demand_samples)),
         demand_std=float(np.std(demand_samples)),
-        demand_p5=pct(demand_samples, 0.05),
-        demand_p25=pct(demand_samples, 0.25),
-        demand_p75=pct(demand_samples, 0.75),
-        demand_p95=pct(demand_samples, 0.95),
+        demand_p5=d_pct[0.05],
+        demand_p25=d_pct[0.25],
+        demand_p75=d_pct[0.75],
+        demand_p95=d_pct[0.95],
         # Ingresos
         revenue_mean=float(np.mean(revenue_samples)),
         revenue_std=float(np.std(revenue_samples)),
-        revenue_p5=pct(revenue_samples, 0.05),
-        revenue_p95=pct(revenue_samples, 0.95),
+        revenue_p5=r_pct[0.05],
+        revenue_p95=r_pct[0.95],
         # Utilidades
         profit_mean=float(np.mean(profit_samples)),
         profit_std=float(np.std(profit_samples)),
-        profit_p5=pct(profit_samples, 0.05),
-        profit_p95=pct(profit_samples, 0.95),
+        profit_p5=p_pct[0.05],
+        profit_p95=p_pct[0.95],
         # Riesgo
         probability_of_loss=prob_loss,
         probability_breakeven=1.0 - prob_loss,
         value_at_risk=float(var_threshold),
         expected_shortfall=es,
         # Intervalos de confianza (bootstrap percentile)
-        demand_ci_lower=pct(demand_samples, half_alpha),
-        demand_ci_upper=pct(demand_samples, 1 - half_alpha),
-        profit_ci_lower=pct(profit_samples, half_alpha),
-        profit_ci_upper=pct(profit_samples, 1 - half_alpha),
+        demand_ci_lower=d_pct[half_alpha],
+        demand_ci_upper=d_pct[1 - half_alpha],
+        profit_ci_lower=p_pct[half_alpha],
+        profit_ci_upper=p_pct[1 - half_alpha],
         # Escenarios
         scenario_pessimistic=_build_scenario(5),
         scenario_base=_build_scenario(50),

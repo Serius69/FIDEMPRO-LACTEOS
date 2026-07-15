@@ -106,6 +106,10 @@ services:
     container_name: findempro_celery
     restart: unless-stopped
     command: celery -A findempro worker --loglevel=info --concurrency=4 -Q default,simulations
+    # healthcheck del worker deshabilitado: `celery inspect ping` no autentica contra
+    # el redis con password; la liveness la garantiza restart:unless-stopped (celery es PID 1)
+    healthcheck:
+      test: ["NONE"]
     environment:
       DJANGO_ENV: production
       DJANGO_SETTINGS_MODULE: findempro.settings.production
@@ -145,6 +149,8 @@ services:
     container_name: findempro_celery_beat
     restart: unless-stopped
     command: celery -A findempro beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    healthcheck:
+      test: ["NONE"]
     environment:
       DJANGO_ENV: production
       DJANGO_SETTINGS_MODULE: findempro.settings.production
@@ -189,7 +195,7 @@ services:
     networks:
       - findempro_network
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -254,8 +260,5 @@ volumes:
 networks:
   findempro_network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/24
   red_publica_gateway:
     external: true

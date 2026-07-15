@@ -46,14 +46,64 @@ export async function getDashboardSummary(): Promise<DashboardSummary> {
   return handle<DashboardSummary>(res)
 }
 
-export async function runSimulation(payload: SimulationRequest): Promise<SimulationResult> {
-  const res = await fetch('/simulate/api/v1/simulate/', {
+/** Espera `ms` milisegundos. */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+interface TaskStatus {
+  state: 'pending' | 'SUCCESS' | 'FAILURE'
+  progress?: number
+  result?: SimulationResult
+  error?: string
+}
+
+/**
+ * Ejecuta la simulación Monte Carlo SIN bloquear el worker gunicorn:
+ * encola la tarea en Celery (202 → task_id) y hace polling del estado hasta
+ * que termina. Mantiene la firma `Promise<SimulationResult>` para que los
+ * consumidores (p.ej. Simulate.tsx) no cambien.
+ *
+ * @param payload  parámetros de la simulación
+ * @param onProgress  callback opcional de progreso (0-100)
+ */
+export async function runSimulation(
+  payload: SimulationRequest,
+  onProgress?: (progress: number) => void,
+): Promise<SimulationResult> {
+  const enqueueRes = await fetch('/simulate/api/v1/simulate/async/', {
     method: 'POST',
     credentials: 'include',
     headers: headers(),
     body: JSON.stringify(payload),
   })
-  return handle<SimulationResult>(res)
+  const { task_id: taskId, status_url: statusUrl } = await handle<{
+    task_id: string
+    status: string
+    status_url: string
+  }>(enqueueRes)
+
+  const pollUrl = statusUrl ?? `/simulate/api/v1/simulate/status/${taskId}/`
+  const POLL_INTERVAL_MS = 1000
+  const MAX_ATTEMPTS = 300 // ~5 min
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    await delay(POLL_INTERVAL_MS)
+    const statusRes = await fetch(pollUrl, { credentials: 'include', headers: headers() })
+    const status = await handle<TaskStatus>(statusRes)
+
+    if (typeof status.progress === 'number') onProgress?.(status.progress)
+
+    if (status.state === 'SUCCESS') {
+      if (!status.result) throw new Error('La simulación terminó sin resultado.')
+      return status.result
+    }
+    if (status.state === 'FAILURE') {
+      throw new Error(status.error ?? 'La simulación falló.')
+    }
+  }
+
+  throw new Error('La simulación excedió el tiempo máximo de espera (5 min).')
 }
 
 export async function runForecast(payload: ForecastRequest): Promise<ForecastResult> {

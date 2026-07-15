@@ -1,0 +1,20 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# requirements/gpu.txt — Extras para acelerar el Monte Carlo en GPU (CuPy)
+# ─────────────────────────────────────────────────────────────────────────────
+# OPCIONAL. Solo necesario para correr el worker de simulaciones sobre una GPU
+# NVIDIA. El código (simulate/core/gpu_backend.py) cae automáticamente a NumPy/CPU
+# si estos paquetes o la GPU no están disponibles, así que la imagen de producción
+# CPU (cluster K8s) NO los necesita.
+#
+# Los wheels `nvidia-cuda-*-cu12` traen el runtime y el NVRTC de CUDA dentro del
+# contenedor: NO hace falta una imagen base `nvidia/cuda`, solo el driver del host
+# expuesto vía nvidia-container-toolkit (`docker run --gpus all`).
+#
+# NVRTC >= 12.8 es OBLIGATORIO para GPUs Blackwell (sm_120, p. ej. RTX 50xx):
+# con NVRTC 12.4 los kernels fallan con CUDA_ERROR_NO_BINARY_FOR_GPU.
+
+-r production.txt
+
+cupy-cuda12x==13.6.0
+nvidia-cuda-nvrtc-cu12>=12.8,<13
+nvidia-cuda-runtime-cu12>=12.8,<13

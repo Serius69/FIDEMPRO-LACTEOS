@@ -305,7 +305,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
         'user': '1000/hour',
-        'simulate': '20/hour',    # simulación ML — costosa (TensorFlow inference)
+        'simulate': '20/hour',    # simulación Monte Carlo — costosa (numpy/CuPy)
         'report_pdf': '10/hour',  # generación PDF async — costosa
         'export': '30/hour',      # exportación CSV/Excel
     },

@@ -2,7 +2,7 @@
 
 > Plataforma Django de apoyo a decisiones financieras para PYMES bolivianas: simulación Monte Carlo con hasta 10.000 escenarios, métricas VaR/CVaR/Sharpe y recomendaciones automáticas por IA.
 
-**Stack:** Django 4.2 · Celery · PostgreSQL 16 · Redis 7 · Nginx · **URL:** app.kapitalya.com.bo · **Estado:** ✅ K8s Running
+**Stack:** Django 4.2 · Celery · PostgreSQL 16 · Redis 7 · Nginx · **URL:** app.kapitalya.com.bo · **Estado:** manifests K8s listos; cluster Docker Desktop abandonado el 2026-07-08 → cluster Ubuntu pendiente (ver "K8s / Despliegue")
 
 ---
 
@@ -32,7 +32,9 @@ La plataforma soporta 19 tipos de industria y 6 sectores configurables, con un c
 | Tareas async | Celery 5.3 + django-celery-beat |
 | Autenticación | Django Allauth + OAuth2 (Google) |
 | Ciencia de datos | NumPy 1.26 · SciPy 1.13 · Pandas 2.2 · scikit-learn 1.5 · statsmodels 0.14 · SimPy 4.1 |
-| Frontend | Bootstrap 5 · ApexCharts · Chart.js · ECharts · Cytoscape.js |
+| Aceleración MC | Motor vectorizado NumPy (CPU) / CuPy (GPU opcional) — `Dockerfile.gpu`, `requirements/gpu.txt`, `docs/GPU_DEPLOY.md` |
+| Frontend (templates Django) | Bootstrap 5 · ApexCharts · Chart.js · ECharts · Cytoscape.js |
+| Frontend (SPA `frontend/`) | React 18 + TypeScript + Vite · react-router-dom · react-hook-form · recharts · Radix UI |
 | Reportes | ReportLab (PDF) · openpyxl (Excel) · Matplotlib/Seaborn |
 | Base de datos | PostgreSQL 16 |
 | Cache / Broker | Redis 7 |
@@ -48,7 +50,7 @@ La plataforma soporta 19 tipos de industria y 6 sectores configurables, con un c
 ```
 Cloudflare Tunnel
        │
-  ingress-nginx (K8s namespace: public, worker4)
+  ingress-nginx (K8s namespace: public)
        │
   ┌────┴─────────────────────────────────┐
   │  4 pods K8s:                         │
@@ -130,6 +132,8 @@ Motor de simulación (simulate/core/):
 | `monte_carlo.py` | Genera N escenarios; ajuste automático de distribución por test KS |
 | `decision_engine.py` | VaR, CVaR, Sharpe, Sortino; función utilidad CARA; recomendaciones automáticas |
 | `model_compiler.py` | Compila grafo visual Canvas v2 → `SimulationConfig` |
+| `gpu_backend.py` | Selección de backend CuPy (GPU) / NumPy (CPU): `FINDEMPRO_GPU=auto\|on\|off`, probe seguro + fallback automático |
+| `vectorized_engine.py` | `VectorizedMonteCarlo` — evalúa las ecuaciones sobre la grilla T×N con arrays (~1.000–2.000× vs bucle escalar; `FINDEMPRO_MC_ENGINE=vectorized`, default ON) |
 
 Distribuciones soportadas: Normal, LogNormal, Gamma, Exponencial, Uniforme, Poisson.
 
@@ -148,14 +152,17 @@ FindemproAI/
     │   │   ├── discrete_engine.py
     │   │   ├── monte_carlo.py
     │   │   ├── decision_engine.py
-    │   │   └── model_compiler.py
+    │   │   ├── model_compiler.py
+    │   │   ├── gpu_backend.py          # Backend CuPy/NumPy con fallback
+    │   │   └── vectorized_engine.py    # VectorizedMonteCarlo
     │   ├── services/
-    │   │   ├── simulation_service.py
+    │   │   ├── simulation_service.py   # run_full_pipeline() — motor vectorizado
     │   │   ├── sensitivity_service.py  # Análisis OAT + tornado chart
     │   │   └── financial_analysis.py
-    │   ├── tasks.py            # Celery: run_sensitivity_async, check_var_alerts_async
+    │   ├── tasks.py            # Celery: execute_simulation_async, run_sensitivity_async,
+    │   │                       #   check_var_alerts_async, cleanup_old_simulations, ...
     │   ├── canvas_models.py · canvas_serializers.py · canvas_dataclasses.py
-    │   └── tests/              # 251 tests
+    │   └── tests/              # suite del motor MC
     ├── business/ · product/ · variable/ · finance/
     ├── questionary/ · report/ · dashboards/ · pages/ · user/
     ├── static/js/model_canvas.js  # FindemproCanvas (Cytoscape.js)
@@ -163,12 +170,17 @@ FindemproAI/
     ├── requirements/
     │   ├── base.txt · development.txt · production.txt
     ├── nginx/
+    ├── docs/GPU_DEPLOY.md      # Guía de despliegue con GPU (worker Linux opcional)
     ├── Dockerfile              # Multi-stage (builder + runtime)
+    ├── Dockerfile.gpu          # Variante con CUDA/CuPy
     ├── docker-compose.prod.yml
     ├── docker-compose.dev.yml
+    ├── docker-compose.gpu.yml
     ├── gunicorn.conf.py
     ├── Makefile
     └── manage.py
+
+(FindemproAI/frontend/ — SPA React 18 + TS + Vite: npm run dev en :5177, build con tsc -b)
 ```
 
 ---
@@ -190,24 +202,30 @@ FindemproAI/
 | `SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET` | Client Secret Google OAuth2 | No |
 | `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | SMTP para alertas | No |
 | `SENTRY_DSN` | DSN Sentry para errores | No |
+| `FINDEMPRO_MC_ENGINE` | `vectorized` (default) / `scalar` — motor Monte Carlo | No |
+| `FINDEMPRO_GPU` | `auto` (default) / `on` / `off` — backend CuPy con fallback a NumPy | No |
 
 ---
 
 ## K8s / Despliegue
 
-- **Namespace:** `public`
-- **Worker:** `desktop-worker4`
+- **Namespace:** `public` (manifests en `infra/k8s/public/findemproai/`)
 - **Pods:** 4 — `findempro-app`, `findempro-celery-worker`, `findempro-celery-beat`, `findempro-nginx`
 - **URL producción:** https://app.kapitalya.com.bo
-- **Imagen:** `kapitalya/findemproai:vYYYYMMDD` (imagePullPolicy: IfNotPresent)
-- **Health check:** `GET /health/` (django-health-check) para readiness probe
+- **Imagen actual:** `kapitalya/findemproai:v20260708` (imagePullPolicy: IfNotPresent)
+- **Health check:** `GET /health/` — implementación propia en `findempro/health.py` (DB + cache + Redis), no el paquete `django-health-check`. Readiness probe usa `GET /health/ready/` (solo DB).
+- **Puerto contenedor:** 8000 (`gunicorn.conf.py` → `GUNICORN_BIND=0.0.0.0:8000`, `service.yaml` expone 8000)
 
-```powershell
-# Build + import K8s
-docker build -t kapitalya/findemproai:v$(Get-Date -Format "yyyyMMdd") .
-docker save kapitalya/findemproai:vYYYYMMDD -o findemproai.tar
-docker exec -i desktop-worker4 ctr images import - < findemproai.tar
-Remove-Item findemproai.tar
+> ⚠️ **Cluster en migración (2026-07-08):** el K8s de 8 nodos vivía en Docker Desktop
+> (Windows, worker `desktop-worker4`), abandonado en favor de Ubuntu Server; el cluster nuevo
+> (k3s/kubeadm) está pendiente de instalar. Hasta entonces estos manifests no tienen dónde
+> aplicarse — ver `docs/GPU_DEPLOY.md` y el CLAUDE.md raíz del monorepo (sección "Pendientes
+> del usuario") para el estado del build GPU `v20260708` pendiente de `docker save | ctr import`.
+
+```bash
+# Build + import K8s (Ubuntu; nombre del worker depende del cluster nuevo una vez instalado)
+docker build -t kapitalya/findemproai:v$(date +%Y%m%d) .
+docker save kapitalya/findemproai:v$(date +%Y%m%d) | docker exec -i <nodo-worker> ctr images import -
 ```
 
 **Nota K8s:** init container ejecuta `collectstatic` antes del pod principal. `ALLOWED_HOSTS` incluye `*` para que las probes K8s funcionen con IPs de pod.
@@ -225,12 +243,12 @@ make up        # Levantar servicios
 make down      # Detener servicios
 make logs      # Logs en tiempo real
 make migrate   # Ejecutar migraciones
-make test      # Ejecutar 251 tests
+make test      # pytest simulate/tests/ (374 tests) — no la suite completa
 make health    # Verificar health check
 
 # Sin Docker
 cd findempro
-python -m venv venv && venv\Scripts\activate
+python3.11 -m venv venv && source venv/bin/activate
 pip install -r requirements/development.txt
 python manage.py migrate --settings=findempro.settings.development
 python manage.py runserver --settings=findempro.settings.development
@@ -289,7 +307,7 @@ de UI que nunca se creó, y la generación de PDF migró a tarea async de Celery
 
 - `SECRET_KEY`: fail-fast — `RuntimeError` si no está definida en el entorno
 - **CORS:** variable `CORS_ALLOWED_ORIGINS` (django-cors-headers)
-- **Autenticación:** Django Allauth + Sanctum; OAuth2 Google disponible
+- **Autenticación:** Django Allauth; OAuth2 Google disponible
 - **Rate limiting:** DRF throttling en endpoints de simulación
 - **Logs:** JSON estructurado con `python-json-logger` (sin datos sensibles)
 - **Sentry:** captura de errores en producción con `SENTRY_DSN`

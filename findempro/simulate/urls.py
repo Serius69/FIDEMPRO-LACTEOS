@@ -18,6 +18,8 @@ from .views.api_views import (
 )
 from .views.api_v1_views import (
     SimulateAPIView,
+    SimulateAsyncAPIView,
+    SimulateTaskStatusAPIView,
     ForecastAPIView,
     RiskAnalysisAPIView,
     ScenariosAPIView,
@@ -56,8 +58,12 @@ urlpatterns = [
     path("share/<uuid:token>/",            view=SimulationShareAccessView.as_view(), name="share.access"),
 
     # ── API v1 — Motor genérico multi-industria ─────────────────────────────────
-    # Simulación Monte Carlo completa
+    # Simulación Monte Carlo completa (síncrona — bloquea el request)
     path("api/v1/simulate/", view=SimulateAPIView.as_view(), name="api.v1.simulate"),
+    # Simulación Monte Carlo asíncrona (encola en Celery, no bloquea gunicorn)
+    path("api/v1/simulate/async/", view=SimulateAsyncAPIView.as_view(), name="api.v1.simulate_async"),
+    # Estado/resultado de una simulación asíncrona
+    path("api/v1/simulate/status/<str:task_id>/", view=SimulateTaskStatusAPIView.as_view(), name="api.v1.simulate_status"),
     # Proyección de demanda a partir de histórico
     path("api/v1/forecast/", view=ForecastAPIView.as_view(), name="api.v1.forecast"),
     # Análisis de riesgo financiero
