@@ -36,10 +36,16 @@ services:
     container_name: findempro_redis
     restart: unless-stopped
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD}
+    environment:
+      # Necesario para que el healthcheck autenticado (redis-cli -a) resuelva la
+      # password DENTRO del contenedor (el command la toma por substitución de compose).
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      # Autenticar en el healthcheck: con --requirepass, `redis-cli ping` responde
+      # NOAUTH pero con exit 0 → falso "healthy". Validamos el path con password.
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -83,6 +89,10 @@ services:
         condition: service_healthy
     networks:
       - findempro_network
+    # Cap de memoria: gunicorn 4 workers + motor Monte Carlo vectorizado (arrays
+    # NumPy T×N). Sin cap, una simulación grande puede OOMear el host.
+    mem_limit: 1g
+    mem_reservation: 512m
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/live/"]
       interval: 30s
@@ -106,6 +116,9 @@ services:
     container_name: findempro_celery
     restart: unless-stopped
     command: celery -A findempro worker --loglevel=info --concurrency=4 -Q default,simulations
+    # Cap de memoria: 4 workers corriendo el motor Monte Carlo vectorizado a la vez.
+    mem_limit: 2g
+    mem_reservation: 512m
     # healthcheck del worker deshabilitado: `celery inspect ping` no autentica contra
     # el redis con password; la liveness la garantiza restart:unless-stopped (celery es PID 1)
     healthcheck:

@@ -1,5 +1,79 @@
 # Changelog — FindemproAI
 
+## [Unreleased] — 2026-07-21 · Auditoría integral + hardening
+
+Auditoría multiagente del proyecto completo (seguridad, motor de simulación,
+backend/negocio, deploy/config/frontend) → fixes confirmados aplicados en 5
+bloques. Suite: **697 → 707 passed** (+10 tests, 0 regresiones).
+
+### Seguridad — IDOR cross-tenant (P0) en `report/` y `finance/`
+- **`report/views.py`**: `Report` no tiene `created_by`, y el guard
+  `if hasattr(report,'created_by') and ...` era **siempre falso** → update/delete/
+  PDF/detalle/listado **no chequeaban dueño** (cualquier usuario autenticado
+  editaba/borraba/descargaba reportes financieros ajenos por PK). Nuevo helper
+  `_reports_for_user()` (base `fk_product__fk_business__fk_user=user`, bypass
+  staff) cableado en todas las vistas (incl. API, toggle, bulk, export). Se
+  quitó el `@cache_page` de los listados (era por-usuario → filtraba entre
+  cuentas) y se scopó la caché de estadísticas por usuario.
+- **`finance/views.py`**: mismas vistas de `FinancialDecision`/
+  `FinanceRecommendation` sin filtro de dueño → ahora `fk_business__fk_user=
+  request.user` en list/detail/update/delete/bulk; `except DoesNotExist` muerto
+  reemplazado por `Http404` (antes un 404 se volvía 500).
+
+### `report/` — generador de reportes reparado (P0/P1)
+- `create_simulation_report` (`report/views.py`) **siempre reventaba**: pasaba
+  `created_by=None` a `Report.objects.create()` (campo inexistente) → `TypeError`
+  tragado. Quitado el kwarg → la feature central vuelve a funcionar.
+- `float('inf')` de punto de equilibrio/payback (flujo ≤ 0) rompía `jsonb`:
+  nuevo `_sanitize_json_numbers()` (inf/nan → None) sobre el content.
+- `calculate_tir` con `inversion_inicial=0` → `ZeroDivisionError`: guarda añadida.
+- `Report.save()` corría `full_clean()` siempre y `clean()` exigía título único →
+  500 al duplicar o crear dos reportes del mismo producto/día. Ahora respeta
+  `update_fields` y `_ensure_unique_title()` desambigua con sufijo.
+- Corregido F821 real: `report/views.py` usaba `request` sin definir en
+  `process_simulation_data` (siempre registraba 'sistema') → ahora recibe
+  `username` del caller.
+
+### Serie de demanda — blindaje del dato central (P1)
+- `Answer` gana `UniqueConstraint(fk_question, fk_questionary_result)` +
+  migración `0006` con **dedupe previo** (conserva la activa/más reciente). El
+  check-then-create pasa a `update_or_create` atómico, con `is_active=True` en
+  defaults (re-guardar una answer cancelada la **reactiva** en vez de perderla).
+  El guardado multi-respuesta ahora es `transaction.atomic`.
+
+### Dashboard — métricas reales (P1)
+- `Avg('data')` sobre un campo eliminado por migración → recomendaciones
+  **siempre vacías**; sustituido por `Avg('metric_value')` (reemplazo canónico).
+- Métricas financieras que **sumaban** TPV/IT/GT sobre todos los períodos de 100
+  sims (escala irreal) → ahora promedio por-período de la simulación más reciente.
+
+### Motor de simulación — correctitud numérica (P1/P2)
+- **Estacionalidad**: los 12 factores mensuales se indexaban por `día % 12`
+  (comprimía el año a 12 días). Mapeo correcto `mes = (día // 30) % 12` en ambos
+  motores (escalar y vectorizado), preservando su equivalencia.
+- **Saneo NaN/inf** en la ruta escalar (`discrete_engine._extract_financials`),
+  consistente con la vectorizada → un GBM con overflow o división ya no envenena
+  media/percentiles ni diverge entre motores.
+- **`demand_std`** dejaba de asumir Normal (`(p95-p5)/3.29`) y usa la σ real por
+  período de la grilla (la reconstrucción queda solo como fallback).
+
+### Deploy / config / hardening
+- **CSP + Permissions-Policy**: la CSP de nginx nunca se emitía (herencia rota de
+  `add_header`: los `location` hijos la anulaban) → la app y la API corrían **sin
+  CSP**. Ahora las emite Django (`findempro/security_headers.py`,
+  `SecurityHeadersMiddleware`) en toda respuesta, con allowlist de los CDNs que
+  los templates usan (lordicon/cdnjs/jsdelivr/jquery/d3/datatables/Google Fonts);
+  desactivable por env `CONTENT_SECURITY_POLICY=''`. Eliminados los headers
+  duplicados/contradictorios del `server{}` de nginx (X-Frame SAMEORIGIN vs el
+  DENY de Django); subred de `/metrics` corregida a la red Docker real.
+- **`docker-compose.prod.yml`**: `mem_limit` en backend (1g) y celery (2g) —
+  evita que un Monte Carlo grande OOMee el host; healthcheck de Redis ahora
+  **autentica** (antes `redis-cli ping` daba NOAUTH con exit 0 = falso healthy).
+- **CI (`ci.yml`)**: el job `test` corre la **suite completa** (antes 4 de 49
+  archivos) + gate flake8 de errores reales (E9/F7/F82); el `deploy` ahora
+  reconstruye **frontend** y recarga **nginx** (antes solo backend → cambios de
+  UI/nginx nunca llegaban a prod) y asegura el superuser `sergio` tras migrar.
+
 ## [Unreleased] — 2026-07-21
 
 ### Fix crítico de login en prod — Redis con auth + email verificado

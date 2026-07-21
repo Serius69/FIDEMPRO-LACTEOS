@@ -93,6 +93,7 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
     'user.middleware.ActivityLogMiddleware',
     'hub_auth.middleware.HubAuthMiddleware',
+    'findempro.security_headers.SecurityHeadersMiddleware',
     # AxesMiddleware debe ir al final, tras AuthenticationMiddleware.
     'axes.middleware.AxesMiddleware',
     'django_prometheus.middleware.PrometheusAfterMiddleware',
@@ -327,6 +328,28 @@ X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 CSRF_COOKIE_HTTPONLY = True
+
+# Content-Security-Policy emitida por SecurityHeadersMiddleware en TODA respuesta
+# Django (nginx no la emitía por la herencia rota de add_header). El allowlist
+# refleja los CDNs que los templates realmente cargan (lordicon/cdnjs/jsdelivr/
+# jquery/d3/datatables/Google Fonts) para no romper el render. Vaciar la cadena
+# (o poner CONTENT_SECURITY_POLICY='' vía env) desactiva la CSP al instante.
+_CSP_SCRIPT = ("'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com "
+               "https://cdn.jsdelivr.net https://code.jquery.com "
+               "https://cdn.datatables.net https://d3js.org https://cdn.lordicon.com")
+_CSP_STYLE = ("'self' 'unsafe-inline' https://cdnjs.cloudflare.com "
+              "https://cdn.jsdelivr.net https://fonts.googleapis.com "
+              "https://cdn.datatables.net")
+CONTENT_SECURITY_POLICY = os.environ.get('CONTENT_SECURITY_POLICY', (
+    "default-src 'self'; "
+    f"script-src {_CSP_SCRIPT}; "
+    f"style-src {_CSP_STYLE}; "
+    "img-src 'self' data: blob: https:; "
+    "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+    "connect-src 'self' https://cdn.lordicon.com; "
+    "frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+))
+PERMISSIONS_POLICY = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
 
 # ─────────────────────────────────────────────
 # Messages UI

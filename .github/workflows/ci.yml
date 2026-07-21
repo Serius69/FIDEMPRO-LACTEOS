@@ -115,11 +115,11 @@ jobs:
           CELERY_RESULT_BACKEND: redis://localhost:6379/0
           CELERY_ALWAYS_EAGER: "true"
         run: |
-          pytest simulate/tests/test_core_engine.py \
-                 simulate/tests/test_model_compiler.py \
-                 simulate/tests/test_p3_features.py \
-                 simulate/tests/test_canvas_views_p3.py \
-                 -v --tb=short
+          # Gate de errores reales (sintaxis, nombres indefinidos) — no estilo.
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Suite COMPLETA (antes corría solo 4 de 49 archivos → un test roto fuera
+          # de esos 4 no bloqueaba el deploy).
+          pytest -p no:warnings --tb=short -q
 
       - name: Upload coverage
         if: always()
@@ -208,23 +208,37 @@ jobs:
             # Guardar imagen actual para rollback
             PREV_IMAGE=$(docker inspect --format='{{.Image}}' findempro_backend 2>/dev/null || true)
 
-            # Build nueva imagen
-            echo "🏗️ Building Docker image..."
-            docker compose -f docker-compose.prod.yml build findempro_backend
+            # Build nuevas imágenes (backend + frontend; antes el frontend nunca
+            # se reconstruía → cambios de UI no llegaban a prod aunque el CI los
+            # typecheckeara).
+            echo "🏗️ Building Docker images (backend + frontend)..."
+            docker compose -f docker-compose.prod.yml build findempro_backend findempro_frontend
 
-            # Deploy backend sin downtime
-            echo "🚀 Iniciando nuevo backend..."
-            docker compose -f docker-compose.prod.yml up -d --no-deps findempro_backend
+            # Deploy backend + frontend sin downtime
+            echo "🚀 Iniciando nuevo backend + frontend..."
+            docker compose -f docker-compose.prod.yml up -d --no-deps findempro_backend findempro_frontend
 
             # Migraciones Django
             echo "⚙️ Ejecutando migraciones..."
             docker compose -f docker-compose.prod.yml exec -T findempro_backend \
               python manage.py migrate --noinput
 
+            # Asegurar el superusuario maestro (idempotente; NO pisa password).
+            echo "👤 Asegurando superuser sergio..."
+            docker compose -f docker-compose.prod.yml exec -T findempro_backend \
+              python manage.py ensure_superuser || true
+
             # Static files
             echo "📁 Recolectando archivos estáticos..."
             docker compose -f docker-compose.prod.yml exec -T findempro_backend \
               python manage.py collectstatic --noinput
+
+            # Recargar nginx (recoge cambios de conf.d y re-resuelve upstreams tras
+            # recrear backend/frontend → evita 502 por IP vieja en caché).
+            echo "🔁 Recargando nginx..."
+            docker compose -f docker-compose.prod.yml up -d --no-deps findempro_nginx
+            docker compose -f docker-compose.prod.yml exec -T findempro_nginx nginx -s reload || \
+              docker compose -f docker-compose.prod.yml restart findempro_nginx
 
             # Reiniciar workers Celery (recogen nuevo código)
             echo "🔄 Reiniciando workers Celery..."
