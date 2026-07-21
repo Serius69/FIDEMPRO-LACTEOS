@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.conf import settings
-from django.http import JsonResponse, HttpResponse, FileResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponse, FileResponse, HttpResponseForbidden, Http404
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.db.models import Q, Count, Avg
@@ -28,13 +28,43 @@ from celery.result import AsyncResult
 # Configure logger
 logger = logging.getLogger(__name__)
 
+
+def _reports_for_user(user):
+    """Queryset base de reportes restringido al DUEÑO real.
+
+    El modelo Report no tiene ``created_by``; la propiedad se establece por la
+    cadena fk_product -> fk_business -> fk_user. Los usuarios staff ven todos
+    los reportes. Esto cierra el IDOR de la app report (los guardas previos
+    ``hasattr(report, 'created_by')`` siempre eran falsos y no protegían nada).
+    """
+    qs = Report.objects.all()
+    if not getattr(user, 'is_staff', False):
+        qs = qs.filter(fk_product__fk_business__fk_user=user)
+    return qs
+
+
+def _sanitize_json_numbers(obj):
+    """Reemplaza recursivamente inf/-inf/nan por None en dicts/listas.
+
+    JSONField sobre jsonb (Postgres) rechaza Infinity/NaN; el motor sqlite los
+    serializa como 'Infinity'/'NaN' inválidos para otros consumidores. Se
+    aplica al contenido de los reportes antes de persistirlo.
+    """
+    import math
+    if isinstance(obj, dict):
+        return {k: _sanitize_json_numbers(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_sanitize_json_numbers(v) for v in obj]
+    if isinstance(obj, float) and (math.isinf(obj) or math.isnan(obj)):
+        return None
+    return obj
+
 class AppsView(LoginRequiredMixin, TemplateView):
     """Main apps view for reports module."""
     template_name = 'report/apps.html'
 
 # List View with improved error handling and caching
 @login_required
-@cache_page(60 * 5)  # Cache for 5 minutes
 def report_list(request):
     """Display paginated list of reports with search functionality."""
     try:
@@ -42,9 +72,10 @@ def report_list(request):
         filter_type = request.GET.get('type', '')
         filter_status = request.GET.get('status', '')
         sort_by = request.GET.get('sort', '-date_created')
-        
-        # Base queryset with optimizations
-        reports = Report.objects.select_related('fk_product').prefetch_related()
+
+        # Base queryset restringido al dueño (cierra IDOR). Sin @cache_page
+        # porque el resultado ahora es específico por usuario.
+        reports = _reports_for_user(request.user).select_related('fk_product')
         
         # Apply filters
         if search_query:
@@ -78,8 +109,8 @@ def report_list(request):
             logger.warning(f"Invalid page number: {page_number}")
             page_obj = paginator.get_page(1)
         
-        # Get statistics
-        stats = get_report_statistics()
+        # Get statistics (restringidas al usuario)
+        stats = get_report_statistics(request.user)
         
         context = {
             'reports': page_obj,
@@ -108,21 +139,26 @@ def report_list(request):
         }
         return render(request, 'report/report-list.html', context)
 
-def get_report_statistics() -> Dict[str, Any]:
-    """Get report statistics for dashboard."""
+def get_report_statistics(user=None) -> Dict[str, Any]:
+    """Get report statistics for dashboard (restringidas al dueño)."""
     try:
-        cache_key = 'report_statistics'
+        base = Report.objects.all()
+        if user is not None and not getattr(user, 'is_staff', False):
+            base = base.filter(fk_product__fk_business__fk_user=user)
+            cache_key = f'report_statistics_{user.id}'
+        else:
+            cache_key = 'report_statistics'
         stats = cache.get(cache_key)
-        
+
         if stats is None:
-            total_reports = Report.objects.count()
-            active_reports = Report.objects.filter(is_active=True).count()
-            recent_reports = Report.objects.filter(
+            total_reports = base.count()
+            active_reports = base.filter(is_active=True).count()
+            recent_reports = base.filter(
                 date_created__gte=timezone.now() - timedelta(days=7)
             ).count()
-            
+
             # Products with most reports
-            top_products = Report.objects.filter(
+            top_products = base.filter(
                 fk_product__isnull=False
             ).values(
                 'fk_product__name'
@@ -151,8 +187,10 @@ def get_report_statistics() -> Dict[str, Any]:
 def report_detail(request, pk):
     """Display detailed view of a specific report."""
     try:
-        report = get_object_or_404(Report.objects.select_related('fk_product'), pk=pk)
-        
+        report = get_object_or_404(
+            _reports_for_user(request.user).select_related('fk_product'), pk=pk
+        )
+
         # Track view count (optional)
         if hasattr(report, 'view_count'):
             report.view_count += 1
@@ -169,7 +207,8 @@ def report_detail(request, pk):
             'report': report,
             'current_datetime': timezone.now(),
             'related_reports': related_reports,
-            'can_edit': request.user.is_staff or (hasattr(report, 'created_by') and report.created_by == request.user),
+            # El queryset ya restringe al dueño (o staff): quien puede verlo, puede editarlo.
+            'can_edit': True,
         }
         
         return render(request, 'report/report-detail.html', context)
@@ -236,13 +275,9 @@ def report_create(request):
 def report_update(request, pk):
     """Update an existing report."""
     try:
-        report = get_object_or_404(Report, pk=pk)
-        
-        # Check permissions
-        if hasattr(report, 'created_by') and report.created_by != request.user and not request.user.is_staff:
-            messages.error(request, 'No tienes permisos para editar este reporte.')
-            return redirect('report:report.detail', pk=pk)
-        
+        # Restringido al dueño real (cierra IDOR); staff incluido en el helper.
+        report = get_object_or_404(_reports_for_user(request.user), pk=pk)
+
         if request.method == 'POST':
             form = ReportForm(request.POST, request.FILES, instance=report)
             
@@ -279,13 +314,9 @@ def report_update(request, pk):
 def report_delete(request, pk):
     """Delete a report with confirmation."""
     try:
-        report = get_object_or_404(Report, pk=pk)
-        
-        # Check permissions
-        if hasattr(report, 'created_by') and report.created_by != request.user and not request.user.is_staff:
-            messages.error(request, 'No tienes permisos para eliminar este reporte.')
-            return redirect('report:report.detail', pk=pk)
-        
+        # Restringido al dueño real (cierra IDOR); staff incluido en el helper.
+        report = get_object_or_404(_reports_for_user(request.user), pk=pk)
+
         if request.method == 'POST':
             report_title = report.title
             
@@ -333,19 +364,22 @@ def create_simulation_report(request):
                     return render(request, 'report/create-simulation-report.html', {'form': form})
                 
                 # Process simulation data
-                report_content = process_simulation_data(product, simulation_params)
+                report_content = process_simulation_data(
+                    product, simulation_params, username=str(request.user))
                 
                 if 'error' in report_content:
                     messages.error(request, f"Error en la simulación: {report_content['error']}")
                     return render(request, 'report/create-simulation-report.html', {'form': form})
                 
                 # Create the report
+                # Nota: Report NO tiene campo created_by; el dueño se deriva de
+                # fk_product -> fk_business -> fk_user. Pasar created_by=None
+                # rompía el create() con TypeError (tragado por el except).
                 report = Report.objects.create(
-                    title=f"Reporte de Simulación - {product.name} - {timezone.now().strftime('%Y%m%d_%H%M')}",
+                    title=f"Reporte de Simulación - {product.name} - {timezone.now().strftime('%Y%m%d_%H%M%S')}",
                     content=report_content,
                     fk_product=product,
-                    report_type='simulation' if hasattr(Report, 'report_type') else None,
-                    created_by=request.user if hasattr(Report, 'created_by') else None,
+                    report_type='simulation',
                 )
                 
                 # Clear cache
@@ -424,7 +458,8 @@ def get_default_simulation_params() -> Dict[str, Any]:
         'inversion_inicial': 50000,
     }
 
-def process_simulation_data(product: Product, simulation_params: Dict[str, Any]) -> Dict[str, Any]:
+def process_simulation_data(product: Product, simulation_params: Dict[str, Any],
+                            username: str = 'sistema') -> Dict[str, Any]:
     """Process simulation data with enhanced calculations and error handling."""
     try:
         # Get variables related to product
@@ -479,14 +514,16 @@ def process_simulation_data(product: Product, simulation_params: Dict[str, Any])
             'fecha_simulacion': timezone.now().isoformat(),
             'metadatos': {
                 'version': '2.0',
-                'usuario': str(request.user) if 'request' in locals() else 'sistema',
+                'usuario': username,
                 'tipo': 'simulacion_producto',
                 'parametros_version': '2.0',
             }
         }
-        
-        return simulation_results
-        
+
+        # Sanea inf/-inf/nan (p.ej. punto_equilibrio / payback cuando el flujo
+        # de caja es <= 0) para que el JSONField/jsonb no reciba Infinity/NaN.
+        return _sanitize_json_numbers(simulation_results)
+
     except Exception as e:
         logger.exception("Error processing simulation data")
         return {'error': str(e)}
@@ -561,10 +598,11 @@ def calculate_tir(params: Dict[str, Any]) -> float:
     inversion = float(params.get('inversion_inicial', 1))
     flujo_caja_mensual = calculate_flujo_caja(params)
     horizonte = int(params.get('horizonte', 12))
-    
-    if flujo_caja_mensual <= 0:
+
+    # Guarda contra división por cero (igual que calculate_roi con inversion<=0).
+    if inversion <= 0 or flujo_caja_mensual <= 0:
         return 0
-    
+
     # Simple approximation
     total_flujos = flujo_caja_mensual * horizonte
     tir_anual = ((total_flujos / inversion) ** (1/horizonte)) - 1
@@ -687,10 +725,8 @@ def generar_reporte_pdf(request, report_id):
     """Enqueue async PDF generation and return task info (202)."""
     from .tasks import generate_report_pdf_async
 
-    reporte = get_object_or_404(Report, pk=report_id)
-
-    if hasattr(reporte, 'created_by') and reporte.created_by != request.user and not request.user.is_staff:
-        return HttpResponseForbidden("No tienes permisos para descargar este reporte.")
+    # Restringido al dueño real (cierra IDOR); 404 si no le pertenece.
+    reporte = get_object_or_404(_reports_for_user(request.user), pk=report_id)
 
     user_id = request.user.id
     task = generate_report_pdf_async.delay(report_id, user_id)
@@ -766,15 +802,9 @@ def report_overview(request, pk):
 def toggle_report_status(request, pk):
     """Toggle report active status with enhanced validation."""
     try:
-        report = get_object_or_404(Report, pk=pk)
-        
-        # Check permissions
-        if hasattr(report, 'created_by') and report.created_by != request.user and not request.user.is_staff:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'error': 'No tienes permisos para modificar este reporte.'})
-            messages.error(request, 'No tienes permisos para modificar este reporte.')
-            return redirect('report:report.detail', pk=pk)
-        
+        # Restringido al dueño real (cierra IDOR); staff incluido en el helper.
+        report = get_object_or_404(_reports_for_user(request.user), pk=pk)
+
         # Toggle status
         old_status = report.is_active
         report.is_active = not report.is_active
@@ -812,7 +842,6 @@ def toggle_report_status(request, pk):
 
 # Enhanced API Endpoints
 @login_required
-@cache_page(60 * 2)  # Cache for 2 minutes
 def report_api_list(request):
     """Enhanced API endpoint for reports list with filtering."""
     try:
@@ -823,8 +852,8 @@ def report_api_list(request):
         status = request.GET.get('status', '')
         product_id = request.GET.get('product_id', '')
         
-        # Build queryset
-        reports = Report.objects.select_related('fk_product').order_by('-date_created')
+        # Build queryset restringido al dueño (cierra IDOR)
+        reports = _reports_for_user(request.user).select_related('fk_product').order_by('-date_created')
         
         # Apply filters
         if search:
@@ -893,16 +922,12 @@ def report_api_list(request):
 def report_api_detail(request, pk):
     """Enhanced API endpoint for report details."""
     try:
+        # Restringido al dueño real (cierra IDOR)
         report = get_object_or_404(
-            Report.objects.select_related('fk_product'), 
+            _reports_for_user(request.user).select_related('fk_product'),
             pk=pk
         )
-        
-        # Check permissions for private reports
-        if hasattr(report, 'is_private') and report.is_private:
-            if hasattr(report, 'created_by') and report.created_by != request.user and not request.user.is_staff:
-                return JsonResponse({'error': 'No tienes permisos para ver este reporte.'}, status=403)
-        
+
         # Serialize data
         data = {
             'id': report.id,
@@ -934,7 +959,9 @@ def report_api_detail(request, pk):
             data['view_count'] = report.view_count
         
         return JsonResponse(data)
-        
+
+    except Http404:
+        return JsonResponse({'error': 'Reporte no encontrado.'}, status=404)
     except Exception as e:
         logger.exception(f"Error in report_api_detail for pk={pk}")
         return JsonResponse({'error': str(e)}, status=500)
@@ -952,14 +979,9 @@ def bulk_report_operations(request):
         if not report_ids:
             return JsonResponse({'success': False, 'error': 'No se seleccionaron reportes.'})
         
-        # Validate report IDs
-        reports = Report.objects.filter(id__in=report_ids)
-        
-        if not request.user.is_staff:
-            # Filter by user permissions
-            if hasattr(Report, 'created_by'):
-                reports = reports.filter(created_by=request.user)
-        
+        # Validate report IDs — restringido al dueño real (cierra IDOR)
+        reports = _reports_for_user(request.user).filter(id__in=report_ids)
+
         success_count = 0
         
         if operation == 'activate':
@@ -998,16 +1020,12 @@ def export_reports(request):
         export_format = request.GET.get('format', 'csv')
         report_ids = request.GET.getlist('ids')
         
-        # Get reports
-        reports = Report.objects.select_related('fk_product').order_by('-date_created')
-        
+        # Get reports — restringido al dueño real (cierra IDOR)
+        reports = _reports_for_user(request.user).select_related('fk_product').order_by('-date_created')
+
         if report_ids:
             reports = reports.filter(id__in=report_ids)
-        
-        if not request.user.is_staff:
-            if hasattr(Report, 'created_by'):
-                reports = reports.filter(created_by=request.user)
-        
+
         if export_format == 'csv':
             return export_reports_csv(reports)
         elif export_format == 'excel':

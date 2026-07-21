@@ -166,3 +166,35 @@ def test_recommendation_details_returns_json(client, user, finance_recommendatio
         reverse("finance:finance.recommendation_details", args=[finance_recommendation.id]))
     assert response.status_code == 200
     assert response.json()["data"]["name"] == finance_recommendation.name
+
+
+# ─────────────────────────────────────────────
+# Aislamiento por dueño (IDOR)
+# ─────────────────────────────────────────────
+@pytest.fixture
+def other_user(db):
+    return User.objects.create_user(username="intruso", password="otherpass-123")
+
+
+@pytest.mark.django_db
+def test_decision_details_isolation_returns_404_for_non_owner(
+    client, other_user, financial_decision
+):
+    """El intruso NO puede ver la decisión de otro usuario -> 404."""
+    client.login(username="intruso", password="otherpass-123")
+    response = client.get(
+        reverse("finance:finance.details", args=[financial_decision.id]))
+    assert response.status_code == 404
+    assert response.json()["success"] is False
+
+
+@pytest.mark.django_db
+def test_finance_list_excludes_other_users_decisions(
+    client, other_user, financial_decision
+):
+    """La lista del intruso no incluye la decisión ajena."""
+    client.login(username="intruso", password="otherpass-123")
+    response = client.get(reverse("finance:finance.list"))
+    assert response.status_code == 200
+    assert financial_decision not in list(response.context["financial_decisions"])
+    assert response.context["total_count"] == 0
