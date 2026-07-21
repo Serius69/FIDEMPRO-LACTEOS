@@ -66,9 +66,9 @@ services:
       DJANGO_SETTINGS_MODULE: findempro.settings.production
       DB_HOST: findempro_db
       DB_PORT: "5432"
-      REDIS_URL: redis://findempro_redis:6379/1
-      CELERY_BROKER_URL: redis://findempro_redis:6379/0
-      CELERY_RESULT_BACKEND: redis://findempro_redis:6379/0
+      REDIS_URL: redis://:${REDIS_PASSWORD}@findempro_redis:6379/1
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@findempro_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@findempro_redis:6379/0
       GIT_COMMIT: ${GIT_COMMIT:-unknown}
     env_file:
       - .env
@@ -114,9 +114,9 @@ services:
       DJANGO_ENV: production
       DJANGO_SETTINGS_MODULE: findempro.settings.production
       DB_HOST: findempro_db
-      REDIS_URL: redis://findempro_redis:6379/1
-      CELERY_BROKER_URL: redis://findempro_redis:6379/0
-      CELERY_RESULT_BACKEND: redis://findempro_redis:6379/0
+      REDIS_URL: redis://:${REDIS_PASSWORD}@findempro_redis:6379/1
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@findempro_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@findempro_redis:6379/0
       CELERY_ALWAYS_EAGER: "false"
     env_file:
       - .env
@@ -155,9 +155,9 @@ services:
       DJANGO_ENV: production
       DJANGO_SETTINGS_MODULE: findempro.settings.production
       DB_HOST: findempro_db
-      REDIS_URL: redis://findempro_redis:6379/1
-      CELERY_BROKER_URL: redis://findempro_redis:6379/0
-      CELERY_RESULT_BACKEND: redis://findempro_redis:6379/0
+      REDIS_URL: redis://:${REDIS_PASSWORD}@findempro_redis:6379/1
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@findempro_redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@findempro_redis:6379/0
     env_file:
       - .env
     volumes:

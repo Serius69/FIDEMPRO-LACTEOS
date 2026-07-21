@@ -1,5 +1,38 @@
 # Changelog — FindemproAI
 
+## [Unreleased] — 2026-07-21
+
+### Fix crítico de login en prod — Redis con auth + email verificado
+- **`docker-compose.prod.yml`**: las URLs `REDIS_URL`/`CELERY_BROKER_URL`/
+  `CELERY_RESULT_BACKEND` (backend + celery + beat, 9 en total) apuntaban a
+  `redis://findempro_redis:6379/N` **sin la contraseña**, mientras Redis arranca
+  con `--requirepass ${REDIS_PASSWORD}`. Resultado: todo write de caché fallaba
+  (fail-open silencioso) → como `SESSION_ENGINE=cache`, **no se podían crear
+  sesiones** → el login reventaba con 500 (`RuntimeError: Unable to create a new
+  session key`). Corregido a `redis://:${REDIS_PASSWORD}@findempro_redis:6379/N`.
+- **allauth email verificado**: con `ACCOUNT_EMAIL_VERIFICATION` obligatorio, el
+  login dispara el envío del correo de confirmación; con el SMTP de Gmail fallando
+  (`535 BadCredentials`) eso también tiraba 500. `ensure_superuser` ahora deja el
+  `EmailAddress` del superuser **primary + verified** para que el login no intente
+  enviar correo.
+- Verificado **end-to-end** en `https://app.kapitalya.com.bo/account/login/`:
+  POST → 302, `sessionid` emitido, home autenticado 200.
+
+### Superusuario `sergio` idempotente
+- **`manage.py ensure_superuser`** (NUEVO, `business/management/commands/`): asegura
+  el superuser `sergio` sin efectos colaterales — lo crea si falta (super/staff/
+  activo, email allauth verificado) y, si ya existe, corrige flags **sin pisar la
+  contraseña** (regla del ecosistema Kapitalya, igual que xgol/forex-erp). Defaults:
+  usuario `sergio`, email `kapitalyabolivia@gmail.com`, password `Kapitalya2026!`
+  (idénticos a xgol); configurables por flag o env (`FINDEMPRO_SUPERUSER*` /
+  `DJANGO_SUPERUSER_PASSWORD`). Pensado para correr tras cada `migrate` en dev/
+  test/prod — **siempre también en prod**.
+- **Tests**: `business/tests/test_ensure_superuser.py` (5: crea, idempotente sin
+  reset de password, repara flags sin tocar password, usuario/clave custom, email
+  allauth verificado).
+- Ejecutado en dev y en **prod** (contenedor `findempro_backend`): superuser
+  `sergio` (kapitalyabolivia@gmail.com) creado, email verificado y login OK.
+
 ## [Unreleased] — 2026-07-15
 
 ### Simulación — Modo GBM elegible desde la UI
