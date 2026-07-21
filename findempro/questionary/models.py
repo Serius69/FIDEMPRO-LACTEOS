@@ -88,6 +88,12 @@ class Answer(models.Model):
             models.Index(fields=['fk_questionary_result', 'is_active'], name='idx_answer_qresult_active'),
             models.Index(fields=['fk_question', 'is_active'], name='idx_answer_question_active'),
         ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['fk_question', 'fk_questionary_result'],
+                name='uniq_answer_question_result',
+            ),
+        ]
 
     def __str__(self):
         return self.answer

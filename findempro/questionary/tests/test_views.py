@@ -108,6 +108,64 @@ def test_questionnaire_main_view_post_save(client, user, questionary, question, 
     assert Answer.objects.filter(fk_question=question, answer="Test Answer").exists()
 
 @pytest.mark.django_db
+def test_post_save_upsert_does_not_duplicate(client, user, questionary, question, questionary_result):
+    """Re-guardar la misma pregunta actualiza la fila, no crea un duplicado."""
+    client.login(username="testuser", password="password")
+    session = client.session
+    session["selected_questionary_id"] = questionary.id
+    session["questionary_result_id"] = questionary_result.id
+    session.save()
+    url = reverse("questionary:questionary.main")
+
+    payload = {
+        f"question_{question.id}": question.id,
+        f"answer_{question.id}": "Primera",
+        "save": True,
+    }
+    client.post(url, payload)
+    payload[f"answer_{question.id}"] = "Segunda"
+    client.post(url, payload)
+
+    answers = Answer.objects.filter(
+        fk_question=question, fk_questionary_result=questionary_result
+    )
+    assert answers.count() == 1
+    assert answers.first().answer == "Segunda"
+
+
+@pytest.mark.django_db
+def test_post_save_reactivates_inactive_answer(client, user, questionary, question, questionary_result):
+    """Re-guardar una answer previamente desactivada la deja is_active=True."""
+    client.login(username="testuser", password="password")
+    # Simula el estado tras cancelar/borrar: answer existente pero inactiva.
+    Answer.objects.create(
+        fk_question=question,
+        fk_questionary_result=questionary_result,
+        answer="Borrador",
+        is_active=False,
+    )
+    session = client.session
+    session["selected_questionary_id"] = questionary.id
+    session["questionary_result_id"] = questionary_result.id
+    session.save()
+    url = reverse("questionary:questionary.main")
+
+    client.post(url, {
+        f"question_{question.id}": question.id,
+        f"answer_{question.id}": "Reactivada",
+        "save": True,
+    })
+
+    answers = Answer.objects.filter(
+        fk_question=question, fk_questionary_result=questionary_result
+    )
+    assert answers.count() == 1
+    ans = answers.first()
+    assert ans.is_active is True
+    assert ans.answer == "Reactivada"
+
+
+@pytest.mark.django_db
 def test_questionnaire_main_view_post_cancel(client, user):
     client.login(username="testuser", password="password")
     session = client.session
