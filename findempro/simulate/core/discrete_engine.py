@@ -377,15 +377,33 @@ class DiscreteEventEngine:
 
     # ── Extraer métricas financieras ─────────────────────────────────────────
 
+    @staticmethod
+    def _finite(x: float) -> float:
+        """Sanea NaN/inf → 0.0 (mismo criterio que np.nan_to_num(nan=0,posinf=0,neginf=0))."""
+        v = float(x)
+        return 0.0 if (math.isnan(v) or math.isinf(v)) else v
+
     def _extract_financials(
         self, combined: Dict[str, float]
     ) -> Tuple[float, float, float, float]:
-        """Extrae demanda, ingresos, costos y ganancia del resultado."""
+        """Extrae demanda, ingresos, costos y ganancia del resultado.
+
+        Sanea NaN/inf a 0.0 con el MISMO criterio que el motor vectorizado
+        (``np.nan_to_num(posinf=0, neginf=0)`` en ``vectorized_engine._grid_host``).
+        Sin esto, un GBM con overflow de ``exp`` o una división degenerada emite
+        inf/nan que luego envenena ``np.mean``/``np.percentile`` en la agregación
+        de ``simulation_service`` y hace divergir la ruta escalar de la vectorizada.
+        """
         demand = combined.get(self.config.demand_variable, 0.0)
         revenue = combined.get(self.config.revenue_variable, 0.0)
         costs = combined.get(self.config.cost_variable, 0.0)
         profit = combined.get(self.config.profit_variable, revenue - costs)
-        return demand, revenue, costs, profit
+        return (
+            self._finite(demand),
+            self._finite(revenue),
+            self._finite(costs),
+            self._finite(profit),
+        )
 
     # ── API pública ──────────────────────────────────────────────────────────
 

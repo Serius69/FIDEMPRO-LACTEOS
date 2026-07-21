@@ -320,6 +320,37 @@ class TestDiscreteEventEngine:
         result = engine.run_period(scenario)
         assert result.demand >= 0.0
 
+    def test_scalar_engine_sanitizes_inf_nan(self):
+        """La ruta escalar sanea inf/nan a 0.0 (paridad con el motor vectorizado).
+
+        Antes, un overflow de float (p. ej. 1e200*1e200 = inf, sin excepción en
+        Python) se propagaba a _extract_financials y envenenaba np.mean/np.percentile
+        en la agregación de simulation_service. Ahora se mapea a 0.0.
+        """
+        config = _make_config(
+            equations=_make_equations(
+                'IT=DE*DE',   # DE grande → IT desborda a +inf
+                'TG=DE',
+                'GT=IT-TG',   # inf - finito = inf
+            ),
+        )
+        engine = DiscreteEventEngine(config)
+        result = engine.run_period(
+            OperationScenario(period_index=0, demand_value=1e200, seasonality_factor=1.0)
+        )
+        # Todas las métricas financieras son finitas
+        assert math.isfinite(result.demand)
+        assert math.isfinite(result.revenue)
+        assert math.isfinite(result.costs)
+        assert math.isfinite(result.profit)
+        # Los valores no finitos (revenue/profit) se sanean a 0.0
+        assert result.revenue == 0.0
+        assert result.profit == 0.0
+        # Un array de estos resultados agrega a números finitos
+        arr = np.array([result.profit] * 100, dtype=float)
+        assert np.isfinite(np.mean(arr))
+        assert np.isfinite(np.percentile(arr, 5))
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MONTE CARLO — DistributionFactory y ScenarioGenerator
@@ -853,14 +884,26 @@ class TestGenerateTimeSeriesVectorized:
             assert all(s.cost_variation == pytest.approx(0.0) for s in period)
 
     def test_seasonality_factor_per_period(self):
-        factors = [1.0, 1.2, 0.8, 1.5]
+        # Los factores son MENSUALES (12). El período t es un DÍA; se mapea a mes
+        # con (t // 30) % 12. Antes el motor usaba t % len(factors) (bug: comprimía
+        # el año a un ciclo de len(factors) días). Aquí verificamos el mapeo correcto
+        # sobre 3 meses (90 días) con 12 factores distintos.
+        factors = [1.0, 1.1, 1.2, 1.3, 1.4, 1.5,
+                   1.6, 1.7, 1.8, 1.9, 2.0, 2.1]
+        n_periods = 90  # 3 meses de 30 días
         config = _make_mc_config(
-            n_periods=4, n_scenarios=50,
+            n_periods=n_periods, n_scenarios=20,
             seasonality_factors=factors,
         )
         series = ScenarioGenerator(config).generate_time_series()
-        for t, expected_factor in enumerate(factors):
+        for t in range(n_periods):
+            expected_factor = factors[(t // 30) % 12]  # día → mes
             assert all(s.seasonality_factor == pytest.approx(expected_factor) for s in series[t])
+        # Días 0..29 → mes 0, 30..59 → mes 1, 60..89 → mes 2
+        assert series[0][0].seasonality_factor == pytest.approx(factors[0])
+        assert series[29][0].seasonality_factor == pytest.approx(factors[0])
+        assert series[30][0].seasonality_factor == pytest.approx(factors[1])
+        assert series[60][0].seasonality_factor == pytest.approx(factors[2])
 
     def test_demand_distribution_approximates_mean(self):
         """Media muestral sobre T*N debe aproximar demand_mean (LGN)."""

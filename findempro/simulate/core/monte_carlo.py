@@ -394,7 +394,14 @@ class ScenarioGenerator:
         factors = self.config.seasonality_factors
         if not factors:
             return 1.0
-        return factors[period_idx % len(factors)]
+        # ``period_idx`` es un ÍNDICE DE DÍA (0-based) del horizonte de simulación,
+        # pero ``seasonality_factors`` son 12 factores MENSUALES. Hay que mapear
+        # día → mes con la MISMA convención de 30 días/mes que usa
+        # ``Simulation.duration_in_days`` (meses × 30) y envolver por año.
+        # Bug previo: ``period_idx % len(factors)`` indexaba por día módulo 12,
+        # comprimiendo el año entero a un ciclo de 12 días.
+        month_idx = (period_idx // 30) % len(factors)
+        return factors[month_idx]
 
     def _sample_demand(self, n: int) -> np.ndarray:
         """

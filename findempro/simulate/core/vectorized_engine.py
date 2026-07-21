@@ -250,8 +250,11 @@ class VectorizedMonteCarlo:
         # 1. Demanda (T,N) + estacionalidad por período
         raw = _sample_demand_grid(self.mc, T, N, xp, rng)
         factors = self.mc.seasonality_factors or [1.0] * 12
+        # Mapeo día → mes idéntico al motor escalar (ScenarioGenerator._get_seasonality):
+        # el período t es un DÍA; los factores son mensuales (×30 días/mes), se envuelve
+        # por año. Antes ``t % len(factors)`` comprimía el año a un ciclo de 12 días.
         seasonal_col = xp.asarray(
-            [factors[t % len(factors)] for t in range(T)], dtype=xp.float64
+            [factors[(t // 30) % len(factors)] for t in range(T)], dtype=xp.float64
         ).reshape(T, 1)
         demand_grid = raw * seasonal_col
 

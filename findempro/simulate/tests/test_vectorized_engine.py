@@ -147,6 +147,28 @@ def test_run_grid_shapes():
     assert np.all(np.isfinite(p))
 
 
+def test_vectorized_seasonality_maps_day_to_month():
+    """La estacionalidad MENSUAL se aplica por mes (día // 30) % 12, no por día % 12.
+
+    Bug previo: el índice de día módulo len(factors) comprimía el año a un ciclo de
+    12 días. Aquí, con σ diminuta, la media de demanda por período revela el factor
+    del mes correcto: días 0-29 → mes 0, 30-59 → mes 1, 60-89 → mes 2.
+    """
+    factors = [1.0, 2.0, 3.0] + [1.0] * 9
+    T = 90  # 3 meses de 30 días
+    company = _standard_company(T=T)
+    mc = MonteCarloConfig(
+        n_scenarios=400, n_periods=T, random_seed=11,
+        distribution='normal', demand_mean=1000.0, demand_std=1.0,
+        seasonality_factors=factors,
+    )
+    d_grid, _r, _c, _p = VectorizedMonteCarlo(mc, company).run_grid()
+    assert np.isclose(d_grid[0].mean(),  1000.0 * factors[0], rtol=0.05)  # mes 0
+    assert np.isclose(d_grid[29].mean(), 1000.0 * factors[0], rtol=0.05)  # mes 0
+    assert np.isclose(d_grid[30].mean(), 1000.0 * factors[1], rtol=0.05)  # mes 1
+    assert np.isclose(d_grid[60].mean(), 1000.0 * factors[2], rtol=0.05)  # mes 2
+
+
 @pytest.mark.parametrize('dist', ['normal', 'lognormal', 'gamma', 'uniform', 'exponential', 'poisson'])
 def test_all_distributions_run(dist):
     company = _standard_company(T=6)
