@@ -142,3 +142,144 @@ def test_solve_equation_view(client, user):
     response = client.post(url, data)
     assert response.status_code == 200
     assert "solution" in response.context
+
+
+# ─────────────────────────────────────────────
+# Aislamiento por dueño (IDOR) — P0 auditoría 2026-07-22
+#
+# variable/views.py obtenía Variable/Equation por pk crudo (sin filtro de
+# propiedad), permitiendo a cualquier usuario autenticado ver/editar/borrar las
+# variables y ecuaciones del negocio de OTRO usuario incrementando el pk. Los
+# handlers ahora restringen por `fk_product__fk_business__fk_user` (Variable) /
+# `fk_variable1__fk_product__fk_business__fk_user` (Equation) vía los helpers
+# `_variables_for_user` / `_equations_for_user`.
+# ─────────────────────────────────────────────
+@pytest.fixture
+def other_user(db):
+    return User.objects.create_user(username="intruso", password="otherpass-123")
+
+
+def _login_intruso(client, other_user):
+    client.login(username="intruso", password="otherpass-123")
+
+
+def test_variable_overview_isolation_returns_404_for_non_owner(client, other_user, variable):
+    """El intruso no puede ver la variable de otro usuario -> 404."""
+    _login_intruso(client, other_user)
+    url = reverse("variable:variable.overview", args=[variable.id])
+    response = client.get(url)
+    assert response.status_code == 404
+
+
+def test_variable_overview_allows_owner(client, user, variable):
+    """El dueño real sí puede ver su propia variable."""
+    client.login(username="testuser", password="password")
+    url = reverse("variable:variable.overview", args=[variable.id])
+    response = client.get(url)
+    assert response.status_code == 200
+    assert response.context["variable"] == variable
+
+
+def test_variable_edit_get_isolation_returns_404_for_non_owner(client, other_user, variable):
+    """El intruso no puede abrir el formulario de edición de otro -> 404."""
+    _login_intruso(client, other_user)
+    url = reverse("variable:variable.edit", args=[variable.id])
+    response = client.get(url)
+    assert response.status_code == 404
+
+
+def test_variable_edit_post_isolation_returns_404_for_non_owner(client, other_user, variable):
+    """El intruso no puede modificar la variable de otro usuario -> 404, ni cambia sus datos."""
+    _login_intruso(client, other_user)
+    url = reverse("variable:variable.edit", args=[variable.id])
+    data = {
+        "name": "Hijacked", "type": variable.type,
+        "description": "hijacked", "fk_product": variable.fk_product.id,
+    }
+    response = client.post(url, data)
+    assert response.status_code == 404
+    variable.refresh_from_db()
+    assert variable.name == "Test Variable"
+
+
+def test_variable_edit_post_allows_owner(client, user, variable):
+    """El dueño real sí puede editar su variable (regresión del helper de dueño)."""
+    client.login(username="testuser", password="password")
+    url = reverse("variable:variable.edit", args=[variable.id])
+    data = {
+        "name": "Updated Variable", "type": variable.type,
+        "description": "Updated description", "fk_product": variable.fk_product.id,
+    }
+    response = client.post(url, data)
+    assert response.status_code == 200
+    variable.refresh_from_db()
+    assert variable.name == "Updated Variable"
+
+
+def test_delete_variable_isolation_returns_404_for_non_owner(client, other_user, variable):
+    """El intruso no puede borrar (desactivar) la variable de otro usuario -> 404."""
+    _login_intruso(client, other_user)
+    url = reverse("variable:variable.delete", args=[variable.id])
+    response = client.post(url)
+    assert response.status_code == 404
+    variable.refresh_from_db()
+    assert variable.is_active
+
+
+def test_get_variable_details_isolation_returns_404_for_non_owner(client, other_user, variable):
+    """El intruso no puede leer el JSON de detalles de la variable de otro -> 404."""
+    _login_intruso(client, other_user)
+    url = reverse("variable:variable.get_details", args=[variable.id])
+    response = client.get(url)
+    assert response.status_code == 404
+    assert "error" in response.json()
+
+
+def test_equation_edit_get_isolation_returns_404_for_non_owner(client, other_user, equation):
+    """El intruso no puede abrir el formulario de edición de la ecuación de otro -> 404."""
+    _login_intruso(client, other_user)
+    url = reverse("variable:equation.edit", args=[equation.id])
+    response = client.get(url)
+    assert response.status_code == 404
+
+
+def test_equation_edit_post_isolation_returns_404_for_non_owner(client, other_user, equation):
+    """El intruso no puede modificar la ecuación de otro usuario -> 404, ni cambia sus datos."""
+    _login_intruso(client, other_user)
+    url = reverse("variable:equation.edit", args=[equation.id])
+    data = {
+        "name": "Hijacked", "description": "hijacked",
+        "fk_variable1": equation.fk_variable1.id, "expression": "x + 99 = 0",
+    }
+    response = client.post(url, data, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
+    assert response.status_code == 404
+    equation.refresh_from_db()
+    assert equation.name == "Test Equation"
+
+
+def test_delete_equation_isolation_returns_404_for_non_owner(client, other_user, equation):
+    """El intruso no puede borrar (desactivar) la ecuación de otro usuario -> 404."""
+    _login_intruso(client, other_user)
+    url = reverse("variable:equation.delete", args=[equation.id])
+    response = client.post(url)
+    assert response.status_code == 404
+    equation.refresh_from_db()
+    assert equation.is_active
+
+
+def test_get_equation_details_isolation_returns_404_for_non_owner(client, other_user, equation):
+    """El intruso no puede leer el JSON de detalles de la ecuación de otro -> 404."""
+    _login_intruso(client, other_user)
+    url = reverse("variable:equation.get_details", args=[equation.id])
+    response = client.get(url)
+    assert response.status_code == 404
+    assert "error" in response.json()
+
+
+def test_get_equation_details_allows_owner(client, user, equation):
+    """El dueño real sí puede leer el JSON de detalles de su ecuación."""
+    client.login(username="testuser", password="password")
+    url = reverse("variable:equation.get_details", args=[equation.id])
+    response = client.get(url)
+    assert response.status_code == 200
+    assert response.json()["name"] == equation.name

@@ -13,7 +13,7 @@ from django.conf import settings
 import openai
 from django.http import JsonResponse
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ObjectDoesNotExist
@@ -32,6 +32,29 @@ class AppsView(LoginRequiredMixin, TemplateView):
 def _is_ajax(request):
     """Reemplazo de HttpRequest.is_ajax(), eliminado en Django 3.1+."""
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+
+def _variables_for_user(request):
+    """Queryset de Variable restringido al DUEÑO real (cierra IDOR de esta app).
+
+    La propiedad se establece por la cadena fk_product -> fk_business -> fk_user,
+    igual que ``_reports_for_user`` en report/views.py y el filtro directo usado
+    en finance/views.py. No filtra ``is_active`` para no cambiar el comportamiento
+    previo de los handlers (que ya operaban sobre variables inactivas).
+    """
+    return Variable.objects.filter(fk_product__fk_business__fk_user=request.user)
+
+
+def _equations_for_user(request):
+    """Queryset de Equation restringido al DUEÑO real (cierra IDOR de esta app).
+
+    ``Equation`` no tiene fk_product/fk_business directo; ``fk_variable1`` es la
+    única FK obligatoria (variable2-5 son opcionales), así que la cadena de
+    propiedad se resuelve a través de ella.
+    """
+    return Equation.objects.filter(
+        fk_variable1__fk_product__fk_business__fk_user=request.user
+    )
 
 VARIABLES_PER_PAGE2 = 24
 
@@ -200,7 +223,8 @@ VARIABLES_PER_PAGE = 4
 @login_required
 def variable_overview(request, pk):
     try:
-        variable = get_object_or_404(Variable, pk=pk)
+        # Restringido al dueño real (cierra IDOR).
+        variable = get_object_or_404(_variables_for_user(request), pk=pk)
         product_id = variable.fk_product.id
         variable_id = variable.id
 
@@ -238,7 +262,10 @@ def variable_overview(request, pk):
         }
         
         return render(request, "variable/variable-overview.html", context)
-        
+
+    except Http404:
+        # get_object_or_404 con filtro de dueño -> 404 real si no existe o no le pertenece.
+        raise
     except Exception as e:
         logger.error(f"Error en variable_overview: {str(e)}")
         messages.error(request, f"Ocurrió un error al cargar la variable: {str(e)}")
@@ -248,11 +275,10 @@ def variable_overview(request, pk):
 def create_or_update_variable_view(request, pk=None):
     variable = None
     if pk:
-        try:
-            variable = get_object_or_404(Variable, pk=pk)
-        except:
-            pass
-    
+        # Restringido al dueño real (cierra IDOR): 404 si no existe o no le pertenece,
+        # en vez de tragarse el error y caer silenciosamente al flujo de creación.
+        variable = get_object_or_404(_variables_for_user(request), pk=pk)
+
     if request.method == 'POST':
         form = VariableForm(request.POST, request.FILES, instance=variable)
         try:
@@ -320,7 +346,8 @@ def create_or_update_variable_view(request, pk=None):
 def delete_variable_view(request, pk):
     try:
         if request.method == 'POST':
-            variable = get_object_or_404(Variable, pk=pk)
+            # Restringido al dueño real (cierra IDOR).
+            variable = get_object_or_404(_variables_for_user(request), pk=pk)
             variable.is_active = False
             variable.save()
             messages.success(request, "Variable eliminada exitosamente")
@@ -328,7 +355,9 @@ def delete_variable_view(request, pk):
         else:
             messages.error(request, "Método de petición inválido")
             return HttpResponse("Método de petición inválido", status=405)
-            
+
+    except Http404:
+        raise
     except Exception as e:
         logger.error(f"Error al eliminar variable: {str(e)}")
         messages.error(request, f"Ocurrió un error al eliminar la variable: {str(e)}")
@@ -338,7 +367,8 @@ def delete_variable_view(request, pk):
 def get_variable_details_view(request, pk):
     try:
         if request.method == 'GET':
-            variable = get_object_or_404(Variable, id=pk)
+            # Restringido al dueño real (cierra IDOR).
+            variable = get_object_or_404(_variables_for_user(request), id=pk)
             variable_details = {
                 "name": variable.name,
                 "type": variable.type,
@@ -349,7 +379,9 @@ def get_variable_details_view(request, pk):
                 "description": variable.description,
             }
             return JsonResponse(variable_details)
-    except ObjectDoesNotExist:
+    except (Http404, ObjectDoesNotExist):
+        # get_object_or_404 lanza Http404 (no ObjectDoesNotExist) al no encontrar
+        # coincidencia; se capturan ambas por robustez.
         return JsonResponse({"error": "La variable no existe"}, status=404)
     except Exception as e:
         logger.error(f"Error al obtener detalles: {str(e)}")
@@ -359,11 +391,10 @@ def get_variable_details_view(request, pk):
 def create_or_update_equation_view(request, pk=None):
     equation = None
     if pk:
-        try:
-            equation = get_object_or_404(Equation, pk=pk)
-        except:
-            pass
-    
+        # Restringido al dueño real (cierra IDOR): 404 si no existe o no le
+        # pertenece, en vez de tragarse el error y caer al flujo de creación.
+        equation = get_object_or_404(_equations_for_user(request), pk=pk)
+
     if request.method in ['POST', 'PUT']:
         form = EquationForm(request.POST, request.FILES, instance=equation)
         try:
@@ -424,17 +455,20 @@ def create_or_update_equation_view(request, pk=None):
 @login_required
 def delete_equation_view(request, pk):
     try:
-        equation = get_object_or_404(Equation, pk=pk)
+        # Restringido al dueño real (cierra IDOR).
+        equation = get_object_or_404(_equations_for_user(request), pk=pk)
         variable_pk = equation.fk_variable1.pk if equation.fk_variable1 else None
         equation.is_active = False
         equation.save()
         messages.success(request, "Ecuación eliminada exitosamente")
-        
+
         if variable_pk:
             return redirect("variable:variable.overview", pk=variable_pk)
         else:
             return redirect("variable:variable.list")
-            
+
+    except Http404:
+        raise
     except Exception as e:
         logger.error(f"Error al eliminar ecuación: {str(e)}")
         messages.error(request, f"Ocurrió un error al eliminar la ecuación: {str(e)}")
@@ -444,7 +478,8 @@ def delete_equation_view(request, pk):
 def get_equation_details(request, pk):
     try:
         if request.method == 'GET':
-            equation = get_object_or_404(Equation, id=pk)
+            # Restringido al dueño real (cierra IDOR).
+            equation = get_object_or_404(_equations_for_user(request), id=pk)
             equation_details = {
                 "name": equation.name,
                 "expression": equation.expression,
@@ -457,7 +492,9 @@ def get_equation_details(request, pk):
                 "description": equation.description,
             }
             return JsonResponse(equation_details)
-    except ObjectDoesNotExist:
+    except (Http404, ObjectDoesNotExist):
+        # get_object_or_404 lanza Http404 (no ObjectDoesNotExist) al no encontrar
+        # coincidencia; se capturan ambas por robustez.
         return JsonResponse({"error": "La ecuación no existe"}, status=404)
     except Exception as e:
         logger.error(f"Error al obtener detalles de ecuación: {str(e)}")
