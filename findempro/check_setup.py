@@ -2,7 +2,23 @@ import os
 import sys
 import django
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'findempro.settings')
+# Mismo patrón fail-safe que findempro/wsgi.py y findempro/asgi.py: sin
+# DJANGO_ENV, resolver a PRODUCTION (no al paquete 'findempro.settings', que
+# internamente cae en development/DEBUG=True si DJANGO_ENV no está seteada).
+# OJO: no pasar default='development' a os.getenv -- anularía el fallback
+# seguro del .get() de abajo (la clave 'development' existe en el mapa).
+_env = os.getenv('DJANGO_ENV')
+_settings_map = {
+    'production': 'findempro.settings.production',
+    'staging': 'findempro.settings.staging',
+    'testing': 'findempro.settings.testing',
+    'test': 'findempro.settings.testing',
+    'development': 'findempro.settings.development',
+}
+os.environ.setdefault(
+    'DJANGO_SETTINGS_MODULE',
+    _settings_map.get(_env, 'findempro.settings.production')
+)
 django.setup()
 
 from django.conf import settings

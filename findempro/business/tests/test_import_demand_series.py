@@ -44,6 +44,29 @@ def test_group_series_long_format_orders_by_date():
     assert g[("Queso", None)] == [99]
 
 
+def test_group_series_bolivian_date_format_orders_chronologically():
+    # DD/MM/YYYY desordenado: si se ordenara por string crudo, "01/02/2025"
+    # (1 feb) quedaría antes que "15/01/2025" (15 ene) -> cronología revuelta.
+    df = pd.DataFrame({
+        "product": ["Leche", "Leche", "Leche", "Leche"],
+        "date": ["15/01/2025", "01/02/2025", "01/01/2025", "20/01/2025"],
+        "demand": [15, 999, 1, 20],
+    })
+    g = di.group_series(df)
+    # Orden cronológico real: 01/01 (1), 15/01 (15), 20/01 (20), 01/02 (999)
+    assert g[("Leche", None)] == [1, 15, 20, 999]
+
+
+def test_group_series_unparseable_date_raises():
+    df = pd.DataFrame({
+        "product": ["Leche", "Leche"],
+        "date": ["no-es-fecha", "31/13/2025"],
+        "demand": [1, 2],
+    })
+    with pytest.raises(ValueError):
+        di.group_series(df)
+
+
 def test_group_series_single_product_no_product_col():
     df = pd.DataFrame({"demand": [1, 2, 3]})
     g = di.group_series(df, single_product="Leche")

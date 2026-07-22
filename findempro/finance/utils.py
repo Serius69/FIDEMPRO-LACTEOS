@@ -1,7 +1,10 @@
 def analyze_simulation_results(results):
     # Example: Calculate average demand mean and standard deviation
-    avg_demand_mean = sum(result.demand_mean for result in results) / len(results)
-    avg_demand_std_dev = sum(result.demand_std_deviation for result in results) / len(results)
+    # Guard: 'results' vacío (p.ej. simulación sin días completados) haría
+    # ZeroDivisionError en vez de devolver un resultado neutro.
+    n = len(results) or 1
+    avg_demand_mean = sum(result.demand_mean for result in results) / n
+    avg_demand_std_dev = sum(result.demand_std_deviation for result in results) / n
 
     # You can add more analysis based on your specific requirements
 

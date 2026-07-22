@@ -182,7 +182,7 @@ class DashboardService:
     def _get_business_products(cls, business_id: int) -> List[Product]:
         """Obtiene productos del negocio optimizado"""
         return list(Product.objects.filter(
-            fk_business=business_id
+            fk_business=business_id, is_active=True
         ).select_related('fk_business').prefetch_related('fk_product_area'))
 
     @classmethod
@@ -400,7 +400,9 @@ class DashboardService:
         try:
             # Contar áreas de manera eficiente
             areas_count = Area.objects.filter(
-                fk_product__fk_business=business_id
+                fk_product__fk_business=business_id,
+                is_active=True,
+                fk_product__is_active=True,
             ).count()
             
             # Contar gráficos activos
@@ -770,11 +772,19 @@ class DashboardService:
         try:
             from collections import defaultdict
 
+            # NOTA: el lookup original ('fk_product_questionary__results__fk_simulation')
+            # no correspondía a ninguna relación real (Questionary -> QuestionaryResult
+            # es 'fk_questionary_questionary_result'; QuestionaryResult -> Simulation es
+            # 'simulations') y Django lanzaba FieldError en cada llamada, atrapado por
+            # el except de abajo -- por eso "top productos" devolvía [] siempre.
             products = list(Product.objects.filter(
-                fk_business=business_id
+                fk_business=business_id, is_active=True
             ).annotate(
-                simulations_count=Count('fk_product_questionary__results__fk_simulation', distinct=True),
-                latest_simulation=Max('fk_product_questionary__results__fk_simulation__date_created')
+                simulations_count=Count(
+                    'fk_product_questionary__fk_questionary_questionary_result__simulations',
+                    distinct=True),
+                latest_simulation=Max(
+                    'fk_product_questionary__fk_questionary_questionary_result__simulations__date_created')
             ).order_by('-simulations_count', '-latest_simulation')[:5])
 
             if not products:

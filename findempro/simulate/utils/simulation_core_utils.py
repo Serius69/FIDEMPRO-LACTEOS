@@ -33,10 +33,16 @@ class SimulationCore:
         self.validator = SimulationValidator()
         self.cache_timeout = 3600
         self.batch_size = 100
-        
+
         # Mapeo mejorado y completo de preguntas a variables
         self.variable_mapper = VariableMapper()  # AGREGAR ESTA LÍNEA
         self.data_parser = DataParser()          # AGREGAR ESTA LÍNEA
+
+        # RNG del motor escalar. Por defecto sin semilla (equivalente al
+        # comportamiento previo con np.random global); execute_simulation lo
+        # re-crea con random_seed cuando la simulación lo especifica, para que
+        # el muestreo (_generate_demand_prediction) sea reproducible.
+        self._rng = np.random.default_rng()
 
     @transaction.atomic
     def create_simulation(self, form_data: Dict[str, Any]) -> Simulation:
@@ -70,6 +76,7 @@ class SimulationCore:
                 demand_history=json.dumps(validated_data['demand_history']),
                 fk_fdp=fk_fdp_instance,
                 demand_distribution=validated_data.get('demand_distribution', ''),
+                random_seed=validated_data.get('random_seed'),
                 is_active=True
             )
             
@@ -81,42 +88,73 @@ class SimulationCore:
             raise
 
     @transaction.atomic
-    def execute_simulation(self, simulation_instance: Simulation) -> None:
-        """Execute simulation with complete equation processing"""
+    def execute_simulation(self, simulation_instance: Simulation) -> Dict[str, Any]:
+        """
+        Execute simulation with complete equation processing.
+
+        Devuelve un resumen ``{'days_total', 'days_completed', 'days_skipped',
+        'skipped_day_indices'}``. Antes, un día que fallaba se descartaba con
+        ``except Exception: continue`` sin dejar ningún rastro: la simulación
+        terminaba con huecos en los resultados pero se reportaba como
+        "completada exitosamente". Ahora los días saltados se cuentan y se
+        exponen al llamador (la vista) para que pueda avisar en vez de fingir
+        éxito completo.
+        """
         try:
             nmd = int(simulation_instance.quantity_time)
             logger.info(f"Starting simulation execution for {nmd} days")
-            
+
+            # Semilla reproducible: si la simulación trae random_seed, el
+            # muestreo estocástico (_generate_demand_prediction) usa un RNG
+            # aislado con esa semilla en vez del estado global de np.random
+            # (que ignoraba random_seed por completo).
+            self._rng = np.random.default_rng(simulation_instance.random_seed)
+
             # Get all required data
             simulation_data = self._prepare_simulation_data(simulation_instance)
-            
+
             # Inicializar estado persistente desde cuestionario / CompanyProfile
             simulation_state = self._build_initial_state(simulation_instance)
-            
+
             # Process days sequentially
             results_to_save = []
-            
+            skipped_day_indices = []
+
             for day_index in range(nmd):
                 try:
                     # PASAR el estado a la simulación del día
                     day_results = self._simulate_single_day_complete(
                         simulation_instance, simulation_data, day_index, simulation_state
                     )
-                    
+
                     # ACTUALIZAR el estado con los resultados del día
                     self._update_simulation_state(simulation_state, day_results)
-                    
+
                     results_to_save.append((day_index, day_results))
                     logger.info(f"Day {day_index + 1} completed with {len(day_results['endogenous_results'])} variables calculated")
                 except Exception as e:
                     logger.error(f"Error simulating day {day_index}: {str(e)}")
+                    skipped_day_indices.append(day_index)
                     continue
-            
+
             # Bulk save results
             self._bulk_save_results(simulation_instance, results_to_save)
-            
+
+            if skipped_day_indices:
+                logger.warning(
+                    f"Simulation {simulation_instance.id}: {len(skipped_day_indices)} "
+                    f"de {nmd} dias fallaron y se omitieron (indices: {skipped_day_indices})"
+                )
+
             logger.info(f"Simulation {simulation_instance.id} executed successfully")
-            
+
+            return {
+                'days_total': nmd,
+                'days_completed': len(results_to_save),
+                'days_skipped': len(skipped_day_indices),
+                'skipped_day_indices': skipped_day_indices,
+            }
+
         except Exception as e:
             logger.error(f"Error executing simulation {simulation_instance.id}: {str(e)}")
             raise
@@ -1259,53 +1297,59 @@ class SimulationCore:
             std_to_use = min(std_demand, max_std)
             
             # Generate prediction based on distribution type
+            # (usa self._rng, sembrado desde Simulation.random_seed en
+            # execute_simulation, en vez del estado global de np.random —
+            # para que dos corridas con la misma semilla den el mismo resultado)
             if fdp.distribution_type == 1:  # Normal
-                base_prediction = np.random.normal(mean_demand, std_to_use)
-                
+                base_prediction = self._rng.normal(mean_demand, std_to_use)
+
             elif fdp.distribution_type == 2:  # Exponential
                 scale = mean_demand  # Use mean as scale
-                base_prediction = np.random.exponential(scale)
-                
+                base_prediction = self._rng.exponential(scale) if scale > 0 else mean_demand
+
             elif fdp.distribution_type == 3:  # Log-Normal
                 if mean_demand > 0 and cv > 0:
                     sigma = np.sqrt(np.log(1 + cv**2))
                     mu = np.log(mean_demand) - sigma**2 / 2
-                    base_prediction = np.random.lognormal(mu, sigma)
+                    base_prediction = self._rng.lognormal(mu, sigma)
                 else:
                     base_prediction = mean_demand
-                    
+
             elif fdp.distribution_type == 4:  # Gamma
-                if std_to_use > 0:
+                if std_to_use > 0 and mean_demand > 0:
                     shape = (mean_demand / std_to_use) ** 2
                     scale = std_to_use ** 2 / mean_demand
-                    base_prediction = np.random.gamma(shape, scale)
+                    base_prediction = self._rng.gamma(shape, scale)
                 else:
                     base_prediction = mean_demand
-                    
+
             elif fdp.distribution_type == 5:  # Uniform
                 min_val = mean_demand - std_to_use
                 max_val = mean_demand + std_to_use
-                base_prediction = np.random.uniform(min_val, max_val)
-                
+                base_prediction = self._rng.uniform(min_val, max_val) if max_val > min_val else mean_demand
+
             else:
-                base_prediction = np.random.normal(mean_demand, std_to_use)
-            
+                base_prediction = self._rng.normal(mean_demand, std_to_use)
+
             # Apply continuity adjustment for first days
             if day_index < 7:
                 continuity_factor = 0.7 - (day_index * 0.1)  # Decreasing weight
-                base_prediction = (continuity_factor * last_historical_value + 
+                base_prediction = (continuity_factor * last_historical_value +
                                 (1 - continuity_factor) * base_prediction)
-            
+
             # Apply seasonality
             prediction = base_prediction * seasonality
-            
+
             # Apply trend with dampening
             trend_dampening = 0.3  # Reduce trend impact
-            trend_factor = 1 + (historical_trend / mean_demand) * trend_dampening * (day_index / 30)
+            if mean_demand > 0:
+                trend_factor = 1 + (historical_trend / mean_demand) * trend_dampening * (day_index / 30)
+            else:
+                trend_factor = 1
             prediction *= trend_factor
-            
+
             # Add small random walk
-            random_walk = np.random.normal(0, std_to_use * 0.05)
+            random_walk = self._rng.normal(0, std_to_use * 0.05)
             prediction += random_walk
             
             # Validate prediction within reasonable bounds
@@ -1324,7 +1368,7 @@ class SimulationCore:
             # Fallback to mean with small randomness
             demand_history = self._parse_demand_history(simulation_instance.demand_history)
             mean_demand = np.mean(demand_history) if demand_history else 2500
-            return max(1.0, mean_demand * (0.95 + random.random() * 0.1))
+            return max(1.0, mean_demand * (0.95 + self._rng.random() * 0.1))
 
     def _get_output_variable(self, equation):
         """Get the output variable from an equation"""

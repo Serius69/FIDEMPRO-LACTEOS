@@ -1552,12 +1552,22 @@ class SimulateShowView(BaseSimulationView, View):
             simulation_service = SimulationCore()
             
             try:
-                simulation_service.execute_simulation(simulation_instance)
-                
+                summary = simulation_service.execute_simulation(simulation_instance)
+
                 # Limpiar sesión
                 self._clear_simulation_session(request)
-                
-                messages.success(request, "Simulación completada exitosamente.")
+
+                days_skipped = (summary or {}).get('days_skipped', 0)
+                if days_skipped:
+                    days_total = summary.get('days_total', days_skipped)
+                    messages.warning(
+                        request,
+                        f"Simulación completada con {days_skipped} de {days_total} "
+                        "días omitidos por errores de cálculo. Los resultados "
+                        "tienen huecos en esas fechas."
+                    )
+                else:
+                    messages.success(request, "Simulación completada exitosamente.")
                 return redirect('simulate:simulate.result', simulation_id=simulation_instance.id)
                 
             except Exception as e:
