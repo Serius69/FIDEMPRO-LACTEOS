@@ -26,6 +26,8 @@ class HubAuthMiddleware:
                 request.hub_user = payload.get("sub")
                 request.hub_rol = payload.get("rol", "viewer")
                 request.hub_proyectos = payload.get("proyectos", [])
+                plan = payload.get("plan", "basico")
+                request.hub_plan = plan if plan in {"basico", "pro", "empresa"} else "basico"
             except AuthError:
                 pass
 
@@ -57,6 +59,7 @@ class HubAuthMiddleware:
             "nombre": payload.get("nombre", ""),
             "rol": payload.get("rol", "viewer"),
             "proyectos": payload.get("proyectos", []),
+            "plan": payload.get("plan", "basico"),
             "tipo": "access_token",
             "iss": "kapitalya-hub",
             "iat": int(time.time()),

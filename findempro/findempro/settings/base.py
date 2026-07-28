@@ -102,6 +102,16 @@ MIDDLEWARE = [
 # Kapitalya Hub SSO
 HUB_JWT_SECRET = os.getenv('HUB_JWT_SECRET', '')
 HUB_URL = os.getenv('HUB_URL', 'https://kapitalya.com.bo')
+HUB_UPGRADE_URL = os.getenv('HUB_UPGRADE_URL', '')
+
+# Límites de uso por plan. Desactivados por defecto para preservar el flujo
+# existente durante el rollout.
+PLAN_GATES_ENABLED = os.getenv('PLAN_GATES_ENABLED', 'False').lower() in ('true', '1', 'yes')
+PLAN_SIM_LIMITS = {
+    'basico': 10,
+    'pro': 100,
+    'empresa': None,
+}
 
 # ─────────────────────────────────────────────
 # URLs / Templates / WSGI

@@ -22,6 +22,7 @@ from ..models import Simulation, ProbabilisticDensityFunction
 from ..utils.simulation_core_utils import SimulationCore
 from ..utils.cache_utils import CacheManager, cache_result, make_cache_key
 from ..utils.chart_demand_utils import ChartDemand
+from ..plan_limits import verificar_limite
 
 # Importaciones condicionales para servicios que pueden no existir
 try:
@@ -271,8 +272,18 @@ class SimulateShowView(BaseSimulationView, View):
         """Manejar peticiones POST para acciones de simulación"""
         try:
             action = request.POST.get('action', '')
-            
+
             if 'start' in request.POST or action == 'start':
+                plan = self._get_request_plan(request)
+                permitido, usadas, limite = verificar_limite(request.user, plan)
+                if not permitido:
+                    return JsonResponse({
+                        'error': 'LIMITE_SIMULACIONES',
+                        'usadas': usadas,
+                        'limite': limite,
+                        'plan': plan,
+                        'upgrade_url': getattr(settings, 'HUB_UPGRADE_URL', ''),
+                    }, status=402)
                 return self._handle_simulation_start(request)
             elif 'cancel' in request.POST or action == 'cancel':
                 return self._handle_simulation_cancel(request)
@@ -285,6 +296,15 @@ class SimulateShowView(BaseSimulationView, View):
             
         except Exception as e:
             return self.handle_exception(request, e, "POST request")
+
+    @staticmethod
+    def _get_request_plan(request) -> str:
+        """Resuelve el plan del Hub o el fallback para sesiones allauth."""
+        user = request.user
+        if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
+            return 'empresa'
+        plan = getattr(request, 'hub_plan', 'basico')
+        return plan if plan in {'basico', 'pro', 'empresa'} else 'basico'
     
     def _handle_questionary_selection(self, request) -> render:
         """Manejar selección de cuestionario y análisis estadístico"""
