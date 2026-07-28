@@ -8,12 +8,11 @@ respuestas servidas por Django, con independencia de las rarezas de herencia de
 los del bloque ``http{}`` padre — por eso la CSP definida en nginx nunca llegaba
 a emitirse en `/`, `/api/` ni en el resto del HTML dinámico).
 
-La CSP se toma de ``settings.CONTENT_SECURITY_POLICY`` (vacío = no se emite, útil
-para rollback inmediato). El allowlist por defecto refleja los CDNs que los
-templates realmente cargan (lordicon, cdnjs, jsdelivr, jquery, d3, datatables,
-Google Fonts) para no romper el render. Django ya emite X-Frame-Options,
-nosniff, Referrer-Policy y COOP vía SecurityMiddleware/XFrameOptionsMiddleware;
-aquí solo añadimos lo que falta.
+La CSP se toma de ``settings.CONTENT_SECURITY_POLICY`` (vacío = no se emite,
+útil para rollback inmediato). La política por defecto está orientada a la SPA
+y no permite scripts de terceros. Django ya emite X-Frame-Options, nosniff,
+Referrer-Policy y COOP vía SecurityMiddleware/XFrameOptionsMiddleware; aquí solo
+añadimos lo que falta.
 """
 from django.conf import settings
 from django.utils.deprecation import MiddlewareMixin

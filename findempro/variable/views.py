@@ -1,5 +1,6 @@
 import re
 import logging
+import os
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Variable, Equation, EquationResult
 from product.models import Product
@@ -10,7 +11,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.conf import settings
-import openai
 from django.http import JsonResponse
 from django.contrib import messages
 from django.http import HttpResponse, Http404
@@ -21,10 +21,44 @@ from sympy import symbols, Eq, solve
 from django.db.models import Q, Count
 from django.db import models
 
-# Set OpenAI API key
-openai.api_key = settings.OPENAI_API_KEY
-
 logger = logging.getLogger(__name__)
+
+
+def _generate_with_claude(prompt, max_tokens):
+    """Genera texto con Claude sin convertir la ausencia/falla del LLM en un 500."""
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return None
+
+    try:
+        import anthropic
+
+        response = anthropic.Anthropic(api_key=api_key).messages.create(
+            model=getattr(settings, "ANTHROPIC_MODEL", "claude-sonnet-5"),
+            max_tokens=max_tokens,
+            cache_control={"type": "ephemeral"},
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text_blocks = [
+            block.text for block in response.content
+            if getattr(block, "type", None) == "text"
+        ]
+        return "".join(text_blocks).strip() or None
+    except Exception:
+        logger.warning("Claude no disponible; se usará el fallback local.", exc_info=True)
+        return None
+
+
+def _fallback_initials(variable_name):
+    words = variable_name.split()
+    initials = ''.join(word[0].upper() for word in words[:4] if word)
+    return initials.ljust(4, 'X')[:4]
+
+
+def _normalise_initials(generated, variable_name):
+    initials = re.sub(r"[^A-Za-z0-9]", "", generated or "").upper()
+    return initials[:4] if len(initials) >= 4 else _fallback_initials(variable_name)
+
 
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
@@ -287,29 +321,15 @@ def create_or_update_variable_view(request, pk=None):
                 if pk is None:
                     variable_name = form.cleaned_data.get('name', '')
                     
-                    # Generar iniciales con fallback
-                    try:
-                        if hasattr(settings, 'OPENAI_API_KEY') and settings.OPENAI_API_KEY:
-                            initial_prompt = f"Generate the initials of the variable, but only use 4 characters. Do not include additional advertisements or instructions. Provide the initials for the next variable: {variable_name}"
-
-                            response = openai.completions.create(
-                                model="gpt-3.5-turbo-instruct",
-                                prompt=initial_prompt,
-                                max_tokens=5,
-                                stop=None
-                            )
-                            initials = response.choices[0].text.strip()
-                        else:
-                            raise Exception("OpenAI API key not configured")
-                            
-                    except Exception as openai_error:
-                        logger.error(f"OpenAI error: {openai_error}", exc_info=True)
-                        # Fallback: generar iniciales del nombre
-                        words = variable_name.split()
-                        initials = ''.join([word[0].upper() for word in words[:4] if word])
-                        if len(initials) < 4:
-                            initials = initials.ljust(4, 'X')
-                        initials = initials[:4]
+                    initial_prompt = (
+                        "Generate initials for the following variable using exactly "
+                        "four characters. Return only the initials: "
+                        f"{variable_name}"
+                    )
+                    initials = _normalise_initials(
+                        _generate_with_claude(initial_prompt, max_tokens=8),
+                        variable_name,
+                    )
 
                     form.instance.initials = initials
 
@@ -557,18 +577,8 @@ def generate_variable_questions(request, variable):
         django_variable = f"{variable.name} = models.{variable.get_type_display()}Field()"
         prompt = f"Create a question to gather and add precise data to a financial test form for the company's Variable:\n\n{django_variable}\n\nQuestion:"
         
-        if hasattr(settings, 'OPENAI_API_KEY') and settings.OPENAI_API_KEY:
-            response = openai.completions.create(
-                model="gpt-3.5-turbo-instruct",
-                prompt=prompt,
-                max_tokens=100,
-                n=1,
-                stop=None,
-            )
-            question = [choice.text.strip() for choice in response.choices]
-        else:
-            # Fallback question
-            question = [f"¿Cuál es el valor para {variable.name}?"]
+        generated = _generate_with_claude(prompt, max_tokens=100)
+        question = [generated or f"¿Cuál es el valor para {variable.name}?"]
             
     except Exception as e:
         logger.error(f"Error generando pregunta: {e}", exc_info=True)
