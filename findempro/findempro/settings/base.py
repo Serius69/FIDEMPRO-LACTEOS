@@ -17,10 +17,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # Cargar .env según el entorno activo — NUNCA forzar .env.development en producción
 _ENV = os.getenv('DJANGO_ENV', 'development')
 _env_file = os.path.join(BASE_DIR, f'.env.{_ENV}')
-if os.path.exists(_env_file):
-    load_dotenv(_env_file, override=False)
-elif os.path.exists(os.path.join(BASE_DIR, '.env')):
-    load_dotenv(os.path.join(BASE_DIR, '.env'), override=False)
+if _ENV not in ('test', 'testing'):
+    if os.path.exists(_env_file):
+        load_dotenv(_env_file, override=False)
+    elif os.path.exists(os.path.join(BASE_DIR, '.env')):
+        load_dotenv(os.path.join(BASE_DIR, '.env'), override=False)
 
 # ─────────────────────────────────────────────
 # Seguridad — NUNCA hardcodear en código

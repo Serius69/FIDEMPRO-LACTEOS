@@ -11,6 +11,7 @@ from variable.views import (
 
 def test_claude_missing_key_uses_clean_fallback(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
     assert _generate_with_claude("prompt", max_tokens=10) is None
     assert _fallback_initials("Costo total mensual") == "CTMX"
@@ -18,6 +19,7 @@ def test_claude_missing_key_uses_clean_fallback(monkeypatch):
 
 
 def test_claude_uses_sonnet_and_prompt_cache(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     create = Mock(return_value=SimpleNamespace(
         content=[SimpleNamespace(type="text", text="¿Cuál es el costo?")]
     ))
