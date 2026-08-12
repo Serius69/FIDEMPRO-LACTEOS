@@ -88,7 +88,15 @@ services:
       findempro_redis:
         condition: service_healthy
     networks:
-      - findempro_network
+      findempro_network: {}
+      # Red compartida con Prometheus para el scrape de /metrics. El alias va con
+      # GUION a propósito: Django rechaza cualquier Host que contenga '_' en
+      # split_domain_port() ANTES de mirar ALLOWED_HOSTS (DisallowedHost 400), y el
+      # nombre de contenedor es 'findempro_backend'. Declararlo aquí lo hace
+      # PERMANENTE: antes se conectaba a mano y se perdía en cada recreate.
+      red_publica_gateway:
+        aliases:
+          - findempro-backend
     # Cap de memoria: gunicorn 4 workers + motor Monte Carlo vectorizado (arrays
     # NumPy T×N). Sin cap, una simulación grande puede OOMear el host.
     mem_limit: 1g
