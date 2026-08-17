@@ -74,15 +74,12 @@ def test_report_overview_view(authenticated_client, report):
     assert 'report/report-detail.html' in [t.name for t in response.templates]
     assert response.context['report'] == report
 
-@pytest.mark.skip(reason="Generación de PDF migrada a tarea async Celery (responde 202 + task_id "
-                         "vía generar_reporte_pdf); ya no devuelve un application/pdf síncrono y "
-                         "requiere broker Celery para ejercitarse.")
 def test_generar_reporte_pdf(authenticated_client, report):
     url = reverse('report:generar_reporte_pdf', args=[report.id])
     response = authenticated_client.get(url)
-    assert response.status_code == 200
-    assert response['Content-Type'] == 'application/pdf'
-    assert f'attachment; filename="{report.title}.pdf"' in response['Content-Disposition']
+    assert response.status_code == 202
+    assert response.json()['task_id']
+    assert response.json()['status_url'].endswith(f'/report/pdf/status/{report.id}/')
 
 def test_create_report_view_get(authenticated_client):
     url = reverse('report:report.create')
@@ -99,6 +96,62 @@ def test_create_report_view_post(authenticated_client):
     })
     assert response.status_code == 302  # Redirect after successful creation
     assert Report.objects.filter(title='Test Report').exists()
+
+
+def _simulation_report_payload(product, **overrides):
+    payload = {
+        'product': product.id,
+        'demanda_inicial': 25,
+        'tasa_crecimiento': '3.50',
+        'horizonte': 6,
+        'precio_unitario': '15.00',
+        'costo_unitario': '7.00',
+        'gastos_fijos': '40.00',
+        'inversion_inicial': '300.00',
+        'tasa_descuento_anual': '12.50',
+        'tipo_simulacion': 'basica',
+    }
+    payload.update(overrides)
+    return payload
+
+
+def test_simulation_report_persists_owner_submitted_financial_assumptions(authenticated_client, user):
+    product = _product_for(user, "submitted-values")
+
+    response = authenticated_client.post(
+        reverse('report:simulation.create'),
+        _simulation_report_payload(product),
+    )
+
+    assert response.status_code == 302
+    report = Report.objects.get(fk_product=product)
+    params = report.content['parametros']
+    assert params['demanda_inicial'] == 25
+    assert params['precio_unitario'] == 15.0
+    assert params['costo_unitario'] == 7.0
+    assert params['inversion_inicial'] == 300.0
+    assert params['horizonte'] == 6
+    assert params['tasa_descuento_anual'] == 0.125
+    assert set(report.content['metadatos']['parameter_provenance'].values()) == {'USER_ENTERED'}
+    assert report.content['resultados_simulacion']['roi'] == 220.0
+    contract = report.content['metadatos']['financial_contract']
+    assert contract['currency'] == 'Bs'
+    assert contract['period'] == 'month'
+    assert contract['tasa_descuento_anual'] == 0.125
+
+
+def test_simulation_report_rejects_product_owned_by_another_user(authenticated_client, other_user):
+    foreign_product = _product_for(other_user, "foreign-simulation-report")
+
+    response = authenticated_client.post(
+        reverse('report:simulation.create'),
+        _simulation_report_payload(foreign_product),
+    )
+
+    assert response.status_code == 200
+    assert 'product' in response.context['form'].errors
+    assert foreign_product not in list(response.context['products'])
+    assert not Report.objects.filter(fk_product=foreign_product).exists()
 
 
 # ─────────────────────────────────────────────

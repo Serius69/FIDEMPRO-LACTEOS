@@ -18,6 +18,7 @@ export default defineConfig(({ command }) => ({
       '/user': { target: 'http://localhost:8000', changeOrigin: true },
       '/account': { target: 'http://localhost:8000', changeOrigin: true },
       '/health': { target: 'http://localhost:8000', changeOrigin: true },
+      '/modeling': { target: 'http://localhost:8000', changeOrigin: true },
       '/static': { target: 'http://localhost:8000', changeOrigin: true },
     },
   },

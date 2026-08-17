@@ -7,12 +7,12 @@ Para cada nodo estocástico del modelo (con distribution_config):
   1. Baseline: muestrea n_runs del parámetro de posición original
   2. High:     muestrea con mean * (1 + variation_pct)
   3. Low:      muestrea con mean * (1 - variation_pct)
-  4. Swing:    profit_proxy_high - profit_proxy_low
+  4. Swing:    profit_high - profit_low
 
 Devuelve lista de SensitivityResult + formato ApexCharts tornado chart.
 
-Proxy de utilidad: profit = mean(samples) * 0.30 (consistente con
-_minimal_montecarlo en canvas_views.py; margen bruto estimado del 30%).
+La utilidad solo se calcula con entradas explícitas de `unit_price`,
+`unit_cost` y `fixed_costs` en `run_specs`; el servicio no inventa un margen.
 """
 from __future__ import annotations
 
@@ -46,8 +46,6 @@ class SensitivityService:
       run_specs– dict con parámetros de corrida del proyecto
     """
 
-    _PROFIT_MARGIN = 0.30  # proxy margen bruto, consistente con _minimal_montecarlo
-
     # ── API pública ──────────────────────────────────────────────────────────
 
     def run_oat(
@@ -70,6 +68,10 @@ class SensitivityService:
         if not stochastic:
             return []
 
+        missing = [key for key in ("unit_price", "unit_cost", "fixed_costs") if run_specs.get(key) is None]
+        if missing:
+            raise ValueError(f"Entradas financieras explícitas requeridas para sensibilidad: {', '.join(missing)}")
+
         seed_eff = seed if seed is not None else run_specs.get("random_seed")
 
         results: List[SensitivityResult] = []
@@ -78,6 +80,7 @@ class SensitivityService:
                 var_name, dist_cfg, variation_pct, n_runs,
                 # Offsets de semilla distintos por variable para independencia
                 None if seed_eff is None else seed_eff + idx * 3,
+                run_specs,
             )
             if result is not None:
                 results.append(result)
@@ -287,14 +290,15 @@ class SensitivityService:
                 return stats.weibull_min.rvs(c=c, scale=scale, size=n, random_state=rng)
 
         except Exception as exc:
-            logger.warning("Error muestreando %s: %s — fallback normal", dist_type, exc)
+            raise ValueError(f"No se pudo muestrear la distribución '{dist_type}': {exc}") from exc
 
-        # Fallback normal con media estimada
-        mu = location_override or (loc_info[1] if loc_info else 500.0)
-        return np.maximum(rng.normal(mu, max(mu * 0.15, 1.0), n), 0.0)
+        raise ValueError(f"Distribución no soportada para sensibilidad: {dist_type}.")
 
-    def _profit_proxy(self, samples: np.ndarray) -> float:
-        return float(np.mean(samples)) * self._PROFIT_MARGIN
+    def _profit(self, samples: np.ndarray, run_specs: Dict) -> float:
+        price = float(run_specs["unit_price"])
+        unit_cost = float(run_specs["unit_cost"])
+        fixed_costs = float(run_specs["fixed_costs"])
+        return float(np.mean(samples) * (price - unit_cost) - fixed_costs)
 
     def _analyze_variable(
         self,
@@ -303,6 +307,7 @@ class SensitivityService:
         variation_pct: float,
         n_runs: int,
         seed: Optional[int],
+        run_specs: Dict,
     ) -> Optional[SensitivityResult]:
         """Baseline + high + low para una variable. Retorna None si no hay parámetro de posición."""
         loc_info = self._get_location_param(dist_cfg)
@@ -323,9 +328,9 @@ class SensitivityService:
         s_h = self._sample(dist_cfg, high_loc,     n_runs, rng_h)
         s_l = self._sample(dist_cfg, low_loc,      n_runs, rng_l)
 
-        p_b = self._profit_proxy(s_b)
-        p_h = self._profit_proxy(s_h)
-        p_l = self._profit_proxy(s_l)
+        p_b = self._profit(s_b, run_specs)
+        p_h = self._profit(s_h, run_specs)
+        p_l = self._profit(s_l, run_specs)
 
         swing = p_h - p_l
         sensitivity_pct = abs(swing) / max(abs(p_b), 1e-6) * 100 if p_b != 0 else 0.0

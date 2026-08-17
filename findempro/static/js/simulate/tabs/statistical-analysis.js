@@ -564,30 +564,20 @@ class StatisticalAnalysis {
             
             if (!valueContainer) return;
             
-            // Simular resultados de pruebas estadísticas
-            const pValue = Math.random();
-            const isSignificant = pValue > 0.05;
-            
             if (testName.includes('normalidad')) {
                 valueContainer.innerHTML = `
-                    <span class="badge ${isSignificant ? 'bg-success' : 'bg-warning'}">
-                        ${isSignificant ? 'Normal' : 'No Normal'}
-                    </span>
-                    <small class="d-block">p-value: ${pValue.toFixed(4)}</small>
+                    <span class="badge bg-secondary">No calculado</span>
+                    <small class="d-block">p-value: no disponible; use el diagnóstico backend</small>
                 `;
             } else if (testName.includes('medias')) {
                 valueContainer.innerHTML = `
-                    <span class="badge ${isSignificant ? 'bg-success' : 'bg-warning'}">
-                        ${isSignificant ? 'Iguales' : 'Diferentes'}
-                    </span>
-                    <small class="d-block">p-value: ${pValue.toFixed(4)}</small>
+                    <span class="badge bg-secondary">No calculado</span>
+                    <small class="d-block">p-value: no disponible en el navegador</small>
                 `;
             } else if (testName.includes('varianzas')) {
                 valueContainer.innerHTML = `
-                    <span class="badge ${isSignificant ? 'bg-success' : 'bg-warning'}">
-                        ${isSignificant ? 'Homogéneas' : 'Heterogéneas'}
-                    </span>
-                    <small class="d-block">p-value: ${pValue.toFixed(4)}</small>
+                    <span class="badge bg-secondary">No calculado</span>
+                    <small class="d-block">p-value: no disponible en el navegador</small>
                 `;
             }
         });
@@ -735,25 +725,14 @@ class StatisticalAnalysis {
     }
 
     performNormalityTest(data) {
-        // Implementación simplificada del test de Shapiro-Wilk
+        // El navegador no implementa una prueba inferencial calibrada.
         const n = data.length;
-        if (n < 3) return { statistic: 0, pValue: 1, isNormal: false };
-        
-        // Ordenar datos
-        const sorted = [...data].sort((a, b) => a - b);
-        
-        // Calcular estadístico W (simplificado)
-        const mean = sorted.reduce((a, b) => a + b, 0) / n;
-        const variance = sorted.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (n - 1);
-        
-        // Aproximación simple del estadístico
-        const w = 0.8 + Math.random() * 0.15; // Simulado
-        const pValue = w > 0.9 ? 0.1 + Math.random() * 0.4 : 0.01 + Math.random() * 0.04;
-        
         return {
-            statistic: w,
-            pValue: pValue,
-            isNormal: pValue > 0.05
+            statistic: null,
+            pValue: null,
+            isNormal: null,
+            available: false,
+            unavailableReason: n < 3 ? 'INSUFFICIENT_SAMPLE' : 'USE_BACKEND_DIAGNOSTIC'
         };
     }
 

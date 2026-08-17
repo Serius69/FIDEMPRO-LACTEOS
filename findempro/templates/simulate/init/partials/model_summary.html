@@ -72,19 +72,38 @@
                 {% if best_distribution %}
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                        <span class="text-muted">Distribución óptima:</span>
+                        <span class="text-muted">Candidato por AIC:</span>
                         <span class="badge bg-success">{{ best_distribution|title }}</span>
                     </div>
                 </div>
-                {% endif %}
-                
-                {% if best_ks_p_value_floor %}
+                {% elif distribution_fit_diagnostic %}
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                        <span class="text-muted">P-Value KS:</span>
-                        <span class="badge bg-warning text-dark" title="Valor p de la prueba Kolmogorov-Smirnov">
-                            {{ best_ks_p_value_floor|floatformat:"4" }}
+                        <span class="text-muted">Ajuste de distribución:</span>
+                        <span class="badge bg-secondary">No disponible</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if distribution_fit_diagnostic %}
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted">Diagnóstico de ajuste:</span>
+                        <span class="text-end">
+                            {% if distribution_fit_diagnostic.valid %}
+                                <span class="badge bg-info">{{ distribution_fit_diagnostic.test_name }}</span>
+                                <small class="d-block text-muted mt-1">Estadístico: {{ distribution_fit_diagnostic.statistic|floatformat:"4" }} · n={{ distribution_fit_diagnostic.n_observations }}</small>
+                            {% else %}
+                                <span class="badge bg-secondary">No calculado</span>
+                                <small class="d-block text-muted mt-1">{{ distribution_fit_diagnostic.unavailable_reason }}</small>
+                            {% endif %}
                         </span>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted">p-value:</span>
+                        <span class="badge bg-secondary" title="No se publica el p-value KS ingenuo cuando los parámetros se estiman con la misma muestra.">No calculado</span>
                     </div>
                 </div>
                 {% endif %}
@@ -238,7 +257,7 @@
                     <div class="text-center">
                         <small class="text-muted">
                             <i class="bx bx-info-circle me-1"></i>
-                            Validación del ajuste {{ best_distribution|title }}
+                            Diagnóstico visual condicionado al candidato {{ best_distribution|title }}
                         </small>
                     </div>
                 </div>

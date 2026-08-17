@@ -2134,23 +2134,23 @@
                                 </tr>
                                 <tr class="table-warning">
                                     <td>
-                                        <strong>VaR 95%</strong>
+                                        <strong>Umbral VaR 95%</strong>
                                         <i class="bx bx-info-circle text-muted ms-1" data-bs-toggle="tooltip"
-                                           title="Value at Risk al 95%: pérdida máxima esperada en el 5% peor de los escenarios. Si es negativo, indica que en el 5% de los días la ganancia cae a ese valor."></i>
+                                           title="Cuantil inferior firmado de utilidad: el 5% de escenarios queda en este valor o por debajo. Un valor positivo sigue siendo ganancia; uno negativo representa pérdida."></i>
                                     </td>
                                     <td class="text-end {% if risk_metrics.var_95 >= 0 %}text-success{% else %}text-danger{% endif %}"><strong>{{ risk_metrics.var_95|floatformat:2 }}</strong></td>
                                     <td class="text-center">{% if risk_metrics.var_95 >= 0 %}<span class="badge bg-success">Verde</span>{% else %}<span class="badge bg-danger">Rojo</span>{% endif %}</td>
-                                    <td><small>Piso de ganancia en peor 5% de escenarios</small></td>
+                                    <td><small>Cuantil inferior firmado (P5)</small></td>
                                 </tr>
                                 <tr class="table-danger">
                                     <td>
                                         <strong>CVaR 95%</strong>
                                         <i class="bx bx-info-circle text-muted ms-1" data-bs-toggle="tooltip"
-                                           title="Expected Shortfall: promedio de pérdidas en el 5% peor de escenarios. Más conservador que el VaR porque captura la magnitud de las pérdidas extremas."></i>
+                                           title="Media firmada de utilidad en el 5% inferior. Puede ser positiva si incluso la cola desfavorable conserva ganancias."></i>
                                     </td>
                                     <td class="text-end {% if risk_metrics.cvar_95 >= 0 %}text-success{% else %}text-danger{% endif %}"><strong>{{ risk_metrics.cvar_95|floatformat:2 }}</strong></td>
                                     <td class="text-center">{% if risk_metrics.cvar_95 >= 0 %}<span class="badge bg-success">Verde</span>{% else %}<span class="badge bg-danger">Rojo</span>{% endif %}</td>
-                                    <td><small>Pérdida promedio en cola inferior 5%</small></td>
+                                    <td><small>Utilidad media en cola inferior 5%</small></td>
                                 </tr>
                             </tbody>
                         </table>

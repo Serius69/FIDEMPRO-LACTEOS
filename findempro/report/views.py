@@ -349,12 +349,12 @@ def create_simulation_report(request):
     """Create a simulation report with enhanced validation."""
     try:
         if request.method == 'POST':
-            form = SimulationReportForm(request.POST)
+            form = SimulationReportForm(request.POST, user=request.user)
             
             if form.is_valid():
                 # Get form data
                 product = form.cleaned_data['product']
-                simulation_params = form.cleaned_data.get('simulation_params', {})
+                simulation_params = form.get_simulation_params()
                 
                 # Validate simulation parameters
                 validation_errors = validate_simulation_params(simulation_params)
@@ -390,11 +390,11 @@ def create_simulation_report(request):
             else:
                 messages.error(request, 'Por favor corrige los errores en el formulario.')
         else:
-            form = SimulationReportForm()
+            form = SimulationReportForm(user=request.user)
         
         context = {
             'form': form,
-            'products': Product.objects.filter(is_active=True).order_by('name'),
+            'products': form.fields['product'].queryset,
             'default_params': get_default_simulation_params(),
         }
         
@@ -456,6 +456,7 @@ def get_default_simulation_params() -> Dict[str, Any]:
         'horizonte': 12,
         'gastos_fijos': 5000,
         'inversion_inicial': 50000,
+        'tasa_descuento_anual': 0.12,
     }
 
 def process_simulation_data(product: Product, simulation_params: Dict[str, Any],
@@ -466,7 +467,9 @@ def process_simulation_data(product: Product, simulation_params: Dict[str, Any],
         variables = Variable.objects.filter(fk_product=product)
         
         # Enhance simulation parameters with defaults
-        params = {**get_default_simulation_params(), **simulation_params}
+        defaults = get_default_simulation_params()
+        supplied_keys = set(simulation_params)
+        params = {**defaults, **simulation_params}
         
         # Perform calculations with error handling
         try:
@@ -475,7 +478,7 @@ def process_simulation_data(product: Product, simulation_params: Dict[str, Any],
             roi = calculate_roi(params)
             punto_equilibrio = calculate_punto_equilibrio(params)
             payback = calculate_payback_period(params)
-            van = calculate_van(params)
+            van = calculate_van(params, tasa_descuento=params['tasa_descuento_anual'])
             tir = calculate_tir(params)
             
         except Exception as calc_error:
@@ -501,11 +504,11 @@ def process_simulation_data(product: Product, simulation_params: Dict[str, Any],
             'resultados_simulacion': {
                 'utilidad_neta': round(utilidad_neta, 2),
                 'flujo_caja': round(flujo_caja, 2),
-                'roi': round(roi, 2),
+                'roi': _round_optional(roi),
                 'punto_equilibrio': round(punto_equilibrio, 0),
-                'payback_period': round(payback, 2),
+                'payback_period': _round_optional(payback),
                 'van': round(van, 2),
-                'tir': round(tir, 2),
+                'tir': _round_optional(tir),
                 'margen_unitario': round(params['precio_unitario'] - params['costo_unitario'], 2),
                 'ingresos_totales': round(params['demanda_inicial'] * params['precio_unitario'], 2),
             },
@@ -517,6 +520,19 @@ def process_simulation_data(product: Product, simulation_params: Dict[str, Any],
                 'usuario': username,
                 'tipo': 'simulacion_producto',
                 'parametros_version': '2.0',
+                'parameter_provenance': {
+                    key: 'USER_ENTERED' if key in supplied_keys else 'TEMPLATE_DEFAULT'
+                    for key in params
+                },
+                'financial_contract': {
+                    'currency': 'Bs',
+                    'period': 'month',
+                    'roi': 'net_horizon_cash_return / initial_investment',
+                    'npv': 'monthly_annuity discounted by explicit annual nominal rate',
+                    'irr': 'annual_effective_rate from monthly NPV root',
+                    'payback': 'initial_investment / positive_monthly_cash_flow',
+                    'tasa_descuento_anual': params['tasa_descuento_anual'],
+                },
             }
         }
 
@@ -529,85 +545,142 @@ def process_simulation_data(product: Product, simulation_params: Dict[str, Any],
         return {'error': str(e)}
 
 # Enhanced calculation functions
+_REPORT_MONEY = Decimal("0.01")
+
+
+def _report_non_negative(params: Dict[str, Any], key: str, default: str | None = None) -> Decimal:
+    if key not in params and default is None:
+        raise ValueError(f"{key} es obligatorio para este cálculo.")
+    try:
+        value = Decimal(str(params.get(key, default)))
+    except Exception as exc:
+        raise ValueError(f"{key} debe ser numérico.") from exc
+    if not value.is_finite() or value < 0:
+        raise ValueError(f"{key} debe ser finito y no negativo.")
+    return value
+
+
+def _report_horizon(params: Dict[str, Any]) -> int:
+    raw = params.get('horizonte')
+    if isinstance(raw, bool):
+        raise ValueError("horizonte debe ser un entero entre 1 y 120 meses.")
+    try:
+        horizon = int(raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("horizonte es obligatorio y debe ser entero.") from exc
+    if horizon < 1 or horizon > 120 or str(raw).strip() not in {str(horizon), f"{horizon}.0"}:
+        raise ValueError("horizonte debe ser un entero entre 1 y 120 meses.")
+    return horizon
+
+
+def _annuity_npv(investment: Decimal, monthly_cash_flow: Decimal, horizon: int, monthly_rate: Decimal) -> Decimal:
+    if monthly_rate <= Decimal("-1"):
+        raise ValueError("La tasa mensual debe ser mayor a -100%.")
+    value = -investment
+    factor = Decimal("1") + monthly_rate
+    for month in range(1, horizon + 1):
+        value += monthly_cash_flow / (factor ** month)
+    return value
+
+
+def _round_optional(value: Optional[float], digits: int = 2) -> Optional[float]:
+    return round(value, digits) if value is not None else None
+
+
 def calculate_utilidad_neta(params: Dict[str, Any]) -> float:
-    """Calculate net profit with enhanced validation."""
-    demanda = float(params.get('demanda_inicial', 0))
-    precio = float(params.get('precio_unitario', 0))
-    costo = float(params.get('costo_unitario', 0))
-    
-    return (precio - costo) * demanda
-
+    """Calculate net operating result with Decimal monetary arithmetic."""
+    demanda = _report_non_negative(params, 'demanda_inicial')
+    precio = _report_non_negative(params, 'precio_unitario')
+    costo = _report_non_negative(params, 'costo_unitario')
+    return float(((precio - costo) * demanda).quantize(_REPORT_MONEY))
 def calculate_flujo_caja(params: Dict[str, Any]) -> float:
-    """Calculate cash flow."""
-    utilidad = calculate_utilidad_neta(params)
-    gastos_fijos = float(params.get('gastos_fijos', 0))
-    
-    return utilidad - gastos_fijos
+    """Calculate the legacy operating cash proxy with explicit naming."""
+    utilidad = Decimal(str(calculate_utilidad_neta(params)))
+    gastos_fijos = _report_non_negative(params, 'gastos_fijos')
+    return float((utilidad - gastos_fijos).quantize(_REPORT_MONEY))
 
-def calculate_roi(params: Dict[str, Any]) -> float:
-    """Calculate ROI (Return on Investment)."""
-    inversion = float(params.get('inversion_inicial', 1))
-    flujo_caja = calculate_flujo_caja(params)
-    
-    if inversion <= 0:
-        return 0
-    
-    return (flujo_caja / inversion) * 100
+
+def calculate_roi(params: Dict[str, Any]) -> Optional[float]:
+    """Return net horizon cash return as a percentage of invested capital."""
+    inversion = _report_non_negative(params, 'inversion_inicial')
+    horizon = _report_horizon(params)
+    monthly_cash_flow = Decimal(str(calculate_flujo_caja(params)))
+    if inversion == 0:
+        return None
+    net_horizon_return = monthly_cash_flow * horizon - inversion
+    return float(((net_horizon_return / inversion) * 100).quantize(Decimal("0.0001")))
+
 
 def calculate_punto_equilibrio(params: Dict[str, Any]) -> float:
     """Calculate break-even point."""
-    precio = float(params.get('precio_unitario', 0))
-    costo_variable = float(params.get('costo_unitario', 0))
-    gastos_fijos = float(params.get('gastos_fijos', 0))
-    
+    precio = _report_non_negative(params, 'precio_unitario')
+    costo_variable = _report_non_negative(params, 'costo_unitario')
+    gastos_fijos = _report_non_negative(params, 'gastos_fijos')
     margen_contribucion = precio - costo_variable
-    
     if margen_contribucion <= 0:
         return float('inf')
-    
-    return gastos_fijos / margen_contribucion
+    return float((gastos_fijos / margen_contribucion).quantize(Decimal("0.0001")))
 
-def calculate_payback_period(params: Dict[str, Any]) -> float:
+
+def calculate_payback_period(params: Dict[str, Any]) -> Optional[float]:
     """Calculate payback period in months."""
-    inversion = float(params.get('inversion_inicial', 1))
-    flujo_caja_mensual = calculate_flujo_caja(params)
-    
+    inversion = _report_non_negative(params, 'inversion_inicial')
+    flujo_caja_mensual = Decimal(str(calculate_flujo_caja(params)))
+    if inversion == 0:
+        return 0.0
     if flujo_caja_mensual <= 0:
-        return float('inf')
-    
-    return inversion / flujo_caja_mensual
+        return None
+    return float((inversion / flujo_caja_mensual).quantize(Decimal("0.0001")))
+def calculate_van(params: Dict[str, Any], tasa_descuento: Optional[float] = None) -> float:
+    """Calculate NPV using equal monthly cash flow and an annual nominal rate."""
+    inversion = _report_non_negative(params, 'inversion_inicial')
+    flujo_caja_mensual = Decimal(str(calculate_flujo_caja(params)))
+    horizonte = _report_horizon(params)
+    if tasa_descuento is None:
+        if 'tasa_descuento_anual' not in params:
+            raise ValueError("tasa_descuento_anual es obligatoria para calcular VAN.")
+        tasa_descuento = params['tasa_descuento_anual']
+    try:
+        annual_discount_rate = Decimal(str(tasa_descuento))
+    except Exception as exc:
+        raise ValueError("tasa_descuento debe ser numérica y finita.") from exc
+    if not annual_discount_rate.is_finite() or annual_discount_rate < 0:
+        raise ValueError("tasa_descuento debe ser finita y no negativa.")
+    tasa_mensual = annual_discount_rate / 12
+    van = _annuity_npv(inversion, flujo_caja_mensual, horizonte, tasa_mensual)
+    return float(van.quantize(_REPORT_MONEY))
 
-def calculate_van(params: Dict[str, Any], tasa_descuento: float = 0.12) -> float:
-    """Calculate Net Present Value (VAN)."""
-    inversion = float(params.get('inversion_inicial', 0))
-    flujo_caja_mensual = calculate_flujo_caja(params)
-    horizonte = int(params.get('horizonte', 12))
-    
-    van = -inversion
-    tasa_mensual = tasa_descuento / 12
-    
-    for mes in range(1, horizonte + 1):
-        flujo_descontado = flujo_caja_mensual / ((1 + tasa_mensual) ** mes)
-        van += flujo_descontado
-    
-    return van
 
-def calculate_tir(params: Dict[str, Any]) -> float:
-    """Calculate Internal Rate of Return (TIR) using approximation."""
-    # Simplified TIR calculation using binary search
-    inversion = float(params.get('inversion_inicial', 1))
-    flujo_caja_mensual = calculate_flujo_caja(params)
-    horizonte = int(params.get('horizonte', 12))
-
-    # Guarda contra división por cero (igual que calculate_roi con inversion<=0).
+def calculate_tir(params: Dict[str, Any]) -> Optional[float]:
+    """Solve monthly IRR by bisection and return its annual effective rate."""
+    inversion = _report_non_negative(params, 'inversion_inicial')
+    flujo_caja_mensual = Decimal(str(calculate_flujo_caja(params)))
+    horizonte = _report_horizon(params)
     if inversion <= 0 or flujo_caja_mensual <= 0:
-        return 0
+        return None
 
-    # Simple approximation
-    total_flujos = flujo_caja_mensual * horizonte
-    tir_anual = ((total_flujos / inversion) ** (1/horizonte)) - 1
-    
-    return tir_anual * 100
+    lower = Decimal("-0.999999")
+    upper = Decimal("1")
+    while _annuity_npv(inversion, flujo_caja_mensual, horizonte, upper) > 0 and upper < Decimal("1048575"):
+        upper = upper * 2 + 1
+    if _annuity_npv(inversion, flujo_caja_mensual, horizonte, upper) > 0:
+        return None
+
+    tolerance = Decimal("0.0000000001")
+    for _ in range(200):
+        midpoint = (lower + upper) / 2
+        npv = _annuity_npv(inversion, flujo_caja_mensual, horizonte, midpoint)
+        if abs(npv) <= tolerance:
+            lower = upper = midpoint
+            break
+        if npv > 0:
+            lower = midpoint
+        else:
+            upper = midpoint
+
+    monthly_rate = (lower + upper) / 2
+    annual_effective_rate = ((Decimal("1") + monthly_rate) ** 12 - Decimal("1")) * 100
+    return float(annual_effective_rate.quantize(Decimal("0.0001")))
 
 def generate_sensitivity_analysis(params: Dict[str, Any]) -> Dict[str, Any]:
     """Generate sensitivity analysis for key parameters."""
@@ -632,8 +705,8 @@ def generate_sensitivity_analysis(params: Dict[str, Any]) -> Dict[str, Any]:
                 param_analysis.append({
                     'variation': variation,
                     'new_value': round(new_value, 2),
-                    'roi': round(new_roi, 2),
-                    'roi_change': round(new_roi - base_roi, 2),
+                    'roi': _round_optional(new_roi),
+                    'roi_change': round(new_roi - base_roi, 2) if new_roi is not None and base_roi is not None else None,
                 })
             
             sensitivity[param] = param_analysis
@@ -894,7 +967,7 @@ def report_api_list(request):
                 if 'resultados_simulacion' in report.content:
                     results = report.content['resultados_simulacion']
                     report_data['metrics'] = {
-                        'roi': results.get('roi', 0),
+                        'roi': results.get('roi'),
                         'utilidad_neta': results.get('utilidad_neta', 0),
                         'punto_equilibrio': results.get('punto_equilibrio', 0),
                     }

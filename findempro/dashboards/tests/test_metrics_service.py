@@ -87,8 +87,20 @@ def test_metrics_are_single_simulation_scale(django_user_model):
     assert metrics.revenue == 100.0
     assert metrics.costs == 60.0
     assert metrics.profit == 40.0
+    assert metrics.roi is None
     # Escala acotada: nunca del orden de sum(sims*periodos)
     assert metrics.revenue < 500
+
+
+def test_dashboard_roi_requires_explicit_investment_and_is_not_scored():
+    assert DashboardService._calculate_roi(profit=25.0, investment=None) is None
+    assert DashboardService._calculate_roi(profit=25.0, investment=0.0) is None
+    assert DashboardService._calculate_roi(profit=25.0, investment=100.0) == 25.0
+
+    metrics = DashboardService._calculate_enhanced_metrics([])
+    kpis = DashboardService._calculate_enhanced_kpis(metrics)
+    assert kpis["roi_percentage"] is None
+    assert not any(alert["title"] == "ROI Negativo" for alert in DashboardService._generate_enhanced_alerts(metrics, {}, kpis))
 
 
 @pytest.mark.django_db

@@ -41,7 +41,7 @@ class BusinessMetrics:
     costs: float = 0.0
     profit: float = 0.0
     profit_margin: float = 0.0
-    roi: float = 0.0
+    roi: Optional[float] = None
     inventory: float = 0.0
     demand: float = 0.0
     production: float = 0.0
@@ -234,7 +234,8 @@ class DashboardService:
         través de sus períodos, obteniendo el valor esperado por período. Así
         revenue/costs/profit quedan en la escala de un período de una simulación,
         independiente del nº de simulaciones y del horizonte, y los derivados
-        (profit_margin, roi, KPIs) resultan interpretables.
+            (profit_margin y KPIs operativos) resultan interpretables. ROI solo
+            puede existir cuando hay una base explícita de inversión.
         """
         metrics = BusinessMetrics()
 
@@ -279,13 +280,14 @@ class DashboardService:
 
         # Calcular métricas derivadas
         metrics.profit_margin = cls._calculate_profit_margin(metrics.revenue, metrics.costs)
-        metrics.roi = cls._calculate_roi(metrics.revenue, metrics.costs)
+        metrics.roi = cls._calculate_roi(metrics.profit, investment=None)
         metrics.efficiency_score = cls._calculate_efficiency_score(metrics)
 
         # Redondear valores
         for field in metrics.__dataclass_fields__:
             value = getattr(metrics, field)
-            setattr(metrics, field, round(value, 2))
+            if isinstance(value, (int, float)):
+                setattr(metrics, field, round(value, 2))
 
         return metrics
 
@@ -362,11 +364,11 @@ class DashboardService:
         return 0.0
 
     @classmethod
-    def _calculate_roi(cls, revenue: float, costs: float) -> float:
-        """Calcula ROI"""
-        if costs > 0:
-            return ((revenue - costs) / costs) * 100
-        return 0.0 if revenue == 0 else 100.0
+    def _calculate_roi(cls, profit: float, investment: Optional[float]) -> Optional[float]:
+        """Calculate ROI only from an explicit invested-capital basis."""
+        if investment is None or investment <= 0:
+            return None
+        return (profit / investment) * 100
 
     @classmethod
     def _calculate_efficiency_score(cls, metrics: BusinessMetrics) -> float:
@@ -660,7 +662,8 @@ class DashboardService:
             
             # Redondear valores
             for key, value in kpis.items():
-                kpis[key] = round(value, 1)
+                if isinstance(value, (int, float)):
+                    kpis[key] = round(value, 1)
             
             return kpis
             
@@ -668,7 +671,7 @@ class DashboardService:
             logger.error(f"Error calculating enhanced KPIs: {e}")
             return {
                 'profit_margin_percentage': 0,
-                'roi_percentage': 0,
+                'roi_percentage': None,
                 'efficiency_score': 0,
                 'net_profit': 0,
                 'cost_ratio': 0,
@@ -694,15 +697,16 @@ class DashboardService:
             else:
                 scores.append(30)
             
-            # Score de ROI
-            if metrics.roi > 25:
-                scores.append(100)
-            elif metrics.roi > 15:
-                scores.append(80)
-            elif metrics.roi > 5:
-                scores.append(60)
-            else:
-                scores.append(30)
+            # ROI is only scored when an explicit investment basis exists.
+            if metrics.roi is not None:
+                if metrics.roi > 25:
+                    scores.append(100)
+                elif metrics.roi > 15:
+                    scores.append(80)
+                elif metrics.roi > 5:
+                    scores.append(60)
+                else:
+                    scores.append(30)
             
             # Score de eficiencia
             scores.append(min(100, metrics.efficiency_score))
@@ -729,7 +733,7 @@ class DashboardService:
                 })
             
             # Alertas de ROI
-            if metrics.roi < 0:
+            if metrics.roi is not None and metrics.roi < 0:
                 alerts.append({
                     'type': 'danger',
                     'title': 'ROI Negativo',
@@ -920,7 +924,7 @@ class DashboardService:
             'recent_activity': [],
             'business_kpis': {
                 'profit_margin_percentage': 0,
-                'roi_percentage': 0,
+                'roi_percentage': None,
                 'efficiency_score': 0,
                 'net_profit': 0,
                 'cost_ratio': 0,

@@ -15,12 +15,15 @@ Usa distribuciones probabilísticas (Normal, Log-Normal, Gamma, Uniforme, Expone
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy import stats
 from scipy.stats import norm, lognorm, gamma, uniform, expon
+
+from modeling.statistics import fit_distributions
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +49,33 @@ class SimulationConfig:
     unit_price: float = 10.0
     unit_cost: float = 6.0
     fixed_costs: float = 5000.0
+    investment: Optional[float] = None
     # Estacionalidad (lista de 12 factores — se extrapola si time_periods != 12)
     seasonality_factors: List[float] = field(default_factory=lambda: [1.0] * 12)
+
+    def __post_init__(self):
+        if self.n_iterations < 1:
+            raise ValueError("n_iterations debe ser al menos 1.")
+        if self.time_periods < 1:
+            raise ValueError("time_periods debe ser al menos 1.")
+        if not 0 < self.confidence_level < 1:
+            raise ValueError("confidence_level debe estar entre 0 y 1 (exclusivos).")
+        numeric_nonnegative = {
+            "demand_mean": self.demand_mean,
+            "demand_std": self.demand_std,
+            "unit_price": self.unit_price,
+            "unit_cost": self.unit_cost,
+            "fixed_costs": self.fixed_costs,
+        }
+        for name, value in numeric_nonnegative.items():
+            if not math.isfinite(float(value)) or value < 0:
+                raise ValueError(f"{name} debe ser un número finito no negativo.")
+        if self.demand_min is not None and self.demand_max is not None and self.demand_min > self.demand_max:
+            raise ValueError("demand_min no puede superar demand_max.")
+        if any(not math.isfinite(float(factor)) or factor < 0 for factor in self.seasonality_factors):
+            raise ValueError("seasonality_factors debe contener números finitos no negativos.")
+        if self.investment is not None and (not math.isfinite(float(self.investment)) or self.investment < 0):
+            raise ValueError("investment debe ser un número finito no negativo.")
 
 
 @dataclass
@@ -61,7 +89,7 @@ class ScenarioResult:
     total_costs: float
     gross_profit: float
     profit_margin_pct: float
-    roi: float
+    roi: Optional[float]
 
 
 @dataclass
@@ -204,7 +232,9 @@ class MonteCarloEngine:
         total_costs = variable_costs + fixed
         gross_profit = revenue - total_costs
         profit_margin = np.where(revenue > 0, (gross_profit / revenue) * 100, 0.0)
-        roi = np.where(total_costs > 0, (gross_profit / total_costs) * 100, 0.0)
+        # Total operating costs are not an investment basis. ROI is exposed
+        # only when the caller explicitly declares invested capital.
+        roi = None
 
         return {
             'revenue': revenue,
@@ -232,6 +262,7 @@ class MonteCarloEngine:
             'probability_breakeven': 1.0 - prob_loss,
             'value_at_risk_95': float(var_threshold),
             'expected_shortfall': expected_shortfall,
+            'confidence_level': confidence_level,
         }
 
     # ── Intervalos de confianza ─────────────────────────────────────────────────
@@ -266,7 +297,7 @@ class MonteCarloEngine:
             total_c = var_c + fixed
             gp = rev - total_c
             margin = (gp / rev * 100) if rev > 0 else 0.0
-            roi = (gp / total_c * 100) if total_c > 0 else 0.0
+            roi = (gp / self.config.investment * 100) if self.config.investment and self.config.investment > 0 else None
             results.append(ScenarioResult(
                 name=name,
                 demand_percentile=pct,
@@ -327,30 +358,14 @@ class MonteCarloEngine:
         Returns:
             (distribution_name, ks_statistic)
         """
-        data = np.array(data, dtype=float)
-        data = data[data > 0]  # Remover ceros/negativos para log-normal y gamma
-        if len(data) < 10:
-            return 'normal', 1.0
-
-        candidates = {
-            'normal': norm,
-            'lognormal': lognorm,
-            'gamma': gamma,
-        }
-        best_name = 'normal'
-        best_ks = float('inf')
-
-        for name, dist_class in candidates.items():
-            try:
-                params = dist_class.fit(data)
-                ks_stat, _ = stats.kstest(data, dist_class.cdf, args=params)
-                if ks_stat < best_ks:
-                    best_ks = ks_stat
-                    best_name = name
-            except Exception:
-                continue
-
-        return best_name, best_ks
+        data = np.asarray(data, dtype=float)
+        fitted = fit_distributions(data.tolist(), data_semantics='continuous')
+        best_name = fitted['ranking']['selected_distribution']
+        diagnostic = next(
+            item for item in fitted['candidates']
+            if item['distribution'] == best_name
+        )
+        return best_name, diagnostic['statistic']
 
     # ── Ejecución principal ─────────────────────────────────────────────────────
 
@@ -451,12 +466,28 @@ class MonteCarloEngine:
                 'std': result.profit_std,
                 'p5': result.profit_p5,
                 'p95': result.profit_p95,
+                # Monetary profit is not a periodized return series. Keep
+                # these fields explicit so clients cannot present a fabricated
+                # Sharpe/Sortino interpretation.
+                'var_95': result.value_at_risk_95,
+                'cvar_95': result.expected_shortfall,
+                'sharpe_ratio': None,
+                'ratio_basis': 'not_applicable_monetary_profit',
+                'var_semantics': 'lower_profit_quantile',
+                'cvar_semantics': 'lower_tail_mean_profit',
                 'ci_lower': result.profit_ci_lower,
                 'ci_upper': result.profit_ci_upper,
             },
             'risk': {
                 'probability_of_loss': result.probability_of_loss,
                 'probability_breakeven': result.probability_breakeven,
+                # Legacy value_at_risk_95/expected_shortfall keys remain for
+                # clients, but the configured confidence is authoritative.
+                'confidence_level': self.config.confidence_level,
+                'var_confidence_level': self.config.confidence_level,
+                'cvar_confidence_level': self.config.confidence_level,
+                'var_semantics': 'lower_profit_quantile',
+                'cvar_semantics': 'lower_tail_mean_profit',
                 'value_at_risk_95': result.value_at_risk_95,
                 'expected_shortfall': result.expected_shortfall,
             },

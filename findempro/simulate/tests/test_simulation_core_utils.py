@@ -12,6 +12,8 @@ path síncrono invocado desde simulate_init_view._handle_simulation_execution):
     cd findempro
     python -m pytest simulate/tests/test_simulation_core_utils.py -v
 """
+from types import SimpleNamespace
+
 import pytest
 from django.contrib.auth.models import User
 
@@ -96,6 +98,22 @@ def test_execute_simulation_no_failures_reports_zero_skipped():
     assert ResultSimulation.objects.filter(fk_simulation=sim).count() == 3
 
 
+@pytest.mark.django_db
+def test_execute_simulation_fails_when_every_period_is_invalid(monkeypatch):
+    _user, _product, qr, fdp, demand = _seed_product("all-days-invalid")
+    simulation = _create_simulation(qr, fdp, demand, quantity_time=3)
+
+    def always_invalid(*_args, **_kwargs):
+        raise ValueError("invalid demand inputs")
+
+    monkeypatch.setattr(SimulationCore, "_simulate_single_day_complete", always_invalid)
+
+    with pytest.raises(RuntimeError, match="todos los períodos"):
+        SimulationCore().execute_simulation(simulation)
+
+    assert not ResultSimulation.objects.filter(fk_simulation=simulation).exists()
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # [P1] random_seed reproducible en el motor escalar
 # ─────────────────────────────────────────────────────────────────────────────
@@ -139,3 +157,67 @@ def test_different_random_seed_gives_different_results():
     )
 
     assert demands_a != demands_b
+
+
+def test_demand_prediction_rejects_missing_history_instead_of_inventing_2500():
+    simulation = SimpleNamespace(
+        demand_history="[]",
+        fk_fdp=SimpleNamespace(distribution_type=1),
+    )
+
+    with pytest.raises(ValueError, match="datos históricos"):
+        SimulationCore()._generate_demand_prediction(simulation, {'DH': 2500}, 0)
+
+
+def test_demand_prediction_does_not_hide_sampling_errors_with_random_fallback():
+    class BrokenRng:
+        def normal(self, *_args, **_kwargs):
+            raise RuntimeError("sampling failed")
+
+    core = SimulationCore()
+    core._rng = BrokenRng()
+    simulation = SimpleNamespace(
+        demand_history=[100.0] * 30,
+        fk_fdp=SimpleNamespace(distribution_type=1),
+    )
+
+    with pytest.raises(ValueError, match="parámetros válidos"):
+        core._generate_demand_prediction(simulation, {}, 0)
+
+
+@pytest.mark.django_db
+def test_bulk_save_rejects_missing_or_nonpositive_prediction():
+    _user, _product, qr, fdp, demand = _seed_product("invalid-demand-save")
+    simulation = _create_simulation(qr, fdp, demand, quantity_time=1)
+
+    with pytest.raises(ValueError, match="Predicción de demanda inválida"):
+        SimulationCore()._bulk_save_results(
+            simulation,
+            [(0, {'endogenous_results': {'DE': 9999}, 'predicted_demand': 0})],
+        )
+
+    assert not ResultSimulation.objects.filter(fk_simulation=simulation).exists()
+
+
+@pytest.mark.django_db
+def test_persisted_demand_metadata_declares_observed_or_simulated_dispersion_source():
+    _user, _product, qr, fdp, demand = _seed_product("demand-provenance")
+    simulation = _create_simulation(qr, fdp, demand, quantity_time=3, random_seed=41)
+
+    SimulationCore().execute_simulation(simulation)
+
+    metadata = list(
+        ResultSimulation.objects.filter(fk_simulation=simulation)
+        .order_by('date')
+        .values_list('variables__\u005fmetadata', flat=True)
+    )
+    assert [item['demand_input_source'] for item in metadata] == [
+        'HISTORICAL_BUSINESS_DATA',
+        'HISTORICAL_BUSINESS_DATA',
+        'HISTORICAL_BUSINESS_DATA',
+    ]
+    assert [item['demand_std_source'] for item in metadata] == [
+        'HISTORICAL_BUSINESS_DATA',
+        'HISTORICAL_BUSINESS_DATA',
+        'SIMULATED_WINDOW',
+    ]

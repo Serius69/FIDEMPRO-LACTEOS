@@ -547,14 +547,17 @@ class SensitivityAnalysisView(APIView):
 
         t0 = time.time()
         service = SensitivityService()
-        results = service.run_oat(
-            nodes=nodes,
-            edges=edges,
-            run_specs=project.run_specs,
-            variation_pct=variation_pct,
-            n_runs=n_runs,
-            seed=seed,
-        )
+        try:
+            results = service.run_oat(
+                nodes=nodes,
+                edges=edges,
+                run_specs=project.run_specs,
+                variation_pct=variation_pct,
+                n_runs=n_runs,
+                seed=seed,
+            )
+        except ValueError as exc:
+            return Response({"error": str(exc), "code": "financial_inputs_required"}, status=status.HTTP_400_BAD_REQUEST)
         duration_ms = int((time.time() - t0) * 1000)
 
         baseline_profit = results[0].baseline_mean if results else None
@@ -661,6 +664,13 @@ def _run_montecarlo(mc_config: dict):
     Llama al motor Monte Carlo existente de FindemproAI.
     Retorna (results_dict, stats_dict).
     """
+    required = ("unit_price", "unit_cost", "fixed_costs")
+    missing = [key for key in required if mc_config.get(key) is None]
+    if missing:
+        return (
+            {"type": "incomplete", "reason": "financial_inputs_required", "missing": missing},
+            {"status": "incomplete", "missing": missing},
+        )
     try:
         from ..core.monte_carlo import MonteCarloConfig, ScenarioGenerator, aggregate_results
 
@@ -685,9 +695,12 @@ def _run_montecarlo(mc_config: dict):
         gen = ScenarioGenerator(config)
         scenarios = [gen.generate(0) for _ in range(n_runs)]
 
-        profits = [s.demand * 10 for s in scenarios]  # placeholder
+        unit_price = float(mc_config["unit_price"])
+        unit_cost = float(mc_config["unit_cost"])
+        fixed_costs = float(mc_config["fixed_costs"])
+        profits = [s.demand * (unit_price - unit_cost) - fixed_costs for s in scenarios]
         demands = [s.demand for s in scenarios]
-        revenues = [s.demand * 12 for s in scenarios]
+        revenues = [s.demand * unit_price for s in scenarios]
 
         agg = aggregate_results(profits, demands, revenues, config)
         stats = {
@@ -705,26 +718,10 @@ def _run_montecarlo(mc_config: dict):
 
 
 def _minimal_montecarlo(mc_config: dict):
-    """Simulación mínima cuando el motor existente no está disponible."""
-    import numpy as np
-
-    n_runs = mc_config.get("n_runs", 1000)
-    time_steps = mc_config.get("time_steps", 365)
-    seed = mc_config.get("seed")
-    rng = np.random.default_rng(seed)
-
-    demands = rng.normal(500, 80, n_runs)
-    profits = demands * 0.3
-
+    """Return a truthful incomplete result instead of fabricated economics."""
     return (
-        {"type": "montecarlo_minimal", "n_runs": n_runs, "time_steps": time_steps},
-        {
-            "mean_profit": float(profits.mean()),
-            "std_profit": float(profits.std()),
-            "p5_profit": float(np.percentile(profits, 5)),
-            "p95_profit": float(np.percentile(profits, 95)),
-            "probability_positive": float((profits > 0).mean()),
-        },
+        {"type": "incomplete", "reason": "canonical_engine_unavailable"},
+        {"status": "incomplete", "missing": ["canonical_monte_carlo_engine"]},
     )
 
 
@@ -734,6 +731,8 @@ def _run_des(des_config: dict):
         from ..core.discrete_engine import DiscreteEventEngine, CompanyConfig
 
         config = build_config_from_des_dict(des_config)
+        if config is None:
+            return {"type": "incomplete", "reason": "des_adapter_not_configured"}, {"status": "incomplete", "missing": ["des_company_config"]}
         engine = DiscreteEventEngine(config)
         results = []
         for t in range(des_config.get("time_steps", 365)):
@@ -749,12 +748,23 @@ def _run_des(des_config: dict):
 
 def build_config_from_des_dict(des_config: dict):
     """Construye CompanyConfig desde des_config (interfaz entre compiler y engine)."""
-    return None  # implementar según firma real de CompanyConfig
+    # This legacy canvas adapter has no lossless mapping to CompanyConfig yet.
+    # Returning None is handled as an explicit incomplete result above; never
+    # silently run a differently parameterized simulation.
+    return None
 
 
 def _run_scenario(mc_config: dict, scenario: str):
-    """Ejecuta escenario pesimista/esperado/optimista ajustando percentiles."""
+    """Ejecuta escenario solo con entradas financieras explícitas."""
     import numpy as np
+
+    required = ("base_demand", "unit_price", "unit_cost", "fixed_costs")
+    missing = [key for key in required if mc_config.get(key) is None]
+    if missing:
+        return (
+            {"type": "incomplete", "reason": "financial_inputs_required", "missing": missing},
+            {"status": "incomplete", "missing": missing},
+        )
 
     multipliers = {"pessimistic": 0.7, "expected": 1.0, "optimistic": 1.3}
     factor = multipliers.get(scenario, 1.0)
@@ -763,9 +773,13 @@ def _run_scenario(mc_config: dict, scenario: str):
     seed = mc_config.get("seed")
     rng = np.random.default_rng(seed)
 
-    base_demand = 500.0
-    demands = rng.normal(base_demand * factor, 80, n_runs)
-    profits = demands * 0.3
+    base_demand = float(mc_config["base_demand"])
+    unit_price = float(mc_config["unit_price"])
+    unit_cost = float(mc_config["unit_cost"])
+    fixed_costs = float(mc_config["fixed_costs"])
+    demand_std = float(mc_config.get("demand_std", base_demand * 0.15))
+    demands = rng.normal(base_demand * factor, demand_std, n_runs)
+    profits = demands * (unit_price - unit_cost) - fixed_costs
 
     return (
         {"type": "scenario", "scenario": scenario, "n_runs": n_runs},

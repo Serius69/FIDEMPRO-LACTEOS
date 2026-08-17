@@ -23,6 +23,7 @@ from ..utils.simulation_core_utils import SimulationCore
 from ..utils.cache_utils import CacheManager, cache_result, make_cache_key
 from ..utils.chart_demand_utils import ChartDemand
 from ..plan_limits import verificar_limite
+from modeling.statistics import DistributionFitError, METHOD_VERSION, fit_distributions
 
 # Importaciones condicionales para servicios que pueden no existir
 try:
@@ -801,7 +802,7 @@ class SimulateShowView(BaseSimulationView, View):
                             logger.warning(f"Error in additional statistical analysis: {e}")
                     
                     # Asegurar que tenemos campos mínimos requeridos
-                    required_fields = ['demand_mean', 'demand_std', 'best_distribution']
+                    required_fields = ['demand_mean', 'demand_std']
                     for field in required_fields:
                         if field not in analysis_results:
                             logger.warning(f"Missing field {field} in statistical analysis, adding default")
@@ -809,8 +810,6 @@ class SimulateShowView(BaseSimulationView, View):
                                 analysis_results[field] = float(np.mean(demand_data))
                             elif field == 'demand_std':
                                 analysis_results[field] = float(np.std(demand_data, ddof=1))
-                            elif field == 'best_distribution':
-                                analysis_results[field] = 'Normal'
                     
                     # Agregar datos originales y metadatos
                     analysis_results['demand_data'] = demand_data
@@ -849,7 +848,14 @@ class SimulateShowView(BaseSimulationView, View):
                 # 🔧 FALLBACK CRÍTICO: Asegurar campos esenciales
                 'demand_std': float(np.std(demand_data, ddof=1)) if len(demand_data) > 1 else 0,
                 'demand_mean': float(np.mean(demand_data)) if demand_data else 0,
-                'best_distribution': 'Normal',
+                'best_distribution': None,
+                'distribution_fit_diagnostic': {
+                    'method_version': METHOD_VERSION,
+                    'valid': False,
+                    'statistic': None,
+                    'p_value': None,
+                    'unavailable_reason': 'ANALYSIS_ERROR',
+                },
                 'data_count': len(demand_data)
             }
     
@@ -863,7 +869,14 @@ class SimulateShowView(BaseSimulationView, View):
                     'analysis_method': 'basic_empty',
                     'demand_std': 0,
                     'demand_mean': 0,
-                    'best_distribution': 'Normal',
+                    'best_distribution': None,
+                    'distribution_fit_diagnostic': {
+                        'method_version': METHOD_VERSION,
+                        'valid': False,
+                        'statistic': None,
+                        'p_value': None,
+                        'unavailable_reason': 'INSUFFICIENT_SAMPLE',
+                    },
                     'data_count': 0
                 }
             
@@ -886,7 +899,14 @@ class SimulateShowView(BaseSimulationView, View):
                         'analysis_method': 'basic_invalid_data',
                         'demand_std': 0,
                         'demand_mean': 0,
-                        'best_distribution': 'Normal',
+                        'best_distribution': None,
+                        'distribution_fit_diagnostic': {
+                            'method_version': METHOD_VERSION,
+                            'valid': False,
+                            'statistic': None,
+                            'p_value': None,
+                            'unavailable_reason': 'NO_FINITE_OBSERVATIONS',
+                        },
                         'data_count': 0
                     }
             
@@ -924,20 +944,44 @@ class SimulateShowView(BaseSimulationView, View):
             q75 = float(np.percentile(data_array, 75))
             variance = float(np.var(data_array, ddof=1)) if len(data_array) > 1 else 0
             
-            # Detección simple de distribución basada en características
+            # Forma descriptiva; la selección se hace por AIC entre familias
+            # continuas comparables, nunca por una heurística o p-value fabricado.
             skewness = self._calculate_skewness(data_array)
-            best_distribution = self._determine_best_distribution_basic(mean_val, std_val, skewness, cv)
-            
-            # Parámetros de distribución básicos
-            distribution_params = {
-                'mean': mean_val,
-                'std': std_val,
-                'variance': variance
-            }
-            
-            # Valores de prueba de bondad de ajuste simulados
-            ks_statistic = min(0.15, abs(skewness) * 0.1)  # Simulado
-            ks_p_value = max(0.1, 1.0 - abs(skewness) * 0.2)  # Simulado
+            try:
+                fit_result = fit_distributions(data_array.tolist(), data_semantics='continuous')
+                selected_name = fit_result['ranking']['selected_distribution']
+                selected_diagnostic = next(
+                    candidate for candidate in fit_result['candidates']
+                    if candidate['distribution'] == selected_name
+                )
+                best_distribution = selected_name
+                distribution_params = selected_diagnostic['parameters']
+                excluded_count = len(demand_data) - len(data_array)
+                if excluded_count:
+                    selected_diagnostic['warnings'].append(
+                        f'{excluded_count} observaciones no finitas excluidas antes del ajuste.'
+                    )
+                    selected_diagnostic['excluded_observations'] = excluded_count
+            except (DistributionFitError, StopIteration) as exc:
+                best_distribution = None
+                distribution_params = {}
+                selected_diagnostic = {
+                    'distribution': None,
+                    'parameters': {},
+                    'statistic': None,
+                    'ks_statistic': None,
+                    'p_value': None,
+                    'test_name': None,
+                    'n_observations': int(len(data_array)),
+                    'valid': False,
+                    'unavailable_reason': (
+                        'INSUFFICIENT_SAMPLE' if len(data_array) < 5
+                        else 'NO_COMPATIBLE_DISTRIBUTION'
+                    ),
+                    'warnings': [str(exc)],
+                    'method_version': METHOD_VERSION,
+                    'fit_method': None,
+                }
             
             # 🔧 CONSTRUIR RESULTADO COMPLETO
             result = {
@@ -946,9 +990,10 @@ class SimulateShowView(BaseSimulationView, View):
                 'demand_std': std_val,  # ✅ CRÍTICO: Asegurar que está presente
                 'demand_data': demand_data,  # Datos originales
                 'best_distribution': best_distribution,
-                'best_ks_p_value_floor': ks_p_value,
-                'best_ks_statistic_floor': ks_statistic,
+                'best_ks_p_value_floor': selected_diagnostic['p_value'],
+                'best_ks_statistic_floor': selected_diagnostic['ks_statistic'],
                 'distribution_params': distribution_params,
+                'distribution_fit_diagnostic': selected_diagnostic,
                 
                 # Estadísticas adicionales detalladas
                 'demand_median': median_val,
@@ -958,7 +1003,7 @@ class SimulateShowView(BaseSimulationView, View):
                 'demand_q25': q25,
                 'demand_q75': q75,
                 'demand_variance': variance,
-                'demand_count': len(demand_data),
+                'demand_count': len(data_array),
                 'demand_range': max_val - min_val,
                 'demand_skewness': skewness,
                 
@@ -966,7 +1011,7 @@ class SimulateShowView(BaseSimulationView, View):
                 'analysis_method': 'basic',
                 'analysis_timestamp': datetime.now().isoformat(),
                 'data_quality': self._assess_data_quality(data_array),
-                'data_count': len(demand_data),
+                'data_count': len(data_array),
                 'original_data_count': len(demand_data),
                 'cleaned_data_count': len(data_array),
                 
@@ -1013,14 +1058,22 @@ class SimulateShowView(BaseSimulationView, View):
                 'analysis_method': 'basic_error',
                 'demand_mean': float(fallback_mean),
                 'demand_std': float(fallback_std),
-                'best_distribution': 'Normal',
+                'best_distribution': None,
                 'data_count': len(demand_data) if demand_data else 0,
                 'distribution_params': {
                     'mean': float(fallback_mean),
                     'std': float(fallback_std)
                 },
-                'best_ks_p_value_floor': 0.5,
-                'best_ks_statistic_floor': 0.1,
+                'best_ks_p_value_floor': None,
+                'best_ks_statistic_floor': None,
+                'distribution_fit_diagnostic': {
+                    'method_version': METHOD_VERSION,
+                    'valid': False,
+                    'statistic': None,
+                    'p_value': None,
+                    'unavailable_reason': 'ANALYSIS_ERROR',
+                    'warnings': [str(e)],
+                },
                 'analysis_timestamp': datetime.now().isoformat()
             }
     
@@ -1090,24 +1143,6 @@ class SimulateShowView(BaseSimulationView, View):
             logger.error(f"Error calculating skewness: {e}")
             return 0.0
 
-    def _determine_best_distribution_basic(self, mean, std, skewness, cv):
-        """Determinar mejor distribución basada en características básicas"""
-        try:
-            # Lógica simple para determinar distribución
-            if abs(skewness) < 0.5 and cv < 0.3:
-                return 'Normal'
-            elif skewness > 1.0 or cv > 0.8:
-                return 'Exponential'
-            elif cv > 0.5:
-                return 'Log-Normal'
-            elif cv < 0.2:
-                return 'Uniform'
-            else:
-                return 'Normal'  # Por defecto
-        except Exception as e:
-            logger.error(f"Error determining distribution: {e}")
-            return 'Normal'
-    
     def _log_service_status(self):
         """Registrar estado de servicios disponibles"""
         services = self._check_service_availability()

@@ -150,11 +150,10 @@ class ChartDemand(ChartBase):
     
     def generate_validation_comparison_chart(self, real_values, projected_values, simulated_values, dates=None):
         """
-        Generate validation comparison chart with exact simulated data (no smoothing)
-        and projections that follow simulation pattern
+        Generate validation comparison chart from supplied series without smoothing.
         """
         try:
-            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), 
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10),
                                         gridspec_kw={'height_ratios': [3, 1]})
             
             # Clean data - MANTENER VALORES ORIGINALES EXACTOS
@@ -204,7 +203,7 @@ class ChartDemand(ChartBase):
                         # Solo conversión básica, sin operaciones matemáticas
                         exact_sim_values.append(float(val))
                     except (ValueError, TypeError):
-                        exact_sim_values.append(0.0)
+                        exact_sim_values.append(np.nan)
                 
                 # Plot con línea discontinua marcada
                 ax1.plot(sim_periods, exact_sim_values,
@@ -219,7 +218,7 @@ class ChartDemand(ChartBase):
                         zorder=2)
                 
                 # Media simulada
-                sim_mean = np.mean(exact_sim_values)
+                sim_mean = np.nanmean(exact_sim_values)
                 ax1.axhline(y=sim_mean, color='#2ca02c', linestyle=':', alpha=0.5,
                         label=f'Media Simulada: {sim_mean:.1f}')
 
@@ -227,64 +226,24 @@ class ChartDemand(ChartBase):
             if projected_values and real_values and simulated_values:
                 # Calcular desde dónde empezar la proyección
                 proj_start_period = len(real_values) + 1
-                max_simulation_period = len(simulated_values)
-                
-                # Si la simulación se extiende más allá de los datos reales
-                if max_simulation_period > len(real_values):
-                    # NUEVA ESTRATEGIA: Hacer que la proyección siga el patrón de la simulación
+                # Preserve the supplied forecast exactly; a chart must not blend
+                # it with simulated values or synthesize additional observations.
+                proj_periods = list(range(proj_start_period, proj_start_period + len(projected_values)))
                     
-                    # Tomar la parte de simulación que va después de los datos reales
-                    sim_for_projection = simulated_values[len(real_values):]
-                    
-                    # Si tenemos datos de simulación posteriores, usarlos como base
-                    if sim_for_projection:
-                        # Crear proyección basada en el patrón de simulación
-                        projection_adjusted = []
-                        
-                        # Usar los valores de simulación como referencia
-                        for i, sim_val in enumerate(sim_for_projection):
-                            if i < len(projected_values):
-                                # Combinar proyección original con patrón de simulación
-                                # 70% simulación, 30% proyección original para mantener cierta diferencia
-                                adjusted_val = sim_val * 0.7 + projected_values[i] * 0.3
-                                projection_adjusted.append(adjusted_val)
-                            else:
-                                # Si se acabó la proyección original, continuar con patrón de simulación
-                                # Añadir ligera variación para que no sea idéntica
-                                variation = np.random.normal(0, abs(sim_val) * 0.05)  # 5% de variación
-                                projection_adjusted.append(sim_val + variation)
-                        
-                        # Si necesitamos más días, extender con tendencia
-                        remaining_sim = sim_for_projection[len(projection_adjusted):]
-                        if remaining_sim:
-                            projection_adjusted.extend(remaining_sim)
-                        
-                        projected_values = projection_adjusted
-                    
-                    # Períodos de proyección
-                    proj_periods = list(range(proj_start_period, proj_start_period + len(projected_values)))
-                    
-                    # Conectar último valor real con primer valor proyectado
-                    if real_values and projected_values:
-                        ax1.plot([len(real_values), proj_periods[0]], 
-                                [real_values[-1], projected_values[0]], 
-                                color='#d62728', linestyle=':', linewidth=2, alpha=0.8)
-                    
-                    # Plot de proyección
-                    ax1.plot(proj_periods, projected_values,
-                            color='#d62728',        # Rojo
-                            linestyle=':',          # Línea punteada
-                            marker='s', 
-                            markersize=4, 
-                            linewidth=3,
-                            label='📈 Proyección Extendida (Sigue Simulación)', 
-                            alpha=0.9, 
-                            zorder=1)
-                    
-                    # Media proyectada
-                    proj_mean = np.mean(projected_values)
-                    ax1.axhline(y=proj_mean, color='#d62728', linestyle=':', alpha=0.5,
-                            label=f'Media Proyectada: {proj_mean:.1f}')
+                ax1.plot([len(real_values), proj_periods[0]],
+                         [real_values[-1], projected_values[0]],
+                         color='#d62728', linestyle=':', linewidth=2, alpha=0.8)
+                ax1.plot(
+                    proj_periods, projected_values,
+                    color='#d62728', linestyle=':', marker='s', markersize=4,
+                    linewidth=3, label='📈 Proyección suministrada',
+                    alpha=0.9, zorder=1,
+                )
+                proj_mean = np.mean(projected_values)
+                ax1.axhline(
+                    y=proj_mean, color='#d62728', linestyle=':', alpha=0.5,
+                    label=f'Media Proyectada: {proj_mean:.1f}',
+                )
 
             # Línea de transición
             if real_values:
@@ -294,7 +253,7 @@ class ChartDemand(ChartBase):
             # === CONFIGURACIÓN DEL GRÁFICO PRINCIPAL ===
             ax1.set_xlabel('Período de Tiempo', fontsize=12, fontweight='bold')
             ax1.set_ylabel('Demanda (Litros)', fontsize=12, fontweight='bold')
-            ax1.set_title('🔍 Validación: Real vs Simulada (Exacta) vs Proyectada (Sigue Simulación)', 
+            ax1.set_title('🔍 Validación: Real vs Simulada vs Proyección suministrada',
                         fontsize=16, fontweight='bold', pad=20)
 
             # Leyenda mejorada
@@ -325,7 +284,7 @@ class ChartDemand(ChartBase):
                     
                     # Usar los datos simulados exactos (sin suavizado)
                     for i in range(min_len):
-                        if real_values[i] != 0:
+                        if real_values[i] != 0 and np.isfinite(exact_sim_values[i]):
                             # Error con datos simulados exactos
                             error = ((exact_sim_values[i] - real_values[i]) / real_values[i]) * 100
                             errors.append(error)

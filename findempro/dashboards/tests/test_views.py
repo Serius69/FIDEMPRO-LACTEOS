@@ -76,6 +76,8 @@ def test_dashboard_user_view(client, django_user_model):
     assert response.status_code == 200
     assert "greeting" in response.context
     assert "business" in response.context
+    assert response.context["roi_available"] is False
+    assert b"Falta inversi" in response.content
 
 
 @pytest.mark.django_db

@@ -292,9 +292,10 @@ class Report(models.Model):
         if not results:
             return {}
         
+        roi = results.get('roi')
         return {
             'Utilidad Neta': results.get('utilidad_neta', 'N/A'),
             'Flujo de Caja': results.get('flujo_caja', 'N/A'),
-            'ROI': f"{results.get('roi', 0):.2f}%" if results.get('roi') else 'N/A',
+            'ROI': f"{roi:.2f}%" if roi is not None else 'N/A',
             'Punto de Equilibrio': results.get('punto_equilibrio', 'N/A')
         }

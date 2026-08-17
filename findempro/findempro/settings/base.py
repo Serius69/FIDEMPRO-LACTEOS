@@ -57,6 +57,7 @@ LOCAL_APPS = [
     "user",
     "report",
     "questionary",
+    "modeling",
 ]
 
 THIRDPARTY_APPS = [
@@ -374,6 +375,15 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 # Claude / Terceros
 # ─────────────────────────────────────────────
 ANTHROPIC_MODEL = os.getenv('ANTHROPIC_MODEL', 'claude-sonnet-5')
+
+# Bounded execution and model compilation for the configurable business-model
+# runner. Deployments may tune these guards without changing the model DSL.
+MODELING_MAX_ACTIVE_RUNS = int(os.getenv('MODELING_MAX_ACTIVE_RUNS', '4'))
+MODELING_MAX_MODEL_NODES = int(os.getenv('MODELING_MAX_MODEL_NODES', '1000'))
+MODELING_MAX_MODEL_EDGES = int(os.getenv('MODELING_MAX_MODEL_EDGES', '5000'))
+MODELING_MAX_EXPRESSION_LENGTH = int(os.getenv('MODELING_MAX_EXPRESSION_LENGTH', '500'))
+MODELING_MAX_EXPRESSION_NODES = int(os.getenv('MODELING_MAX_EXPRESSION_NODES', '200'))
+MODELING_MAX_EXPRESSION_DEPTH = int(os.getenv('MODELING_MAX_EXPRESSION_DEPTH', '40'))
 
 # ─────────────────────────────────────────────
 # Matplotlib (no-GUI)

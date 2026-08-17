@@ -67,6 +67,7 @@ urlpatterns = [
     path('report/', include('report.urls')),
     path('user/', include('user.urls')),
     path('finance/', include('finance.urls')),
+    path('modeling/', include('modeling.urls')),
 
     # Authentication
     path(

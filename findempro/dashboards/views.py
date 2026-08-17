@@ -276,6 +276,7 @@ def dashboard_user(request):
             # KPIs mejorados
             'profit_margin_percentage': dashboard_data['financial_metrics']['profit_margin'],
             'roi_percentage': dashboard_data['financial_metrics']['roi'],
+            'roi_available': dashboard_data['financial_metrics']['roi'] is not None,
             'efficiency_score': dashboard_data['business_kpis']['efficiency_score'],
             'financial_health': dashboard_data['business_kpis']['financial_health'],
             'net_profit': dashboard_data['business_kpis']['net_profit'],

@@ -22,7 +22,8 @@ const formConfig = {
         gastos_fijos: 5000,
         inversion_inicial: 50000,
         tasa_crecimiento: 5,
-        horizonte: 12
+        horizonte: 12,
+        tasa_descuento_anual: 12
     },
     maxUpdateCalls: 4,
     updateCallCount: 0
@@ -69,6 +70,7 @@ function initializeDOMElements() {
     domElements.inversionInput = document.getElementById('id_inversion_inicial');
     domElements.crecimientoInput = document.getElementById('id_tasa_crecimiento');
     domElements.horizonteInput = document.getElementById('id_horizonte');
+    domElements.descuentoInput = document.getElementById('id_tasa_descuento_anual');
     domElements.productSelect = document.getElementById('id_product');
     
     // Preview elements
@@ -117,7 +119,8 @@ function initializeForm() {
         domElements.gastosFijosInput,
         domElements.inversionInput,
         domElements.crecimientoInput,
-        domElements.horizonteInput
+        domElements.horizonteInput,
+        domElements.descuentoInput
     ];
     
     // Store for global access
@@ -300,8 +303,10 @@ function performCalculations(values) {
     const utilidadBruta = margen * values.demanda;
     const utilidadNeta = utilidadBruta - values.gastosFijos;
     const puntoEquilibrio = margen > 0 ? Math.ceil(values.gastosFijos / margen) : Infinity;
-    const roi = values.inversion > 0 ? (utilidadNeta / values.inversion) * 100 : 0;
-    const payback = utilidadNeta > 0 ? values.inversion / utilidadNeta : Infinity;
+    const roi = values.inversion > 0 && values.horizonte > 0
+        ? ((utilidadNeta * values.horizonte - values.inversion) / values.inversion) * 100
+        : null;
+    const payback = values.inversion === 0 ? 0 : utilidadNeta > 0 ? values.inversion / utilidadNeta : null;
     
     return {
         margen,
@@ -317,7 +322,7 @@ function performCalculations(values) {
 
 function updatePreviewDisplay(calc) {
     if (domElements.previewMargin) {
-        domElements.previewMargin.textContent = `${calc.margen.toFixed(2)}`;
+        domElements.previewMargin.textContent = `Bs ${calc.margen.toFixed(2)}`;
     }
     
     if (domElements.previewBreakEven) {
@@ -327,23 +332,23 @@ function updatePreviewDisplay(calc) {
     }
     
     if (domElements.previewRoi) {
-        domElements.previewRoi.textContent = `${calc.roi.toFixed(2)}%`;
+        domElements.previewRoi.textContent = calc.roi === null ? 'N/A' : `${calc.roi.toFixed(2)}%`;
     }
     
     if (domElements.previewProfit) {
-        domElements.previewProfit.textContent = `${calc.utilidadNeta.toFixed(2)}`;
+        domElements.previewProfit.textContent = `Bs ${calc.utilidadNeta.toFixed(2)}`;
     }
     
     if (domElements.previewPayback) {
-        domElements.previewPayback.textContent = isFinite(calc.payback) 
-            ? `${calc.payback.toFixed(1)} meses` 
-            : '∞ meses';
+        domElements.previewPayback.textContent = calc.payback !== null
+            ? `${calc.payback.toFixed(1)} meses`
+            : 'N/A';
     }
 }
 
 function updateMarginInfo(calc) {
     if (domElements.marginInfo && domElements.marginValue && domElements.marginPercent) {
-        domElements.marginValue.textContent = `${calc.margen.toFixed(2)}`;
+        domElements.marginValue.textContent = `Bs ${calc.margen.toFixed(2)}`;
         domElements.marginPercent.textContent = `${calc.marginPercentage.toFixed(1)}%`;
         domElements.marginInfo.style.display = 'block';
     }
@@ -389,12 +394,13 @@ function getMetricClass(value, type, reference = null) {
         case 'profit':
             return value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral';
         case 'roi':
+            if (value === null) return 'neutral';
             return value > 15 ? 'positive' : value > 5 ? 'neutral' : 'negative';
         case 'breakeven':
             if (!isFinite(value)) return 'negative';
             return value < reference ? 'positive' : value < reference * 2 ? 'neutral' : 'negative';
         case 'payback':
-            if (!isFinite(value)) return 'negative';
+            if (value === null) return 'neutral';
             return value < 12 ? 'positive' : value < 24 ? 'neutral' : 'negative';
         default:
             return 'neutral';
@@ -437,7 +443,7 @@ function updateRiskAssessment(calc) {
     }
     
     // ROI risk
-    if (calc.roi < 5) {
+    if (calc.roi !== null && calc.roi < 5) {
         riskScore += 20;
         riskFactors.push('ROI bajo');
     }
@@ -452,7 +458,7 @@ function updateRiskAssessment(calc) {
     }
     
     // Payback risk
-    if (calc.payback > 36) {
+    if (calc.payback !== null && calc.payback > 36) {
         riskScore += 10;
         riskFactors.push('Recuperación lenta');
     }

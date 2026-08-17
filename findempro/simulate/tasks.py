@@ -57,6 +57,9 @@ def run_stateless_simulation(config_dict: Dict[str, Any], extra: Dict[str, Any] 
         if extra:
             result.update(extra)
         return result
+    except ValueError as exc:
+        logger.error("Error en run_stateless_simulation: %s", exc)
+        raise
     except Exception as exc:
         logger.error("Error en run_stateless_simulation: %s", exc)
         raise
@@ -306,6 +309,14 @@ def run_sensitivity_async(
             'tornado_chart': chart_data,
         }
 
+    except ValueError as exc:
+        logger.warning('run_sensitivity_async: incomplete financial contract for %s: %s', project_id, exc)
+        return {
+            'status': 'incomplete',
+            'project_id': project_id,
+            'error': str(exc),
+            'code': 'financial_inputs_required',
+        }
     except Exception as exc:
         logger.error('Error en run_sensitivity_async para proyecto %s: %s', project_id, exc)
         self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))

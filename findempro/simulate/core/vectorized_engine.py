@@ -32,9 +32,12 @@ from __future__ import annotations
 
 import ast
 import logging
+import warnings
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+
+from modeling.safe_expression import ExpressionError
 
 from simulate.core.discrete_engine import (
     CompanyConfig,
@@ -56,6 +59,75 @@ from simulate.core.gpu_backend import (
 from simulate.core.monte_carlo import MonteCarloConfig
 
 logger = logging.getLogger(__name__)
+
+
+def _evaluate_vector_expression(expression: str, values: Dict[str, Any], namespace: Dict[str, Any]) -> Any:
+    """Evaluate an array expression and reject every invalid numeric domain."""
+    tree = ast.parse(expression, mode="eval")
+    allowed = set(values) | set(namespace)
+
+    def finite(value: Any) -> Any:
+        try:
+            host = asnumpy(value)
+        except (TypeError, ValueError) as exc:
+            raise ExpressionError("El resultado vectorizado no es numérico.") from exc
+        if not np.all(np.isfinite(host)) or np.any(np.abs(host) > 1e100):
+            raise ExpressionError(
+                "El resultado vectorizado no es finito o excede el límite operativo."
+            )
+        return value
+
+    def contains_zero(value: Any) -> bool:
+        return bool(np.any(asnumpy(value) == 0))
+
+    def visit(node: ast.AST) -> Any:
+        if isinstance(node, ast.Expression):
+            return visit(node.body)
+        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+            return finite(node.value)
+        if isinstance(node, ast.Name) and node.id in allowed:
+            value = values[node.id] if node.id in values else namespace[node.id]
+            return value if callable(value) or isinstance(value, dict) else finite(value)
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
+            value = visit(node.operand)
+            return finite(-value if isinstance(node.op, ast.USub) else value)
+        if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod)):
+            left, right = visit(node.left), visit(node.right)
+            if isinstance(node.op, ast.Add): return finite(left + right)
+            if isinstance(node.op, ast.Sub): return finite(left - right)
+            if isinstance(node.op, ast.Mult): return finite(left * right)
+            if isinstance(node.op, ast.Div):
+                if contains_zero(right):
+                    raise ExpressionError("División por cero en expresión vectorizada.")
+                return finite(left / right)
+            if isinstance(node.op, ast.Pow):
+                if bool(np.any(np.abs(asnumpy(right)) > 20)):
+                    raise ExpressionError("Exponente fuera de rango.")
+                return finite(left ** right)
+            if contains_zero(right):
+                raise ExpressionError("Módulo por cero en expresión vectorizada.")
+            return finite(left % right)
+        if isinstance(node, ast.Compare) and len(node.ops) == 1:
+            left, right = visit(node.left), visit(node.comparators[0])
+            op = node.ops[0]
+            if isinstance(op, ast.Gt): return left > right
+            if isinstance(op, ast.GtE): return left >= right
+            if isinstance(op, ast.Lt): return left < right
+            if isinstance(op, ast.LtE): return left <= right
+            if isinstance(op, ast.Eq): return left == right
+            if isinstance(op, ast.NotEq): return left != right
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in namespace:
+            return finite(namespace[node.func.id](*(visit(arg) for arg in node.args)))
+        raise ValueError(f"Vector expression node not allowed: {type(node).__name__}")
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", RuntimeWarning)
+            return finite(visit(tree))
+    except RuntimeWarning as exc:
+        raise ExpressionError("La expresión vectorizada produjo un error numérico.") from exc
+    except (ArithmeticError, OverflowError) as exc:
+        raise ExpressionError("La expresión vectorizada produjo un error numérico.") from exc
 
 
 # ── Muestreo de demanda vectorizado ──────────────────────────────────────────
@@ -118,6 +190,7 @@ def _build_vectorized_table(
     demand_grid: Any,          # (T, N) — demanda ya con estacionalidad aplicada
     period_index_col: Any,     # (T, 1) — DIA por período
     xp: Any,
+    demand_std: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
     Replica ``DiscreteEventEngine._build_variable_table`` en estado reseteado,
@@ -135,8 +208,18 @@ def _build_vectorized_table(
     table[company.demand_variable] = demand
     # Estado reseteado ⇒ _demand_history vacío ⇒ DPH = demanda del período.
     table["DPH"] = demand
-    table["DSD"] = demand * 0.1
-    table["CVD"] = (demand * 0.1) / xp.maximum(demand, 1.0)
+    configured_std = demand_std if demand_std is not None else exogenous.get('DSD')
+    if configured_std is not None:
+        if isinstance(configured_std, bool):
+            raise ValueError("La desviación de demanda debe ser numérica y no negativa.")
+        configured_std = float(configured_std)
+        if not np.isfinite(configured_std) or configured_std < 0:
+            raise ValueError("La desviación de demanda debe ser finita y no negativa.")
+        table["DSD"] = configured_std
+        table["CVD"] = configured_std / xp.maximum(xp.abs(demand), 1.0)
+    else:
+        table.pop("DSD", None)
+        table.pop("CVD", None)
     return table
 
 
@@ -202,7 +285,7 @@ def _solve_vectorized(
             if not all(d in combined for d in deps):
                 continue
             expr = _rewrite_ternaries_to_where(_preprocess_rhs(rhs))
-            value = eval(expr, safe_ns, combined)  # noqa: S307 — namespace controlado
+            value = _evaluate_vector_expression(expr, combined, safe_ns)
             results[lhs] = value
             solved += 1
         return solved
@@ -260,7 +343,14 @@ class VectorizedMonteCarlo:
 
         # 2. Tabla de variables + solve vectorizado
         dia_col = xp.asarray([float(t + 1) for t in range(T)], dtype=xp.float64).reshape(T, 1)
-        table = _build_vectorized_table(self.company, self.exogenous, demand_grid, dia_col, xp)
+        table = _build_vectorized_table(
+            self.company,
+            self.exogenous,
+            demand_grid,
+            dia_col,
+            xp,
+            demand_std=self.mc.demand_std,
+        )
         results = _solve_vectorized(self.company, table, xp)
 
         combined = {**table, **results}
@@ -282,10 +372,14 @@ class VectorizedMonteCarlo:
         else:
             profit = _grid(self.company.profit_variable, 0.0)
 
-        # 4. Devolver en host con forma (T,N), saneando inf/nan (paridad con eval escalar)
+        # 4. Devolver en host con forma (T,N), rechazando resultados inválidos.
         def _grid_host(a: Any) -> np.ndarray:
             out = asnumpy(xp.broadcast_to(a, (T, N)))
-            return np.nan_to_num(out, nan=0.0, posinf=0.0, neginf=0.0)
+            if not np.all(np.isfinite(out)) or np.any(np.abs(out) > 1e100):
+                raise ExpressionError(
+                    "La simulación vectorizada produjo un resultado financiero inválido."
+                )
+            return out
 
         logger.info(
             "[MC vectorizado] backend=%s T=%d N=%d (%d celdas)",
@@ -299,6 +393,7 @@ class VectorizedMonteCarlo:
 def can_vectorize(
     company: CompanyConfig,
     exogenous: Optional[Dict[str, float]] = None,
+    demand_std: Optional[float] = None,
     rtol: float = 1e-6,
     atol: float = 1e-3,
 ) -> bool:
@@ -318,7 +413,10 @@ def can_vectorize(
 
         demand_grid = xp.asarray(test_demands, dtype=xp.float64).reshape(T, N)
         dia_col = xp.asarray([1.0]).reshape(T, 1)
-        table = _build_vectorized_table(company, exo, demand_grid, dia_col, xp)
+        reference_std = demand_std if demand_std is not None else exo.get('DSD')
+        table = _build_vectorized_table(
+            company, exo, demand_grid, dia_col, xp, demand_std=reference_std
+        )
         vres = _solve_vectorized(company, table, xp)
         vcomb = {**table, **vres}
 
@@ -332,7 +430,15 @@ def can_vectorize(
         for i, d in enumerate(test_demands):
             engine.reset_state()
             res = engine.run_period(
-                OperationScenario(period_index=0, demand_value=d, seasonality_factor=1.0),
+                OperationScenario(
+                    period_index=0,
+                    demand_value=d,
+                    seasonality_factor=1.0,
+                    demand_std=reference_std,
+                    demand_std_source=(
+                        'EXPLICIT_EXOGENOUS' if reference_std is not None else None
+                    ),
+                ),
                 exo,
             )
             for name, sval in (

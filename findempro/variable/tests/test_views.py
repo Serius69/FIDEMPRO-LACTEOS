@@ -132,9 +132,6 @@ def test_delete_equation_view(client, user, equation):
     assert not equation.is_active
 
 
-@pytest.mark.skip(reason="solve_equation renderiza 'result_template.html', que no existe "
-                         "en el repositorio (plantilla nunca creada). La lógica de "
-                         "validación/resolución se cubre en test_security.py.")
 def test_solve_equation_view(client, user):
     client.login(username="testuser", password="password")
     url = reverse("variable:equation.solve")

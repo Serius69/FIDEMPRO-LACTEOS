@@ -185,6 +185,7 @@ class SimulationService:
         generator = ScenarioGenerator(mc_config)
 
         # ── 4. Configurar motor de eventos discretos ──────────────────────────
+        from types import SimpleNamespace
         from variable.models import Equation
         equations = list(
             Equation.objects.filter(
@@ -192,6 +193,17 @@ class SimulationService:
                 fk_area__fk_product=product,
             ).select_related('fk_area')
         )
+
+        from simulate.utils.variable_mapper import VariableMapper
+        variable_mapper = VariableMapper()
+        template_equations = variable_mapper.get_template_equation_expressions(
+            sim.fk_questionary_result
+        )
+        if template_equations:
+            equations = [
+                SimpleNamespace(expression=expression, fk_area=None)
+                for expression in template_equations
+            ]
 
         if profile is not None:
             try:
@@ -219,9 +231,8 @@ class SimulationService:
         # El motor de ecuaciones espera exógenas ESCALARES; se descartan las series
         # (p. ej. DH = demanda histórica), que se manejan vía mc_config/escenarios,
         # no como entrada por período de las ecuaciones.
-        from simulate.utils.variable_mapper import VariableMapper
         exogenous = {
-            k: v for k, v in VariableMapper().extract_all_variables(sim.fk_questionary_result).items()
+            k: v for k, v in variable_mapper.extract_all_variables(sim.fk_questionary_result).items()
             if isinstance(v, (int, float)) and not isinstance(v, bool)
         }
 
@@ -251,7 +262,11 @@ class SimulationService:
             try:
                 from simulate.core.vectorized_engine import VectorizedMonteCarlo, can_vectorize
                 from simulate.core.gpu_backend import backend_name
-                if can_vectorize(company_config, exogenous):
+                if can_vectorize(
+                    company_config,
+                    exogenous,
+                    demand_std=mc_config.demand_std,
+                ):
                     _t_vec = time.perf_counter()
                     with ACTIVE_SIMULATIONS.labels(sector=_sector).track_inprogress():
                         d_grid, r_grid, _c_grid, p_grid = VectorizedMonteCarlo(

@@ -50,8 +50,8 @@ def register_elements_create(request):
                 request,
                 _(
                     'Configuración creada exitosamente. Su negocio "%(name)s" (%(label)s) '
-                    'ha sido configurado con productos, variables y datos reales del mercado '
-                    'boliviano, listos para simular. Puede personalizarlo desde el panel.'
+                    'ha sido configurado con una plantilla sintética editable. '
+                    'Revise y confirme los datos antes de simular.'
                 ) % {'name': spec.business_name, 'label': str(label)}
             )
         else:
@@ -67,8 +67,8 @@ def register_elements_create(request):
                 request,
                 _(
                     'Configuración creada exitosamente. '
-                    'Su negocio lácteo ha sido configurado con todos los elementos iniciales. '
-                    'Puede personalizar la información desde el panel de control.'
+                    'Su negocio lácteo tiene una estructura inicial. Complete y confirme '
+                    'los datos empresariales antes de simular.'
                 )
             )
 

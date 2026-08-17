@@ -115,7 +115,7 @@ _STRUCTURAL_DEFAULTS: Optional[Dict[str, object]] = None
 # del default lácteo).
 _ECONOMIC_INITIALS = {
     "PVP", "PC", "CUIP", "DE", "QPL", "CPROD", "QMAX", "CPPL", "CIP", "CMIPF",
-    "SI", "NEPP", "SE", "CFD", "CUTRANS", "GMM", "CPD", "CTL", "DH", "ED", "NMD",
+    "SI", "PI", "NEPP", "SE", "CFD", "CUTRANS", "GMM", "CPD", "CTL", "DH", "ED", "NMD",
 }
 
 
@@ -230,6 +230,7 @@ def generate_answers(baseline: ProductBaseline, n_history: int = 45,
         "CIP": round(inv, 1),
         "CMIPF": round(inv * 1.8, 1),
         "SI": round(d * 3, 1),
+        "PI": 0.0,
         "CTL": round(d * 1.02, 1),
         "NEPP": int(baseline.employees),
         "SE": round(baseline.monthly_salaries, 2),
@@ -365,10 +366,11 @@ class IndustrySeeder:
         create_and_save_questionary(product)
 
         # Respuestas generadas desde el baseline del producto.
-        self._create_answers(product, baseline)
+        template_values = self._create_answers(product, baseline)
+        self._store_legacy_template_parameters(product, baseline, template_values)
         return product
 
-    def _create_answers(self, product: Product, baseline: ProductBaseline) -> None:
+    def _create_answers(self, product: Product, baseline: ProductBaseline) -> Dict[str, object]:
         # Estacionalidad REAL del sector + un año completo de histórico diario
         # (360 puntos) para que el perfil mensual boliviano sea observable.
         business_type = getattr(product.fk_business, "type", None)
@@ -396,3 +398,34 @@ class IndustrySeeder:
                     is_active=True,
                 ))
             Answer.objects.bulk_create(batch)
+        return answers_by_initials
+
+    def _store_legacy_template_parameters(
+        self,
+        product: Product,
+        baseline: ProductBaseline,
+        answers_by_initials: Dict[str, object],
+    ) -> None:
+        """Persist explicit synthetic parameters not represented by questions."""
+        is_service = baseline.unit.lower() in {'servicio', 'servicios'}
+        profile = CompanyProfile.get_or_create_for_business(product.fk_business)
+        custom_kpis = dict(profile.custom_kpis or {})
+        registry = dict(custom_kpis.get('legacy_product_parameters', {}))
+        registry[str(product.id)] = {
+            'provenance': 'SYNTHETIC_TEMPLATE',
+            'model_kind': 'SERVICE' if is_service else 'LEGACY_OPERATIONAL',
+            'values': {
+                key: value
+                for key, value in answers_by_initials.items()
+                if key in _ECONOMIC_INITIALS
+            },
+            'equations': [
+                'TPV = min(DE, CPROD)',
+                'IT = TPV * PVP',
+                'TG = TPV * CUIP + CFD + SE / 30 + GMM / 30 + TPV * CUTRANS',
+                'GT = IT - TG',
+            ] if is_service else [],
+        }
+        custom_kpis['legacy_product_parameters'] = registry
+        profile.custom_kpis = custom_kpis
+        profile.save(update_fields=['custom_kpis', 'last_updated'])

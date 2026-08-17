@@ -1,4 +1,4 @@
-import type { DashboardData, DashboardSummary, SimulationRequest, SimulationResult, ForecastRequest, ForecastResult, Report } from '@/types'
+import type { DashboardData, DashboardSummary, SimulationRequest, SimulationResult, ForecastRequest, ForecastResult, Report, BusinessModel, ModelTemplate, ModelVersion, ModelReadiness } from '@/types'
 
 const DJANGO_LOGIN = '/account/login/'
 
@@ -23,7 +23,11 @@ async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const text = await res.text().catch(() => `HTTP ${res.status}`)
     let msg = text
-    try { msg = JSON.parse(text).detail ?? JSON.parse(text).error ?? msg } catch { /* raw */ }
+    try {
+      const payload = JSON.parse(text) as { detail?: string; message?: string; error?: string; how_to_fix?: string }
+      msg = payload.message ?? payload.detail ?? payload.error ?? msg
+      if (payload.how_to_fix) msg += ` Cómo corregirlo: ${payload.how_to_fix}`
+    } catch { /* raw */ }
     throw new Error(msg)
   }
   const ct = res.headers.get('content-type') ?? ''
@@ -158,5 +162,235 @@ export async function runScenarios(payload: { business_id?: number; base_demand:
     headers: headers(),
     body: JSON.stringify(payload),
   })
+  return handle(res)
+}
+
+export async function getBusinessModels(): Promise<{ models: BusinessModel[] }> {
+  const res = await fetch('/modeling/models/', { credentials: 'include', headers: headers() })
+  return handle(res)
+}
+
+export async function getOwnedBusinesses(): Promise<{ businesses: { id: number; name: string; sector: string }[] }> {
+  const res = await fetch('/modeling/businesses/', { credentials: 'include', headers: headers() })
+  return handle(res)
+}
+
+export async function createBusiness(payload: { name: string; location: string; sector: string; description?: string }) {
+  const res = await fetch('/modeling/businesses/', { method: 'POST', credentials: 'include', headers: headers(), body: JSON.stringify(payload) })
+  return handle<{ business: { id: number; name: string; sector: string; type: number } }>(res)
+}
+
+export async function createModelTemplate(payload: { name: string; slug?: string; sector: string; description?: string; spec: Record<string, unknown> }) {
+  const res = await fetch('/modeling/templates/', { method: 'POST', credentials: 'include', headers: headers(), body: JSON.stringify(payload) })
+  return handle<{ template: ModelTemplate }>(res)
+}
+
+export async function createBusinessModel(payload: { business_id: number; name: string; sector: string; spec: Record<string, unknown> }) {
+  const res = await fetch('/modeling/models/', { method: 'POST', credentials: 'include', headers: headers(), body: JSON.stringify(payload) })
+  return handle<{ model: BusinessModel & { version: ModelVersion } }>(res)
+}
+
+export async function getBusinessModel(id: string): Promise<BusinessModel & { current_version?: ModelVersion; versions: ModelVersion[] }> {
+  const res = await fetch(`/modeling/models/${id}/`, { credentials: 'include', headers: headers() })
+  return handle(res)
+}
+
+export async function getModelTemplates(): Promise<{ templates: ModelTemplate[] }> {
+  const res = await fetch('/modeling/templates/', { credentials: 'include', headers: headers() })
+  return handle(res)
+}
+
+export async function validateBusinessModel(id: string, spec: Record<string, unknown>) {
+  const res = await fetch(`/modeling/models/${id}/validate/`, {
+    method: 'POST', credentials: 'include', headers: headers(), body: JSON.stringify({ spec }),
+  })
+  return handle<{ valid: boolean; errors: { path: string; code: string; message: string }[]; warnings: { path: string; code: string; message: string }[]; readiness: ModelReadiness }>(res)
+}
+
+export async function createModelVersion(id: string, spec: Record<string, unknown>) {
+  const res = await fetch(`/modeling/models/${id}/versions/`, { method: 'POST', credentials: 'include', headers: headers(), body: JSON.stringify({ spec, status: 'validated' }) })
+  return handle<{ version: ModelVersion }>(res)
+}
+
+export interface ModelDiagram {
+  title: string
+  nodes: { id: string; label: string; kind: string; [key: string]: unknown }[]
+  edges: { source: string; target: string; relation: string; [key: string]: unknown }[]
+}
+
+export async function getModelDiagrams(id: string): Promise<{ model_id: string; version: number | null; diagrams: Record<string, ModelDiagram> }> {
+  const res = await fetch(`/modeling/models/${id}/diagrams/`, { credentials: 'include', headers: headers() })
+  return handle(res)
+}
+
+export interface ModelScenario { id: string; name: string; label: string; changes: Record<string, number> }
+
+export async function getModelScenarios(id: string): Promise<{ scenarios: ModelScenario[] }> {
+  const res = await fetch(`/modeling/models/${id}/scenarios/`, { credentials: 'include', headers: headers() })
+  return handle(res)
+}
+
+export async function createModelScenario(id: string, payload: { name: string; label: string; changes: Record<string, number> }) {
+  const res = await fetch(`/modeling/models/${id}/scenarios/`, { method: 'POST', credentials: 'include', headers: headers(), body: JSON.stringify(payload) })
+  return handle<{ scenario: ModelScenario }>(res)
+}
+
+export interface ModelSensitivityResult {
+  engine: 'one_at_a_time_sensitivity'
+  simulation_engine?: 'monte_carlo' | 'system_dynamics' | 'discrete_event'
+  metric?: 'profit' | 'completed' | 'queue_end' | 'utilization'
+  seed: number | null
+  iterations: number
+  baseline: Record<string, number>
+  factors: { variable: string; change: number; baseline_mean: number; perturbed_mean: number; effect: number }[]
+}
+
+export async function runModelSensitivity(id: string, payload: { changes: Record<string, number>; iterations: number; seed: number; engine?: 'monte_carlo' | 'system_dynamics' | 'discrete_event'; metric?: 'profit' | 'completed' | 'queue_end' | 'utilization' }): Promise<{ model_version: number; content_hash: string; result: ModelSensitivityResult }> {
+  const res = await fetch(`/modeling/models/${id}/sensitivity/`, { method: 'POST', credentials: 'include', headers: headers(), body: JSON.stringify(payload) })
+  return handle(res)
+}
+
+export interface DistributionFitCandidate {
+  distribution: string
+  family: 'continuous' | 'discrete'
+  parameters: Record<string, number>
+  fit_method: string
+  method_version: string
+  log_likelihood: number
+  aic: number
+  bic: number
+  statistic: number
+  ks_statistic: number | null
+  p_value: number | null
+  test_name: string
+  p_value_unavailable_reason: string | null
+  valid: boolean
+  assumptions: string[]
+  warnings: string[]
+  sample_size: number
+}
+
+export interface DistributionFitResult {
+  method: string
+  quantiles: Record<string, number>
+  candidates: DistributionFitCandidate[]
+  rejected: { distribution: string; reason: string }[]
+  ranking: { criterion: string; comparable: boolean; selected_distribution: string | null; unavailable_reason: string | null }
+  provenance: string
+  requires_review: boolean
+}
+
+export async function fitModelDistributions(id: string, observations: number[], candidates?: string[], dataSemantics: 'continuous' | 'count' = 'continuous'): Promise<DistributionFitResult> {
+  const res = await fetch(`/modeling/models/${id}/distribution-fit/`, {
+    method: 'POST', credentials: 'include', headers: headers(),
+    body: JSON.stringify({ observations, candidates, data_semantics: dataSemantics }),
+  })
+  return handle(res)
+}
+
+export async function runBusinessModel(id: string, payload: { iterations: number; seed: number; engine?: 'monte_carlo' | 'system_dynamics' | 'discrete_event'; scenario_id?: string }) {
+  const res = await fetch(`/modeling/models/${id}/simulate/`, { method: 'POST', credentials: 'include', headers: headers(), body: JSON.stringify(payload) })
+  const queued = await handle<{ run_id: string; status_url: string }>(res)
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    const statusRes = await fetch(queued.status_url, { credentials: 'include', headers: headers() })
+    const status = await handle<{ status: string; progress: number; result?: { summary: Record<string, number> }; error?: ModelRunHistory['error'] }>(statusRes)
+    if (status.status === 'completed') return status.result
+    if (status.status === 'failed') throw new Error(status.error?.message ?? 'La simulación falló.')
+    await new Promise((resolve) => setTimeout(resolve, 250))
+  }
+  throw new Error('La simulación excedió el tiempo de espera.')
+}
+
+export interface ImportReceipt {
+  id: string
+  status: 'validated' | 'rejected'
+  rows_imported: number
+  error_rows: { row: number; error: string }[]
+  provenance: { kind: string; source_name: string; format: string }
+}
+
+export async function importModelFile(
+  modelId: string,
+  file: File,
+  format: 'json' | 'csv' | 'xlsx',
+  mapping: Record<string, string> = {},
+): Promise<{ import: ImportReceipt }> {
+  const form = new FormData()
+  form.append('file', file)
+  form.append('format', format)
+  form.append('mapping', JSON.stringify(mapping))
+  const res = await fetch('/modeling/models/' + modelId + '/imports/', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'X-CSRFToken': getCsrf(), Accept: 'application/json' },
+    body: form,
+  })
+  return handle(res)
+}
+
+export interface ImportPreview {
+  preview: Record<string, unknown>[]
+  rows_total: number
+  error_rows: { row: number; error: string }[]
+  mapping: Record<string, string>
+  provenance: { kind: string; source_name: string; format: string }
+}
+
+export async function previewModelFile(
+  modelId: string,
+  file: File,
+  format: 'json' | 'csv' | 'xlsx',
+  mapping: Record<string, string> = {},
+): Promise<ImportPreview> {
+  const form = new FormData()
+  form.append('file', file)
+  form.append('format', format)
+  form.append('mapping', JSON.stringify(mapping))
+  form.append('preview', 'true')
+  const res = await fetch('/modeling/models/' + modelId + '/imports/', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'X-CSRFToken': getCsrf(), Accept: 'application/json' },
+    body: form,
+  })
+  return handle(res)
+}
+
+export interface ModelRunHistory {
+  id: string
+  status: string
+  engine: string
+  seed: number | null
+  scenario: string
+  model: string
+  business: string
+  version: number
+  content_hash: string
+  created_at: string
+  traceability?: { model_version_id?: string; model_version?: number; schema_version?: string; content_hash?: string; engine?: string; seed?: number | null; iterations?: number; scenario_id?: string | null; scenario?: string }
+  summary: { mean?: number; median?: number; std?: number; p5?: number; p95?: number; probability_loss?: number; mean_unmet_demand?: number; p95_unmet_demand?: number; mean_stock_service_level?: number; financial?: { status: string; revenue?: string; total_cost?: string; variable_cost?: string; cogs?: string; fixed_cost?: string; gross_profit?: string; contribution_margin?: string; operating_result?: string; cash_flow?: string; ending_cash?: string; working_capital?: string; break_even_units?: string; break_even_revenue?: string; roi?: string; mean_revenue?: string; mean_total_cost?: string; mean_cogs?: string; mean_contribution_margin?: string; mean_operating_result?: string; mean_roi?: string; mean_cash_flow?: string; mean_ending_cash?: string; mean_working_capital?: string } }
+  error?: { code: string; where: string; message: string; how_to_fix: string; details?: { errors?: { path: string; code: string; message: string }[] } } | null
+}
+
+export async function getModelRuns(): Promise<{ runs: ModelRunHistory[] }> {
+  const res = await fetch('/modeling/runs/', { credentials: 'include', headers: headers() })
+  return handle(res)
+}
+
+export async function cancelModelRun(id: string): Promise<{ run_id: string; status: 'cancelled' }> {
+  const res = await fetch(`/modeling/runs/${id}/cancel/`, { method: 'POST', credentials: 'include', headers: headers() })
+  return handle(res)
+}
+
+export interface ModelRunComparison {
+  run_id: string
+  scenario: string
+  seed: number | null
+  summary: ModelRunHistory['summary']
+  delta: Record<string, number>
+}
+
+export async function compareModelRuns(ids: string[]): Promise<{ model_version: number; content_hash: string; baseline_run_id: string; comparisons: ModelRunComparison[] }> {
+  const res = await fetch(`/modeling/runs/compare/?ids=${encodeURIComponent(ids.join(','))}`, { credentials: 'include', headers: headers() })
   return handle(res)
 }

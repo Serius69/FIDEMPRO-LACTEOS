@@ -27,6 +27,8 @@ if TYPE_CHECKING:
 
 import numpy as np
 
+from modeling.safe_expression import ExpressionError, evaluate_expression
+
 logger = logging.getLogger(__name__)
 
 
@@ -92,6 +94,11 @@ class OperationScenario:
     price_variation: float = 0.0      # Variación de precio respecto al base (%)
     cost_variation: float = 0.0       # Variación de costos respecto al base (%)
 
+    # Dispersión explícita de demanda. None significa no disponible; nunca se
+    # sustituye por un porcentaje arbitrario del nivel de demanda.
+    demand_std: Optional[float] = None
+    demand_std_source: Optional[str] = None
+
     # Variables externas adicionales (pasan a la tabla de variables directamente)
     external_variables: Dict[str, float] = field(default_factory=dict)
 
@@ -106,24 +113,20 @@ class PeriodResult:
     costs: float
     profit: float
     warnings: List[str] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Resolución de expresiones
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Variables de función permitidas en eval seguro
-_SAFE_MATH = {
-    '__builtins__': {},
-    'max': max, 'min': min, 'abs': abs,
-    'round': round, 'pow': pow, 'sum': sum,
-    'sqrt': math.sqrt, 'log': math.log,
-    'exp': math.exp, 'ceil': math.ceil, 'floor': math.floor,
-    'pi': math.pi,
-}
+# Retained as a compatibility description for dependency extraction. Equation
+# evaluation itself uses the shared AST allowlist below; it never executes
+# Python source.
+_SAFE_MATH = frozenset({'max', 'min', 'abs', 'round', 'pow', 'sqrt', 'log', 'exp', 'ceil', 'floor'})
 
 _VAR_PATTERN = re.compile(r'\b([A-Z][A-Z0-9_]*)\b')
-_KNOWN_FUNCTIONS = frozenset(_SAFE_MATH.keys()) | {'True', 'False', 'None'}
+_KNOWN_FUNCTIONS = _SAFE_MATH | {'True', 'False', 'None'}
 
 
 def _extract_rhs_dependencies(expression: str) -> Set[str]:
@@ -152,7 +155,11 @@ def _preprocess_rhs(rhs: str) -> str:
 def _eval_expression(rhs: str, var_table: Dict[str, float]) -> Optional[float]:
     """
     Evalúa el RHS de una ecuación en el contexto de var_table.
-    Retorna None si no puede evaluarse (variables faltantes, error matemático).
+
+    Las expresiones no evaluables por referencias/sintaxis retornan ``None``
+    para conservar el contrato legacy de resolución por pasadas. Los errores
+    matemáticos de una expresión ya resoluble se propagan: convertirlos en cero
+    fabricaría resultados financieros plausibles pero falsos.
     """
     rhs = _preprocess_rhs(rhs)
 
@@ -162,10 +169,20 @@ def _eval_expression(rhs: str, var_table: Dict[str, float]) -> Optional[float]:
         expr = re.sub(r'\b' + re.escape(name) + r'\b', repr(float(value)), expr)
 
     try:
-        result = eval(expr, _SAFE_MATH)  # noqa: S307
+        result = evaluate_expression(expr, values={name: float(value) for name, value in var_table.items()})
         return float(result)
-    except ZeroDivisionError:
-        return 0.0
+    except ExpressionError as exc:
+        numeric_errors = (
+            'División por cero.',
+            'Exponente fuera de rango.',
+            'La expresión excede los límites numéricos permitidos.',
+            'El resultado no es un número finito.',
+        )
+        if str(exc) in numeric_errors:
+            raise
+        return None
+    except (ArithmeticError, OverflowError, ValueError) as exc:
+        raise ExpressionError("La ecuación produjo un error numérico.") from exc
     except Exception as e:
         logger.debug("eval error en '%s': %s", rhs, e)
         return None
@@ -238,6 +255,7 @@ class DiscreteEventEngine:
         self._state: Dict[str, float] = dict(config.initial_state)
         # Historial de demandas para cálculos de media móvil
         self._demand_history: List[float] = []
+        self._last_demand_std_source: Optional[str] = None
         # Ecuaciones ordenadas topológicamente (se calcula una sola vez)
         self._sorted_equations = self._prepare_equations()
 
@@ -302,17 +320,40 @@ class DiscreteEventEngine:
         demand = scenario.demand_value * scenario.seasonality_factor
         table[self.config.demand_variable] = max(0.0, demand)
 
-        # 7. Media histórica de demanda (disponible como DPH)
+        # 7. Media y dispersión de demanda. La dispersión procede de una
+        # ventana simulada suficiente, del escenario/configuración o de una
+        # entrada exógena explícita; nunca de un 10% hardcodeado.
         if self._demand_history:
             window = self._demand_history[-7:]  # últimos 7 períodos
             table['DPH'] = float(np.mean(window))
-            table['DSD'] = float(np.std(window)) if len(window) > 1 else table['DPH'] * 0.1
         else:
             table['DPH'] = table.get(self.config.demand_variable, demand)
-            table['DSD'] = table['DPH'] * 0.1
 
-        # 8. CVD (coeficiente de variación de demanda)
-        table['CVD'] = table['DSD'] / max(table['DPH'], 1.0)
+        demand_std = None
+        self._last_demand_std_source = None
+        if len(self._demand_history) > 1:
+            demand_std = float(np.std(self._demand_history[-7:]))
+            self._last_demand_std_source = 'SIMULATED_WINDOW'
+        elif scenario.demand_std is not None:
+            demand_std = scenario.demand_std
+            self._last_demand_std_source = (
+                scenario.demand_std_source or 'CONFIGURED_SCENARIO'
+            )
+        elif 'DSD' in table:
+            demand_std = table['DSD']
+            self._last_demand_std_source = 'EXPLICIT_EXOGENOUS'
+
+        if demand_std is not None:
+            if isinstance(demand_std, bool):
+                raise ValueError("La desviación de demanda debe ser numérica y no negativa.")
+            demand_std = float(demand_std)
+            if not math.isfinite(demand_std) or demand_std < 0:
+                raise ValueError("La desviación de demanda debe ser finita y no negativa.")
+            table['DSD'] = demand_std
+            table['CVD'] = demand_std / max(abs(table['DPH']), 1.0)
+        else:
+            table.pop('DSD', None)
+            table.pop('CVD', None)
 
         return table
 
@@ -379,21 +420,18 @@ class DiscreteEventEngine:
 
     @staticmethod
     def _finite(x: float) -> float:
-        """Sanea NaN/inf → 0.0 (mismo criterio que np.nan_to_num(nan=0,posinf=0,neginf=0))."""
+        """Rechaza valores financieros no finitos o fuera del límite operativo."""
         v = float(x)
-        return 0.0 if (math.isnan(v) or math.isinf(v)) else v
+        if math.isnan(v) or math.isinf(v) or abs(v) > 1e100:
+            raise ExpressionError(
+                "El resultado financiero no es finito o excede el límite operativo."
+            )
+        return v
 
     def _extract_financials(
         self, combined: Dict[str, float]
     ) -> Tuple[float, float, float, float]:
-        """Extrae demanda, ingresos, costos y ganancia del resultado.
-
-        Sanea NaN/inf a 0.0 con el MISMO criterio que el motor vectorizado
-        (``np.nan_to_num(posinf=0, neginf=0)`` en ``vectorized_engine._grid_host``).
-        Sin esto, un GBM con overflow de ``exp`` o una división degenerada emite
-        inf/nan que luego envenena ``np.mean``/``np.percentile`` en la agregación
-        de ``simulation_service`` y hace divergir la ruta escalar de la vectorizada.
-        """
+        """Extrae métricas y rechaza resultados numéricos que no pueden reportarse."""
         demand = combined.get(self.config.demand_variable, 0.0)
         revenue = combined.get(self.config.revenue_variable, 0.0)
         costs = combined.get(self.config.cost_variable, 0.0)
@@ -463,6 +501,10 @@ class DiscreteEventEngine:
             costs=costs,
             profit=profit,
             warnings=warnings,
+            metadata={
+                'demand_std': combined.get('DSD'),
+                'demand_std_source': self._last_demand_std_source,
+            },
         )
 
     def run_all_periods(
@@ -486,6 +528,7 @@ class DiscreteEventEngine:
         """Reinicia el estado al valor inicial (útil para múltiples corridas)."""
         self._state = dict(self.config.initial_state)
         self._demand_history = []
+        self._last_demand_std_source = None
 
 
 # ─────────────────────────────────────────────────────────────────────────────

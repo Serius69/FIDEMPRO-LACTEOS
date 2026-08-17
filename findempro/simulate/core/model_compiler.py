@@ -210,6 +210,11 @@ class ModelCompiler:
             "flows": self.compiled_model["flows"],
             "converters": self.compiled_model["converters"],
         }
+        # Financial semantics are optional but must be explicit; adapters
+        # must not invent a price, cost or demand baseline from node labels.
+        for key in ("base_demand", "demand_std", "unit_price", "unit_cost", "fixed_costs", "investment"):
+            if key in self.run_specs:
+                mc_config[key] = self.run_specs[key]
 
         # Mapear distribuciones al formato del motor existente
         _dist_map = {

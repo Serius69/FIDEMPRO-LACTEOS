@@ -11,6 +11,12 @@ const Simulate = lazy(() => import('@/pages/Simulate'))
 const ForecastPage = lazy(() => import('@/pages/Forecast'))
 const Reports = lazy(() => import('@/pages/Reports'))
 const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'))
+const Models = lazy(() => import('@/pages/Models'))
+const ModelBuilder = lazy(() => import('@/pages/ModelBuilder'))
+const DataImports = lazy(() => import('@/pages/DataImports'))
+const BomBuilder = lazy(() => import('@/pages/BomBuilder'))
+const ProcessBuilder = lazy(() => import('@/pages/ProcessBuilder'))
+const Results = lazy(() => import('@/pages/Results'))
 
 function PageFallback() {
   return (
@@ -38,6 +44,12 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/businesses" element={<Businesses />} />
+                <Route path="/models" element={<Models />} />
+                <Route path="/models/:id" element={<ModelBuilder />} />
+                <Route path="/data" element={<DataImports />} />
+                <Route path="/bom" element={<BomBuilder />} />
+                <Route path="/processes" element={<ProcessBuilder />} />
+                <Route path="/results" element={<Results />} />
                 <Route path="/simulate" element={<Simulate />} />
                 <Route path="/forecast" element={<ForecastPage />} />
                 <Route path="/reports" element={<Reports />} />

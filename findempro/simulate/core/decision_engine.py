@@ -25,6 +25,7 @@ from simulate.services.recommendation_service import (
     Recommendation,
     RecommendationService,
 )
+from simulate.utils.statistical_contracts import stable_distribution_shape
 
 logger = logging.getLogger(__name__)
 
@@ -42,8 +43,8 @@ class RiskMetrics:
     mean: float
     std: float
     variance: float
-    skewness: float
-    kurtosis: float
+    skewness: Optional[float]
+    kurtosis: Optional[float]
 
     # Percentiles clave
     p1: float
@@ -61,15 +62,24 @@ class RiskMetrics:
     probability_breakeven: float
 
     # VaR y CVaR
-    var_95: float     # Percentil 5 de ganancias = pérdida máxima al 95% de confianza
+    var_95: float     # Percentil 5 firmado de utilidad/ganancia
     var_99: float
-    cvar_95: float    # Media de la cola inferior al 5% (Expected Shortfall / CVaR)
+    cvar_95: float    # Media firmada de la cola inferior al 5%
     cvar_99: float
 
-    # Ratios de rendimiento ajustados por riesgo
-    sharpe_ratio: Optional[float] = None   # (mean - rf) / std
-    sortino_ratio: Optional[float] = None  # (mean - rf) / downside_std
-    downside_std: Optional[float] = None   # std sólo de retornos negativos
+    # Ratios de retorno ajustados por riesgo. La distribución legacy contiene
+    # utilidad monetaria, no retornos periódicos; por tanto estos campos son N/A.
+    sharpe_ratio: Optional[float] = None
+    sortino_ratio: Optional[float] = None
+    downside_std: Optional[float] = None
+    # Confidence-aware metrics are explicit; var_95/var_99 remain legacy stable fields.
+    confidence_level: float = 0.95
+    var_at_confidence: Optional[float] = None
+    cvar_at_confidence: Optional[float] = None
+    ratio_basis: str = "not_applicable_monetary_profit"
+    var_semantics: str = "lower_profit_quantile"
+    cvar_semantics: str = "lower_tail_mean_profit"
+    shape_statistics_status: str = "AVAILABLE"
 
 
 @dataclass
@@ -111,8 +121,15 @@ class DecisionReport:
                 'sharpe_ratio':         self.risk_metrics.sharpe_ratio,
                 'sortino_ratio':        self.risk_metrics.sortino_ratio,
                 'downside_std':         self.risk_metrics.downside_std,
+                'confidence_level':     self.risk_metrics.confidence_level,
+                'var_at_confidence':    self.risk_metrics.var_at_confidence,
+                'cvar_at_confidence':   self.risk_metrics.cvar_at_confidence,
+                'ratio_basis':          self.risk_metrics.ratio_basis,
+                'var_semantics':        self.risk_metrics.var_semantics,
+                'cvar_semantics':       self.risk_metrics.cvar_semantics,
                 'skewness':             self.risk_metrics.skewness,
                 'kurtosis':             self.risk_metrics.kurtosis,
+                'shape_statistics_status': self.risk_metrics.shape_statistics_status,
             },
             'expected_utility': self.expected_utility,
             'risk_aversion': self.risk_aversion,
@@ -131,17 +148,19 @@ class DecisionReport:
 def _compute_risk_metrics(
     profit_samples: np.ndarray,
     risk_free_rate: float = 0.0,
+    confidence_level: float = 0.95,
 ) -> RiskMetrics:
     """
     Calcula el conjunto completo de métricas de riesgo sobre la distribución
     de ganancias simuladas.
 
-    Incluye VaR, CVaR, Sharpe y Sortino. Todas las operaciones son vectorizadas.
+    Incluye VaR y CVaR monetarios. Sharpe y Sortino permanecen N/A porque las
+    muestras son utilidades monetarias por escenario, no retornos periódicos.
     """
     if len(profit_samples) == 0:
         raise ValueError("profit_samples no puede estar vacío")
-
-    from scipy import stats as scipy_stats
+    if not 0.5 <= confidence_level < 1.0:
+        raise ValueError("confidence_level debe estar entre 0.5 y 1.0 (exclusivo)")
 
     mean = float(np.mean(profit_samples))
     std  = float(np.std(profit_samples, ddof=1)) if len(profit_samples) > 1 else 0.0
@@ -157,30 +176,27 @@ def _compute_risk_metrics(
     tail_99 = profit_samples[profit_samples <= var_99_threshold]
     cvar_95 = float(np.mean(tail_95)) if len(tail_95) > 0 else var_95_threshold
     cvar_99 = float(np.mean(tail_99)) if len(tail_99) > 0 else var_99_threshold
+    confidence_percentile = (1.0 - confidence_level) * 100.0
+    var_at_confidence = pct(confidence_percentile)
+    tail_at_confidence = profit_samples[profit_samples <= var_at_confidence]
+    cvar_at_confidence = float(np.mean(tail_at_confidence)) if len(tail_at_confidence) else var_at_confidence
 
-    # ── Ratios de rendimiento ─────────────────────────────────────────────────
-    excess_return = mean - risk_free_rate
-    sharpe  = excess_return / std if std > 0 else None
-
-    # Sortino: penaliza solo la volatilidad a la baja (retornos < risk_free_rate)
-    downside_returns = profit_samples[profit_samples < risk_free_rate]
-    if len(downside_returns) > 1:
-        downside_std_val = float(np.std(downside_returns, ddof=1))
-        sortino = excess_return / downside_std_val if downside_std_val > 0 else None
-    else:
-        downside_std_val = None
-        sortino = None
+    # No normalizar utilidades monetarias como si fueran retornos de inversión.
+    # ``risk_free_rate`` se conserva en la firma por compatibilidad, pero solo
+    # podrá usarse cuando exista un contrato explícito de retornos periódicos.
+    sharpe = None
+    sortino = None
+    downside_std_val = None
 
     # ── Momentos estadísticos ─────────────────────────────────────────────────
-    skewness = float(scipy_stats.skew(profit_samples))
-    kurt     = float(scipy_stats.kurtosis(profit_samples))
+    shape = stable_distribution_shape(profit_samples)
 
     return RiskMetrics(
         mean=mean,
         std=std,
         variance=std ** 2,
-        skewness=skewness,
-        kurtosis=kurt,
+        skewness=shape.skewness,
+        kurtosis=shape.kurtosis,
         p1=pct(1),  p5=pct(5),  p10=pct(10),
         p25=pct(25), p50=pct(50), p75=pct(75),
         p90=pct(90), p95=pct(95), p99=pct(99),
@@ -193,6 +209,13 @@ def _compute_risk_metrics(
         sharpe_ratio=sharpe,
         sortino_ratio=sortino,
         downside_std=downside_std_val,
+        confidence_level=confidence_level,
+        var_at_confidence=var_at_confidence,
+        cvar_at_confidence=cvar_at_confidence,
+        ratio_basis="not_applicable_monetary_profit",
+        var_semantics="lower_profit_quantile",
+        cvar_semantics="lower_tail_mean_profit",
+        shape_statistics_status=shape.status,
     )
 
 
@@ -259,9 +282,11 @@ class DecisionEngine:
         min_profit_margin_pct: float = 10.0,
         max_cost_revenue_ratio: float = 70.0,
         max_probability_of_loss: float = 0.20,
+        confidence_level: float = 0.95,
     ):
         self.risk_aversion = risk_aversion
         self.risk_free_rate = risk_free_rate
+        self.confidence_level = confidence_level
         self._rec_engine = RecommendationService(
             min_profit_margin_pct=min_profit_margin_pct,
             max_cost_revenue_ratio=max_cost_revenue_ratio,
@@ -274,6 +299,7 @@ class DecisionEngine:
         return cls(
             min_profit_margin_pct=profile.min_profit_margin_pct,
             max_cost_revenue_ratio=profile.max_cost_revenue_ratio,
+            confidence_level=getattr(profile, 'confidence_level', 0.95),
         )
 
     def analyze(
@@ -303,7 +329,7 @@ class DecisionEngine:
         revenue_samples = np.asarray(revenue_samples, dtype=float)
 
         # 1. Métricas de riesgo
-        risk = _compute_risk_metrics(profit_samples, self.risk_free_rate)
+        risk = _compute_risk_metrics(profit_samples, self.risk_free_rate, self.confidence_level)
 
         # 2. Utilidad esperada
         eu = _compute_cara_utility(profit_samples, self.risk_aversion)
@@ -405,7 +431,7 @@ class DecisionEngine:
         summaries = {
             'viable': (
                 f"La operación es financieramente viable con P(ganancia)={risk.probability_breakeven:.1%}. "
-                f"Ganancia esperada: {risk.mean:,.0f}, VaR 95%: {risk.var_95:,.0f}."
+                f"Ganancia esperada: {risk.mean:,.0f}, umbral inferior P5: {risk.var_95:,.0f}."
             ),
             'riesgoso': (
                 f"La operación presenta riesgos moderados. "

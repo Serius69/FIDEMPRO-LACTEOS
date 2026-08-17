@@ -121,11 +121,15 @@ class RecommendationService:
     ) -> List[Recommendation]:
         recs = []
 
-        revenue = agg_vars.get('IT', agg_vars.get('INGRESOS', 0.0))
-        profit = agg_vars.get('GT', agg_vars.get('GANANCIA', risk.mean))
-        margin_pct = (profit / revenue * 100) if revenue > 0 else 0.0
+        revenue = agg_vars.get('IT', agg_vars.get('INGRESOS'))
+        profit = agg_vars.get('GT', agg_vars.get('GANANCIA'))
+        margin_pct = (
+            profit / revenue * 100
+            if revenue is not None and profit is not None and revenue > 0
+            else None
+        )
 
-        if margin_pct < 0:
+        if margin_pct is not None and margin_pct < 0:
             recs.append(Recommendation(
                 category='financiero', severity='critical',
                 title='Operación con pérdidas',
@@ -142,7 +146,7 @@ class RecommendationService:
                 ),
                 impact='Crítico',
             ))
-        elif margin_pct < self.min_profit_margin_pct:
+        elif margin_pct is not None and margin_pct < self.min_profit_margin_pct:
             recs.append(Recommendation(
                 category='financiero', severity='warning',
                 title='Margen de ganancia por debajo del umbral',
@@ -203,7 +207,7 @@ class RecommendationService:
                     impact='Alto',
                 ))
 
-        if abs(risk.kurtosis) > 3:
+        if risk.kurtosis is not None and abs(risk.kurtosis) > 3:
             recs.append(Recommendation(
                 category='riesgo', severity='info',
                 title='Distribución de ganancias con colas pesadas',
@@ -222,10 +226,10 @@ class RecommendationService:
 
     def _check_cost_structure(self, agg_vars: Dict[str, float]) -> List[Recommendation]:
         recs = []
-        revenue = agg_vars.get('IT', agg_vars.get('INGRESOS', 0.0))
-        costs = agg_vars.get('TG', agg_vars.get('GASTOS_TOTALES', 0.0))
+        revenue = agg_vars.get('IT', agg_vars.get('INGRESOS'))
+        costs = agg_vars.get('TG', agg_vars.get('GASTOS_TOTALES'))
 
-        if revenue > 0 and costs > 0:
+        if revenue is not None and costs is not None and revenue > 0 and costs >= 0:
             cost_ratio = costs / revenue * 100
             if cost_ratio > self.max_cost_revenue_ratio:
                 recs.append(Recommendation(

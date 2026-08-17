@@ -6,6 +6,7 @@ Centraliza todos los tipos de validación y análisis de confiabilidad.
 import logging
 from typing import Dict, List, Any, Optional
 import numpy as np
+from modeling.statistics import METHOD_VERSION
 try:
     from scipy import stats
     import scipy.stats
@@ -504,12 +505,16 @@ class EnhancedValidationManager:
             
             # Kolmogorov-Smirnov test contra distribución normal
             mean, std = np.mean(data), np.std(data)
-            ks_stat, ks_p = scipy.stats.kstest(data, lambda x: scipy.stats.norm.cdf(x, mean, std))
+            ks_stat = scipy.stats.kstest(
+                data, lambda x: scipy.stats.norm.cdf(x, mean, std)
+            ).statistic
             normality_tests['kolmogorov_smirnov'] = {
                 'statistic': float(ks_stat),
-                'p_value': float(ks_p),
-                'is_normal': ks_p > 0.05,
-                'interpretation': 'Normal' if ks_p > 0.05 else 'No normal'
+                'p_value': None,
+                'is_normal': None,
+                'p_value_unavailable_reason': 'PARAMETERS_ESTIMATED_FROM_SAME_SAMPLE',
+                'method_version': METHOD_VERSION,
+                'interpretation': 'Distancia descriptiva; usar Shapiro-Wilk o D’Agostino para inferencia de normalidad.'
             }
             
             # D'Agostino's normality test

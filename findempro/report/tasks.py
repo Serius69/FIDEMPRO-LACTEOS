@@ -1,9 +1,10 @@
 # report/tasks.py
 import io
 import logging
+import math
+import statistics
 from typing import Dict, Any
 
-import numpy as np
 from celery import shared_task
 from django.core.cache import cache
 from django.utils import timezone
@@ -91,9 +92,22 @@ def _build_content_sections(content: Dict[str, Any], styles) -> list:
         story.append(Paragraph("<b>Resultados de Simulación</b>", styles['Heading2']))
         story.append(Spacer(1, 6))
         results = content['resultados_simulacion']
+        result_units = {
+            'utilidad_neta': 'Bs',
+            'flujo_caja': 'Bs/mes',
+            'roi': '% horizonte',
+            'punto_equilibrio': 'unidades',
+            'payback_period': 'meses',
+            'van': 'Bs',
+            'tir': '% anual efectiva',
+            'margen_unitario': 'Bs/unidad',
+            'ingresos_totales': 'Bs',
+        }
         for key, value in results.items():
             label = key.replace('_', ' ').title()
-            story.append(Paragraph(f"<b>{label}:</b> {value}", styles['Normal']))
+            rendered = 'N/A' if value is None else value
+            unit = result_units.get(key, '')
+            story.append(Paragraph(f"<b>{label}:</b> {rendered} {unit}".rstrip(), styles['Normal']))
             story.append(Spacer(1, 4))
         story.append(Spacer(1, 12))
 
@@ -154,12 +168,12 @@ def generate_report_pdf_async(self, report_id: int, user_id: int) -> Dict[str, A
 @shared_task(bind=True, max_retries=2)
 def generate_simulation_pdf_async(self, simulation_id: int, user_id: int) -> Dict[str, Any]:
     """
-    Genera PDF de simulación Monte Carlo con histograma Matplotlib y tabla de riesgo.
+    Genera PDF de simulación desde resúmenes persistidos por período.
 
     El PDF incluye:
-      · Histograma de distribución de utilidades (reconstruido desde estadísticas por período)
-      · Serie temporal de utilidad media con banda IC 90%
-      · Tabla de métricas: VaR, CVaR, Sharpe, Sortino, P(pérdida) en BOB
+      · Serie temporal de utilidad media con banda P5/P95 persistida
+      · Resumen descriptivo entre períodos
+      · Estado no disponible para métricas que requieren muestras originales
 
     El PDF se guarda en cache (TTL 1h) bajo 'sim_pdf_bytes:{simulation_id}:{user_id}'.
     """
@@ -184,7 +198,7 @@ def generate_simulation_pdf_async(self, simulation_id: int, user_id: int) -> Dic
 
         self.update_state(
             state='PROGRESS',
-            meta={'current': 40, 'total': 100, 'status': 'Generando histograma...'},
+            meta={'current': 40, 'total': 100, 'status': 'Generando resumen...'},
         )
 
         pdf_bytes = _build_simulation_pdf(simulation, results)
@@ -218,6 +232,48 @@ def generate_simulation_pdf_async(self, simulation_id: int, user_id: int) -> Dic
         self.retry(exc=exc, countdown=retry_in)
 
 
+def _extract_persisted_profit_summary(results: list) -> Dict[str, Any]:
+    """Extract finite persisted summaries without reconstructing observations."""
+    periods = []
+    excluded = 0
+    for period_number, result in enumerate(results, start=1):
+        variables = getattr(result, 'variables', None)
+        if not isinstance(variables, dict):
+            excluded += 1
+            continue
+        try:
+            mean_value = float(variables['profit_mean'])
+            p5_value = float(variables['profit_p5'])
+            p95_value = float(variables['profit_p95'])
+        except (KeyError, TypeError, ValueError):
+            excluded += 1
+            continue
+        if not all(math.isfinite(value) for value in (mean_value, p5_value, p95_value)):
+            excluded += 1
+            continue
+        if not p5_value <= mean_value <= p95_value:
+            excluded += 1
+            continue
+        periods.append({
+            'period': period_number,
+            'mean': mean_value,
+            'p5': p5_value,
+            'p95': p95_value,
+        })
+
+    means = [period['mean'] for period in periods]
+    return {
+        'periods': periods,
+        'excluded_periods': excluded,
+        'mean_of_period_means': statistics.fmean(means) if means else None,
+        'std_of_period_means': statistics.pstdev(means) if len(means) > 1 else None,
+        'negative_mean_periods': sum(value < 0 for value in means),
+        'risk_metrics_available': False,
+        'risk_unavailable_reason': 'ORIGINAL_MONTE_CARLO_SAMPLES_NOT_PERSISTED',
+        'method_version': 'simulation_report_summary_v2',
+    }
+
+
 def _build_simulation_pdf(simulation, results: list) -> bytes:
     """
     Construye el PDF de simulación con Matplotlib + ReportLab.
@@ -237,63 +293,36 @@ def _build_simulation_pdf(simulation, results: list) -> bytes:
     )
 
     # ── Extraer series por período ────────────────────────────────────────────
-    profit_means = np.array(
-        [float(r.variables.get('profit_mean', 0)) for r in results], dtype=float
-    )
-    profit_p5 = np.array(
-        [float(r.variables.get('profit_p5', 0)) for r in results], dtype=float
-    )
-    profit_p95 = np.array(
-        [float(r.variables.get('profit_p95', 0)) for r in results], dtype=float
-    )
-
-    if len(profit_means) < 2:
-        # Fallback: PDF mínimo sin histograma
+    summary = _extract_persisted_profit_summary(results)
+    periods_data = summary['periods']
+    if len(periods_data) < 2:
         return _build_minimal_pdf(simulation, results)
+
+    profit_means = [period['mean'] for period in periods_data]
+    profit_p5 = [period['p5'] for period in periods_data]
+    profit_p95 = [period['p95'] for period in periods_data]
 
     # ── Reconstruir distribución de utilidades desde estadísticas ────────────
     # σ estimada del rango inter-percentil  (P5/P95 ≈ ±1.645σ → rango = 3.29σ)
-    sigma_est = np.maximum((profit_p95 - profit_p5) / 3.29, np.abs(profit_means) * 0.01 + 1)
-    rng = np.random.default_rng(42)
-    profit_samples = np.concatenate([
-        rng.normal(mu, sig, 200) for mu, sig in zip(profit_means, sigma_est)
-    ])
 
     # ── Métricas de riesgo ────────────────────────────────────────────────────
     cl = simulation.confidence_level
-    var_pct = (1 - cl) * 100                             # percentil para VaR (p5 si cl=0.95)
-    var_val = float(np.percentile(profit_samples, var_pct))
-    tail = profit_samples[profit_samples <= var_val]
-    cvar_val = float(np.mean(tail)) if len(tail) > 0 else var_val
-
-    profit_mean = float(np.mean(profit_samples))
-    profit_std  = float(np.std(profit_samples))
-    downside = profit_samples[profit_samples < 0]
-    downside_std = float(np.std(downside)) if len(downside) > 0 else 1e-6
-    sharpe  = profit_mean / max(profit_std,    1e-6)
-    sortino = profit_mean / max(downside_std,  1e-6)
-    prob_loss = float(np.mean(profit_samples < 0))
 
     # ── Generar figuras Matplotlib ────────────────────────────────────────────
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
     fig.patch.set_facecolor('white')
 
-    # Histograma de utilidades
-    n_bins = min(50, max(15, len(profit_samples) // 50))
-    ax1.hist(profit_samples, bins=n_bins, color='#2563eb', alpha=0.75,
-             edgecolor='white', linewidth=0.4)
-    ax1.axvline(profit_mean, color='#16a34a', linestyle='--', linewidth=2,
-                label=f'Media: {profit_mean:,.0f}')
-    ax1.axvline(var_val, color='#dc2626', linestyle='-.', linewidth=2,
-                label=f'VaR({int(cl*100)}%): {var_val:,.0f}')
-    ax1.set_xlabel('Utilidad (BOB)', fontsize=9)
-    ax1.set_ylabel('Frecuencia', fontsize=9)
-    ax1.set_title('Distribución de Utilidades MC', fontsize=10, fontweight='bold')
-    ax1.legend(fontsize=7)
-    ax1.grid(axis='y', alpha=0.3)
+    ax1.axis('off')
+    ax1.set_title('Diagnóstico de Riesgo', fontsize=10, fontweight='bold')
+    ax1.text(
+        0.5, 0.55,
+        'NO DISPONIBLE\n\nLas muestras originales de Monte Carlo\nno están persistidas. No se reconstruyen\nvalores para estimar VaR, CVaR o P(pérdida).',
+        ha='center', va='center', fontsize=9,
+        bbox={'boxstyle': 'round', 'facecolor': '#f8fafc', 'edgecolor': '#94a3b8'},
+    )
 
     # Serie temporal
-    periods = list(range(1, len(profit_means) + 1))
+    periods = [period['period'] for period in periods_data]
     ax2.plot(periods, profit_means, color='#2563eb', linewidth=1.8,
              marker='o', markersize=2.5)
     ax2.fill_between(periods, profit_p5, profit_p95,
@@ -347,20 +376,21 @@ def _build_simulation_pdf(simulation, results: list) -> bytes:
 
     risk_rows = [
         ['Métrica', 'Valor (BOB)', 'Interpretación'],
-        ['Utilidad Media (μ)',         f'{profit_mean:,.2f}',
-         'Ganancia esperada promedio por período'],
-        ['Desviación Estándar (σ)',    f'{profit_std:,.2f}',
-         'Variabilidad total de la utilidad'],
-        [f'VaR ({int(cl*100)}%)',      f'{var_val:,.2f}',
-         f'Pérdida máxima con {int(cl*100)}% de confianza'],
-        [f'CVaR / ES ({int(cl*100)}%)', f'{cvar_val:,.2f}',
-         'Pérdida esperada en la cola desfavorable'],
-        ['Ratio de Sharpe',            f'{sharpe:.3f}',
-         'Utilidad ajustada por riesgo total (>1 = favorable)'],
-        ['Ratio de Sortino',           f'{sortino:.3f}',
-         'Utilidad ajustada por riesgo bajista (>1 = favorable)'],
-        ['P(Pérdida)',                 f'{prob_loss * 100:.1f}%',
-         'Probabilidad de utilidad negativa'],
+        ['Media entre períodos', f'{summary["mean_of_period_means"]:,.2f}',
+         'Media descriptiva de las utilidades medias persistidas'],
+        ['Desv. entre períodos', f'{summary["std_of_period_means"]:,.2f}',
+         'Variabilidad descriptiva entre medias de período'],
+        [f'VaR ({int(cl*100)}%)', 'N/A',
+         'No disponible sin las muestras originales de Monte Carlo'],
+        [f'CVaR / ES ({int(cl*100)}%)', 'N/A',
+         'No disponible sin las muestras originales de Monte Carlo'],
+        ['Ratio de Sharpe',            'N/A',
+         'No aplicable: se requieren retornos periodizados, no utilidad monetaria'],
+        ['Ratio de Sortino',           'N/A',
+         'No aplicable: se requieren retornos periodizados, no utilidad monetaria'],
+        ['Períodos con media negativa',
+         f'{summary["negative_mean_periods"]}/{len(periods_data)}',
+         'Conteo observado; no es una probabilidad de pérdida'],
     ]
 
     t = Table(risk_rows, colWidths=[1.8 * inch, 1.5 * inch, 3.2 * inch])
@@ -381,6 +411,20 @@ def _build_simulation_pdf(simulation, results: list) -> bytes:
     story.append(Spacer(1, 10))
 
     story.append(Paragraph(
+        '<b>Metodología:</b> simulation_report_summary_v2. El reporte usa exclusivamente '
+        'profit_mean, profit_p5 y profit_p95 persistidos por período. No genera ni '
+        'reconstruye muestras. Las métricas dependientes de muestras se muestran como N/A.',
+        styles['Normal'],
+    ))
+    if summary['excluded_periods']:
+        story.append(Paragraph(
+            f'<b>Calidad de datos:</b> se excluyeron {summary["excluded_periods"]} '
+            'período(s) sin resumen finito y coherente.',
+            styles['Normal'],
+        ))
+    story.append(Spacer(1, 10))
+
+    story.append(Paragraph(
         f'<i>Generado por FindemproAI el '
         f'{timezone.now().strftime("%d/%m/%Y a las %H:%M")} — Moneda: Boliviano (BOB)</i>',
         styles['Normal'],
@@ -391,7 +435,7 @@ def _build_simulation_pdf(simulation, results: list) -> bytes:
 
 
 def _build_minimal_pdf(simulation, results: list) -> bytes:
-    """Fallback PDF mínimo cuando no hay suficientes datos para el histograma."""
+    """Fallback PDF when persisted summaries are insufficient."""
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
@@ -408,7 +452,8 @@ def _build_minimal_pdf(simulation, results: list) -> bytes:
         Spacer(1, 6),
         Paragraph(
             f'La simulación #{simulation.id} tiene {len(results)} período(s) registrado(s). '
-            f'Se requieren al menos 2 períodos para generar el histograma.',
+            'No hay al menos 2 períodos con profit_mean, profit_p5 y profit_p95 '
+            'finitos y coherentes. Las métricas de riesgo no se calculan ni se inventan.',
             styles['Normal'],
         ),
     ])

@@ -41,8 +41,8 @@ class FinancialMetrics:
     net_profit: float
     gross_margin_pct: float
     net_margin_pct: float
-    ebitda_proxy: float          # Utilidad operativa simplificada
-    roi_pct: float
+    ebitda_proxy: Optional[float]  # None until D&A inputs exist
+    roi_pct: Optional[float]
 
     # Eficiencia
     cost_revenue_ratio_pct: float
@@ -54,7 +54,7 @@ class FinancialMetrics:
     margin_of_safety_pct: float  # Qué tan lejos está del break-even
 
     # Flujo de caja proxy
-    operating_cash_flow: float
+    operating_cash_flow: Optional[float]  # None until cash/working-capital inputs exist
 
     # Indicadores de salud
     financial_health_score: float  # 0-100
@@ -64,13 +64,15 @@ class FinancialMetrics:
 @dataclass
 class RiskMetrics:
     """Métricas de riesgo financiero."""
-    probability_of_loss: float
-    value_at_risk_95: float      # Máxima pérdida esperada con 95% de confianza
-    expected_shortfall: float    # Pérdida promedio en el 5% peor (CVaR)
+    probability_of_loss: Optional[float]
+    value_at_risk_95: Optional[float]
+    expected_shortfall: Optional[float]
     demand_volatility: float     # Coeficiente de variación de la demanda
-    revenue_at_risk: float       # Ingresos en riesgo (VaR aplicado a ingresos)
-    risk_rating: str             # 'bajo' | 'moderado' | 'alto' | 'crítico'
-    risk_score: float            # 0-100
+    revenue_at_risk: Optional[float]
+    risk_rating: Optional[str]
+    risk_score: Optional[float]
+    available: bool
+    unavailable_reason: Optional[str] = None
 
 
 @dataclass
@@ -172,14 +174,29 @@ class FinancialAnalysisEngine:
         min_profit_margin: Optional[float] = None,
         max_cost_ratio: Optional[float] = None,
         target_roi: Optional[float] = None,
+        investment: Optional[float] = None,
     ):
         self.revenue = float(revenue)
         self.variable_costs = float(variable_costs)
         self.fixed_costs = float(fixed_costs)
+        for name, value in {
+            'revenue': self.revenue,
+            'variable_costs': self.variable_costs,
+            'fixed_costs': self.fixed_costs,
+            'demand_mean': float(demand_mean),
+            'demand_std': float(demand_std),
+            'unit_price': float(unit_price),
+            'investment': float(investment) if investment is not None else 0.0,
+        }.items():
+            if not np.isfinite(value) or value < 0:
+                raise ValueError(f"{name} debe ser un número finito no negativo.")
         self.total_costs = self.variable_costs + self.fixed_costs
         self.demand_mean = float(demand_mean)
         self.demand_std = float(demand_std)
         self.unit_price = float(unit_price)
+        if investment is not None and (not np.isfinite(float(investment)) or float(investment) < 0):
+            raise ValueError("investment debe ser un número finito no negativo.")
+        self.investment = float(investment) if investment is not None else None
         self.industry_sector = industry_sector
         self.profit_samples = profit_samples
 
@@ -197,8 +214,10 @@ class FinancialAnalysisEngine:
         net_profit = self.revenue - self.total_costs
         gross_margin = (gross_profit / self.revenue * 100) if self.revenue > 0 else 0.0
         net_margin = (net_profit / self.revenue * 100) if self.revenue > 0 else 0.0
-        roi = (net_profit / self.total_costs * 100) if self.total_costs > 0 else 0.0
-        ebitda = net_profit  # Proxy simplificado (sin D&A por ahora)
+        # ROI requires an explicit investment basis. Total costs are an
+        # operating denominator, not a capital investment proxy.
+        roi = (net_profit / self.investment * 100) if self.investment and self.investment > 0 else None
+        ebitda = None  # EBITDA requires depreciation/amortization inputs.
         cost_ratio = (self.total_costs / self.revenue * 100) if self.revenue > 0 else 100.0
         var_ratio = (self.variable_costs / self.revenue * 100) if self.revenue > 0 else 100.0
 
@@ -219,8 +238,8 @@ class FinancialAnalysisEngine:
         else:
             margin_of_safety = 0.0
 
-        # Flujo de caja operativo proxy
-        operating_cf = net_profit  # Simplificado
+        # Net profit is not cash flow without working-capital and cash inputs.
+        operating_cf = None
 
         # Puntaje de salud financiera (0-100)
         health_score = self._compute_health_score(net_margin, roi, cost_ratio, margin_of_safety)
@@ -255,7 +274,7 @@ class FinancialAnalysisEngine:
             profitability_rating=rating,
         )
 
-    def _compute_health_score(self, net_margin: float, roi: float, cost_ratio: float, mos: float) -> float:
+    def _compute_health_score(self, net_margin: float, roi: Optional[float], cost_ratio: float, mos: float) -> float:
         """Calcula puntaje de salud financiera 0-100."""
         score = 0.0
         # Margen neto (0-30 puntos)
@@ -264,7 +283,9 @@ class FinancialAnalysisEngine:
         elif net_margin > 0:
             score += (net_margin / self.min_profit_margin) * 30
         # ROI (0-25 puntos)
-        if roi >= self.target_roi:
+        if roi is None:
+            pass
+        elif roi >= self.target_roi:
             score += 25
         elif roi > 0:
             score += (roi / self.target_roi) * 25
@@ -284,30 +305,40 @@ class FinancialAnalysisEngine:
         """Calcula métricas de riesgo financiero."""
         cv = (self.demand_std / self.demand_mean) if self.demand_mean > 0 else 0.0
 
-        if self.profit_samples is not None and len(self.profit_samples) > 10:
-            prob_loss = float(np.mean(self.profit_samples < 0))
-            var_95 = float(np.percentile(self.profit_samples, 5))
-            tail = self.profit_samples[self.profit_samples <= var_95]
+        samples = None
+        if self.profit_samples is not None:
+            samples = np.asarray(self.profit_samples, dtype=float)
+            if not np.all(np.isfinite(samples)):
+                raise ValueError("profit_samples debe contener solo valores finitos.")
+
+        if samples is not None and len(samples) > 10:
+            prob_loss = float(np.mean(samples < 0))
+            var_95 = float(np.percentile(samples, 5))
+            tail = samples[samples <= var_95]
             es = float(np.mean(tail)) if len(tail) > 0 else var_95
             revenue_at_risk = abs(var_95) if var_95 < 0 else 0.0
-        else:
-            # Estimación analítica cuando no hay muestras
-            prob_loss = 0.0
-            var_95 = 0.0
-            es = 0.0
-            revenue_at_risk = 0.0
+            risk_score = self._compute_risk_score(prob_loss, cv, var_95)
 
-        # Risk score (0-100, menor es mejor)
-        risk_score = self._compute_risk_score(prob_loss, cv, var_95)
+            if risk_score <= 25:
+                risk_rating = 'bajo'
+            elif risk_score <= 50:
+                risk_rating = 'moderado'
+            elif risk_score <= 75:
+                risk_rating = 'alto'
+            else:
+                risk_rating = 'crítico'
 
-        if risk_score <= 25:
-            risk_rating = 'bajo'
-        elif risk_score <= 50:
-            risk_rating = 'moderado'
-        elif risk_score <= 75:
-            risk_rating = 'alto'
+            available = True
+            unavailable_reason = None
         else:
-            risk_rating = 'crítico'
+            prob_loss = None
+            var_95 = None
+            es = None
+            revenue_at_risk = None
+            risk_score = None
+            risk_rating = None
+            available = False
+            unavailable_reason = 'INSUFFICIENT_PROFIT_SAMPLES'
 
         return RiskMetrics(
             probability_of_loss=prob_loss,
@@ -317,6 +348,8 @@ class FinancialAnalysisEngine:
             revenue_at_risk=revenue_at_risk,
             risk_rating=risk_rating,
             risk_score=risk_score,
+            available=available,
+            unavailable_reason=unavailable_reason,
         )
 
     def _compute_risk_score(self, prob_loss: float, cv: float, var_95: float) -> float:
@@ -358,7 +391,7 @@ class FinancialAnalysisEngine:
             total_c = var_c + self.fixed_costs
             gp = rev - total_c
             margin = (gp / rev * 100) if rev > 0 else 0.0
-            roi = (gp / total_c * 100) if total_c > 0 else 0.0
+            roi = (gp / self.investment * 100) if self.investment and self.investment > 0 else None
 
             results[name] = {
                 'demand_factor': factor,
@@ -368,7 +401,7 @@ class FinancialAnalysisEngine:
                 'total_costs': round(total_c, 2),
                 'gross_profit': round(gp, 2),
                 'profit_margin_pct': round(margin, 2),
-                'roi_pct': round(roi, 2),
+                'roi_pct': round(roi, 2) if roi is not None else None,
                 'is_profitable': gp > 0,
             }
         return results
@@ -483,7 +516,7 @@ class FinancialAnalysisEngine:
             ))
 
         # 4. Riesgo de pérdida
-        if risk.probability_of_loss > 0.3:
+        if risk.probability_of_loss is not None and risk.probability_of_loss > 0.3:
             recs.append(Recommendation(
                 category='riesgo',
                 severity='critical' if risk.probability_of_loss > 0.5 else 'warning',
@@ -492,7 +525,8 @@ class FinancialAnalysisEngine:
                             f'de los escenarios la empresa operaría con pérdidas.',
                 actions=[
                     'Construir reserva de liquidez para cubrir escenarios adversos',
-                    f'VaR al 95%: ${abs(risk.value_at_risk_95):,.0f} en riesgo',
+                    f'VaR al 95%: ${abs(risk.value_at_risk_95):,.0f} en riesgo'
+                    if risk.value_at_risk_95 is not None else 'VaR no disponible',
                     'Diversificar fuentes de ingreso para reducir dependencia de demanda',
                     'Establecer coberturas o contratos de largo plazo',
                 ],
@@ -523,7 +557,7 @@ class FinancialAnalysisEngine:
             ))
 
         # 6. ROI
-        if metrics.roi_pct < self.target_roi and metrics.roi_pct >= 0:
+        if metrics.roi_pct is not None and metrics.roi_pct < self.target_roi and metrics.roi_pct >= 0:
             recs.append(Recommendation(
                 category='rentabilidad',
                 severity='info',
@@ -570,13 +604,21 @@ class FinancialAnalysisEngine:
     def _generate_summary(self, metrics: FinancialMetrics, risk: RiskMetrics) -> str:
         """Genera un resumen ejecutivo en texto."""
         status = metrics.profitability_rating.upper()
+        risk_summary = (
+            f"Riesgo: {risk.risk_rating.upper()} ({risk.risk_score:.0f}/100) | "
+            f"P(pérdida): {risk.probability_of_loss:.1%}"
+            if risk.available
+            else f"Riesgo: NO DISPONIBLE ({risk.unavailable_reason})"
+        )
         lines = [
             f"Estado financiero: {status}",
             f"Ingresos: ${metrics.total_revenue:,.0f} | Costos: ${metrics.total_costs:,.0f}",
             f"Utilidad neta: ${metrics.net_profit:,.0f} ({metrics.net_margin_pct:.1f}%)",
-            f"ROI: {metrics.roi_pct:.1f}% | Riesgo: {risk.risk_rating.upper()} ({risk.risk_score:.0f}/100)",
-            f"P(pérdida): {risk.probability_of_loss:.1%} | Salud financiera: {metrics.financial_health_score:.0f}/100",
+            risk_summary,
+            f"Salud financiera: {metrics.financial_health_score:.0f}/100",
         ]
+        if metrics.roi_pct is not None:
+            lines.insert(3, f"ROI: {metrics.roi_pct:.1f}%")
         if metrics.breakeven_revenue > 0:
             lines.append(f"Break-even: ${metrics.breakeven_revenue:,.0f} | "
                          f"Margen seguridad: {metrics.margin_of_safety_pct:.1f}%")
@@ -600,7 +642,11 @@ class FinancialAnalysisEngine:
         summary = self._generate_summary(metrics, risk)
 
         # Puntaje global: promedio ponderado de salud y riesgo (invertido)
-        overall_score = (metrics.financial_health_score * 0.6 + (100 - risk.risk_score) * 0.4)
+        overall_score = (
+            metrics.financial_health_score * 0.6 + (100 - risk.risk_score) * 0.4
+            if risk.risk_score is not None
+            else metrics.financial_health_score
+        )
 
         return FinancialReport(
             metrics=metrics,
@@ -642,6 +688,8 @@ class FinancialAnalysisEngine:
                 'revenue_at_risk': r.revenue_at_risk,
                 'risk_rating': r.risk_rating,
                 'risk_score': r.risk_score,
+                'available': r.available,
+                'unavailable_reason': r.unavailable_reason,
             },
             'scenarios': report.scenarios,
             'recommendations': [

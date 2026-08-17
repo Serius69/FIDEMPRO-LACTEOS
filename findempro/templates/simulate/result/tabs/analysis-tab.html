@@ -1449,43 +1449,8 @@ if (demandData.length > 0) {
 }
 
 function extractFallbackData() {
-    const variables = [];
-    
-    try {
-        // Generar datos de ejemplo para demostración
-        const sampleSize = 30;
-        const demandData = [];
-        const revenueData = [];
-        
-        for (let i = 0; i < sampleSize; i++) {
-            // Generar datos simulados con distribución normal
-            const demand = Math.max(0, 100 + (Math.random() - 0.5) * 40);
-            const revenue = demand * (2.5 + Math.random() * 0.5);
-            
-            demandData.push(parseFloat(demand.toFixed(2)));
-            revenueData.push(parseFloat(revenue.toFixed(2)));
-        }
-        
-        variables.push({
-            name: 'Demanda Simulada (L)',
-            data: demandData,
-            unit: 'L',
-            description: 'Datos de demanda generados para análisis'
-        });
-        
-        variables.push({
-            name: 'Ingresos Simulados (Bs)',
-            data: revenueData,
-            unit: 'Bs',
-            description: 'Datos de ingresos generados para análisis'
-        });
-        
-        console.log('📝 Usando datos de ejemplo para demostración');
-    } catch (error) {
-        console.error('Error generando datos de ejemplo:', error);
-    }
-    
-    return variables;
+    console.warn('No hay datos reales disponibles para el análisis estadístico.');
+    return [];
 }
 
 // ===========================================
@@ -1939,33 +1904,46 @@ function performShapiroWilkTest(data) {
     const validData = data.filter(v => v !== null && v !== undefined && !isNaN(v) && isFinite(v));
     const n = validData.length;
     
-    if (n < 3) return { isNormal: false, pValue: 0, statistic: 0, skewness: 0, kurtosis: 0 };
+    if (n < 3) return {
+        isNormal: null,
+        pValue: null,
+        statistic: null,
+        skewness: null,
+        kurtosis: null,
+        available: false,
+        unavailableReason: 'INSUFFICIENT_SAMPLE',
+        testName: 'Descriptivos de forma'
+    };
     
     const sortedData = [...validData].sort((a, b) => a - b);
     const mean = validData.reduce((a, b) => a + b, 0) / n;
     const variance = validData.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n;
     const stdDev = Math.sqrt(variance);
     
-    if (stdDev === 0) return { isNormal: true, pValue: 1, statistic: 1, skewness: 0, kurtosis: 0 };
+    if (stdDev === 0) return {
+        isNormal: null,
+        pValue: null,
+        statistic: null,
+        skewness: 0,
+        kurtosis: 0,
+        available: false,
+        unavailableReason: 'ZERO_VARIATION',
+        testName: 'Descriptivos de forma'
+    };
     
     // Calcular asimetría y curtosis
     const skewness = validData.reduce((sum, val) => sum + Math.pow((val - mean) / stdDev, 3), 0) / n;
     const kurtosis = validData.reduce((sum, val) => sum + Math.pow((val - mean) / stdDev, 4), 0) / n - 3;
     
-    // Criterio simplificado de normalidad
-    const skewnessThreshold = n > 50 ? 0.5 : 1.0;
-    const kurtosisThreshold = n > 50 ? 0.5 : 1.0;
-    
-    const isNormal = Math.abs(skewness) < skewnessThreshold && Math.abs(kurtosis) < kurtosisThreshold;
-    const pValue = isNormal ? 0.15 : 0.02;
-    const statistic = Math.max(0, 1 - Math.abs(skewness) - Math.abs(kurtosis));
-    
     return {
-        isNormal,
-        pValue,
+        isNormal: null,
+        pValue: null,
         skewness,
         kurtosis,
-        statistic
+        statistic: null,
+        available: true,
+        unavailableReason: 'INFERENTIAL_TEST_NOT_COMPUTED_IN_BROWSER',
+        testName: 'Descriptivos de forma'
     };
 }
 
@@ -2155,14 +2133,10 @@ function performStatisticalTests(variables) {
             const normalityTest = performShapiroWilkTest(variable.data);
             tests.push({
                 variable: variable.name,
-                test: 'Shapiro-Wilk (Normalidad)',
+                test: 'Descriptivos de forma',
                 result: normalityTest,
-                interpretation: normalityTest.isNormal ? 
-                    'Los datos siguen una distribución normal' : 
-                    'Los datos no siguen una distribución normal',
-                recommendation: normalityTest.isNormal ?
-                    'Pueden usarse pruebas paramétricas' :
-                    'Considerar pruebas no paramétricas o transformación de datos'
+                interpretation: 'Asimetría y curtosis son descriptivas; no prueban normalidad por sí solas.',
+                recommendation: 'Use el diagnóstico calculado por el backend para inferencia estadística.'
             });
         });
         
@@ -2177,12 +2151,8 @@ function performStatisticalTests(variables) {
                 variables: [var1.name, var2.name],
                 test: 'Prueba t (Medias)',
                 result: tTest,
-                interpretation: tTest.meansEqual ? 
-                    'Las medias son estadísticamente iguales' : 
-                    'Las medias son estadísticamente diferentes',
-                recommendation: tTest.meansEqual ?
-                    'Los grupos tienen comportamiento similar en promedio' :
-                    'Existe diferencia significativa entre los grupos'
+                interpretation: 'Se muestra el estadístico de Welch; el navegador no calcula un p-value calibrado.',
+                recommendation: 'No concluya igualdad o diferencia estadística desde este resumen descriptivo.'
             });
             
             // Prueba F para varianzas
@@ -2191,12 +2161,8 @@ function performStatisticalTests(variables) {
                 variables: [var1.name, var2.name],
                 test: 'Prueba F (Varianzas)',
                 result: fTest,
-                interpretation: fTest.variancesEqual ? 
-                    'Las varianzas son homogéneas' : 
-                    'Las varianzas son heterogéneas',
-                recommendation: fTest.variancesEqual ?
-                    'Los grupos tienen variabilidad similar' :
-                    'Considerar transformaciones para homogeneizar varianzas'
+                interpretation: 'Se muestra la razón de varianzas; el navegador no calcula un p-value calibrado.',
+                recommendation: 'No concluya homogeneidad de varianzas desde este resumen descriptivo.'
             });
             
             // Prueba de Kolmogorov-Smirnov
@@ -2205,12 +2171,8 @@ function performStatisticalTests(variables) {
                 variables: [var1.name, var2.name],
                 test: 'Kolmogorov-Smirnov',
                 result: ksTest,
-                interpretation: ksTest.distributionsEqual ?
-                    'Las distribuciones son similares' :
-                    'Las distribuciones son diferentes',
-                recommendation: ksTest.distributionsEqual ?
-                    'Los datos provienen de la misma población' :
-                    'Los datos provienen de poblaciones diferentes'
+                interpretation: 'Se muestra la distancia máxima entre CDF empíricas; no se calcula p-value en el navegador.',
+                recommendation: 'Use el diagnóstico backend antes de inferir si las poblaciones difieren.'
             });
         }
         
@@ -2226,7 +2188,7 @@ function performTTest(data1, data2) {
     const stats2 = calculateDescriptiveStats(data2);
     
     if (!stats1 || !stats2 || stats1.count < 2 || stats2.count < 2) {
-        return { meansEqual: false, pValue: 1, statistic: 0, degreesFreedom: 0 };
+        return { meansEqual: null, pValue: null, statistic: null, degreesFreedom: null, available: false, unavailableReason: 'INSUFFICIENT_SAMPLE' };
     }
     
     const n1 = stats1.count;
@@ -2243,19 +2205,17 @@ function performTTest(data1, data2) {
     const df = Math.pow(s1_squared/n1 + s2_squared/n2, 2) / 
               (Math.pow(s1_squared/n1, 2)/(n1-1) + Math.pow(s2_squared/n2, 2)/(n2-1));
     
-    // Aproximación del p-value
-    const pValue = tStatistic < 1.96 ? 0.1 : 0.01; // Simplificado
-    const meansEqual = pValue > 0.05;
-    
     return {
-        meansEqual,
-        pValue,
+        meansEqual: null,
+        pValue: null,
         statistic: tStatistic,
         degreesFreedom: Math.floor(df),
         mean1: stats1.mean,
         mean2: stats2.mean,
         difference: Math.abs(stats1.mean - stats2.mean),
-        effectSize: Math.abs(stats1.mean - stats2.mean) / Math.sqrt((s1_squared + s2_squared) / 2)
+        effectSize: Math.abs(stats1.mean - stats2.mean) / Math.sqrt((s1_squared + s2_squared) / 2),
+        available: Number.isFinite(tStatistic),
+        unavailableReason: 'P_VALUE_NOT_COMPUTED_IN_BROWSER'
     };
 }
 
@@ -2264,21 +2224,20 @@ function performFTest(data1, data2) {
     const stats2 = calculateDescriptiveStats(data2);
     
     if (!stats1 || !stats2 || stats1.variance === 0 || stats2.variance === 0) {
-        return { variancesEqual: true, pValue: 1, statistic: 1 };
+        return { variancesEqual: null, pValue: null, statistic: null, available: false, unavailableReason: 'ZERO_OR_MISSING_VARIANCE' };
     }
     
     const fStatistic = Math.max(stats1.variance, stats2.variance) / Math.min(stats1.variance, stats2.variance);
-    const pValue = fStatistic < 2.5 ? 0.1 : 0.01; // Simplificado
-    const variancesEqual = pValue > 0.05;
-    
     return {
-        variancesEqual,
-        pValue,
+        variancesEqual: null,
+        pValue: null,
         statistic: fStatistic,
         variance1: stats1.variance,
         variance2: stats2.variance,
         df1: stats1.count - 1,
-        df2: stats2.count - 1
+        df2: stats2.count - 1,
+        available: true,
+        unavailableReason: 'P_VALUE_NOT_COMPUTED_IN_BROWSER'
     };
 }
 
@@ -2287,13 +2246,13 @@ function performKSTest(data1, data2) {
     const validData2 = data2.filter(v => !isNaN(v) && isFinite(v));
     
     if (validData1.length < 3 || validData2.length < 3) {
-        return { distributionsEqual: true, pValue: 1, statistic: 0 };
+        return { distributionsEqual: null, pValue: null, statistic: null, available: false, unavailableReason: 'INSUFFICIENT_SAMPLE' };
     }
     
     const sorted1 = [...validData1].sort((a, b) => a - b);
     const sorted2 = [...validData2].sort((a, b) => a - b);
     
-    // Calcular el estadístico KS (simplificado)
+    // Distancia real entre las CDF empíricas. La inferencia se delega al backend.
     const n1 = sorted1.length;
     const n2 = sorted2.length;
     
@@ -2306,13 +2265,12 @@ function performKSTest(data1, data2) {
         maxDiff = Math.max(maxDiff, Math.abs(cdf1 - cdf2));
     }
     
-    const pValue = maxDiff < 0.3 ? 0.1 : 0.01; // Simplificado
-    const distributionsEqual = pValue > 0.05;
-    
     return {
-        distributionsEqual,
-        pValue,
-        statistic: maxDiff
+        distributionsEqual: null,
+        pValue: null,
+        statistic: maxDiff,
+        available: true,
+        unavailableReason: 'P_VALUE_NOT_COMPUTED_IN_BROWSER'
     };
 }
 
@@ -2330,9 +2288,8 @@ function displayStatisticalTests(tests) {
     `;
     
     tests.forEach((test, index) => {
-        const isSignificant = test.result.pValue <= 0.05;
-        const statusClass = isSignificant ? 'success' : 'warning';
-        const statusText = isSignificant ? 'Significativo' : 'No Significativo';
+        const statusClass = test.result.available ? 'info' : 'secondary';
+        const statusText = test.result.available ? 'Diagnóstico descriptivo' : 'No disponible';
         
         html += `
             <div class="accordion-item">
@@ -2349,7 +2306,7 @@ function displayStatisticalTests(tests) {
                                 <h6>Resultados:</h6>
                                 <ul>
                                     <li><strong>Estadístico:</strong> ${test.result.statistic?.toFixed(4) || 'N/A'}</li>
-                                    <li><strong>p-value:</strong> ${test.result.pValue?.toFixed(4) || 'N/A'}</li>
+                                    <li><strong>p-value:</strong> ${test.result.pValue == null ? 'No calculado' : test.result.pValue.toFixed(4)}</li>
                                     ${test.result.mean1 ? `<li><strong>Media 1:</strong> ${test.result.mean1.toFixed(4)}</li>` : ''}
                                     ${test.result.mean2 ? `<li><strong>Media 2:</strong> ${test.result.mean2.toFixed(4)}</li>` : ''}
                                     ${test.result.degreesFreedom ? `<li><strong>Grados de libertad:</strong> ${test.result.degreesFreedom}</li>` : ''}
@@ -3066,11 +3023,10 @@ function compareDistributions(data1, data2) {
             ksTest
         },
         summary: {
-            meansEqual: tTest.meansEqual,
-            variancesEqual: fTest.variancesEqual,
-            distributionsEqual: ksTest.distributionsEqual,
-            overallSimilarity: (tTest.meansEqual && fTest.variancesEqual && ksTest.distributionsEqual) ? 'Alta' : 
-                              (tTest.meansEqual || fTest.variancesEqual) ? 'Media' : 'Baja'
+            meansEqual: null,
+            variancesEqual: null,
+            distributionsEqual: null,
+            overallSimilarity: 'No inferida'
         }
     };
 }

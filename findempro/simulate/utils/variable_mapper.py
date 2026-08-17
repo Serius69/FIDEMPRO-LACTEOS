@@ -4,12 +4,9 @@ NUEVO ARCHIVO: Sistema de mapeo completo de variables desde base de datos.
 Extrae y mapea todas las variables necesarias para las ecuaciones.
 """
 import logging
-import json
 from typing import Dict, Any, List, Optional
 from decimal import Decimal
-from django.db.models import Q
 from questionary.models import Answer, QuestionaryResult
-from variable.models import Variable
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +36,7 @@ class VariableMapper:
             'NR': ['nivel_rentabilidad', 'margen_neto', 'rentabilidad', 'profit_margin'],
             'MB': ['margen_bruto', 'gross_margin', 'margen_contribucion'],
             'RI': ['retorno_inversion', 'roi', 'return_investment'],
+            'INV': ['inversion', 'inversion_inicial', 'capital_invertido', 'capital_invested'],
             'IE': ['ingresos_esperados', 'expected_revenue', 'ingresos_proyectados'],
             'IB': ['ingreso_bruto', 'gross_income', 'margen_bruto_total'],
             'CVU': ['costo_variable_unitario', 'variable_cost_per_unit'],
@@ -253,76 +251,11 @@ class VariableMapper:
             'CCAP': ['costo_capital', 'inversion_capital'],
         }
         
-        # Valores por defecto mejorados (AGREGADO EOG)
-        self.enhanced_defaults = {
-            # FINANCIERAS BÁSICAS
-            'PVP': 15.50, 'CUIP': 8.20, 'CFD': 1800, 'SE': 48000, 'GMM': 3500, 'PC': 15.80,
-            
-            # FINANCIERAS CALCULADAS
-            'GT': 32600, 'IT': 37200, 'TG': 4600, 'NR': 0.876, 'MB': 0.43, 'RI': 7.09,
-            'IE': 38750, 'IB': 15950, 'CVU': 8.50, 'RVE': 1.0,
-            
-            # COSTOS CALCULADOS
-            'CTAI': 21250, 'GO': 3400, 'GG': 1200, 'CTTL': 350, 'CA': 150, 'CHO': 80,
-            'CPP': 1.36, 'CPV': 1.92, 'CUP': 1.45, 'PVR': 16.20, 'CTM': 125,
-            'MP': 50, 'MI': 20,
-            
-            # OPERATIVAS BÁSICAS
-            'NEPP': 15, 'MLP': 480, 'TPE': 45, 'CPPL': 500, 'CINSP': 1.05, 'CPROD': 3000,
-            'CPD': 85, 'VPC': 30, 'VPC_BASE': 29.5,
-            
-            # PRODUCCIÓN Y VENTAS
-            'TPV': 2400, 'QPL': 2500, 'PPL': 2500, 'TCAE': 80, 'TPPRO': 2500,
-            'NSC': 0.96, 'PE': 0.85, 'FU': 0.83, 'EP': 0.91, 'EOG': 0.68, 'IDG': 0.78,
-            'DI': 100,
-            
-            # INVENTARIO
-            'IPF': 1000, 'II': 5000, 'IOP': 2000, 'IOI': 7500, 'PI': 2625, 'UII': 2625,
-            'RTI': 36.5, 'DPL': 3, 'TR': 3, 'CMIPF': 20000,
-            
-            # DEMANDA
-            'DH': [2400, 2500, 2600, 2450, 2550], 'DPH': 2500, 'DSD': 250,
-            'DDP': 2500, 'DE': 2650, 'ED': 1.0, 'CVD': 0.10, 'POD': 2600, 'DT': 2500,
-            
-            # RECURSOS HUMANOS
-            'HO': 62, 'HNP': 318, 'ES': 0.85, 'EE': 0.80, 'HAU': 8, 'HTP': 24,
-            'HTO': 24, 'IRP': 8.0, 'PPE': 166.7, 'CCE': 133.3, 'TAU': 33.3, 'CLL': 0.64,
-            
-            # CALIDAD Y EFICIENCIA
-            'QC': 0.95, 'QMAX': 3000, 'ISC': 0.85, 'PED': 1800,
-            
-            # TRANSPORTE
-            'CUTRANS': 0.35, 'CTPLV': 1500,
-            
-            # MARKETING
-            'EM': 1.2, 'CUAC': 70, 'FC': 1.0, 'PM': 8.5, 'IC': 0.7, 'ROIA': 250,
-            'CPL_MKT': 60, 'LG': 50, 'TCL': 30, 'NC': 15, 'AEC': 3000, 'ALC': 10000,
-            'RMI': 35, 'MRE': 25, 'MRA': 45,
-            
-            # COMPETENCIA
-            'VCP': -1.9, 'PMR': 0.28, 'PMC': 30, 'IDP': 8.0, 'CDP': 7.5, 'CCP': 8.0,
-            'CSP': 8.5, 'EEC': 7.8, 'AMEN': 6, 'NPC': 12, 'ICC': 6,
-            
-            # MANTENIMIENTO
-            'DISP': 0.92, 'TP': 2, 'OEE': 0.62, 'CML': 0.48, 'CRP': 500, 'CREP': 300,
-            'CMOM': 400, 'NF': 1, 'FF': 41.7, 'RMP': 0.75, 'HMP': 1.5, 'HMC': 0.5,
-            
-            # ABASTECIMIENTO
-            'CTA': 19000, 'CC': 18000, 'CTI': 500, 'CAL': 200, 'TPEP': 2.7,
-            'TE1': 2, 'TE2': 3, 'TE3': 4, 'P1': 0.5, 'P2': 0.3, 'P3': 0.2,
-            'ICP': 8.2, 'RIMP': 52.6, 'IIF': 8000, 'CDE': 93.3, 'EAT': 28, 'TTEP': 30,
-            
-            # DISTRIBUCIÓN
-            'ERE': 9.6, 'KMT': 250, 'CDL': 0.46, 'CCF': 300, 'CLOG': 200,
-            'TPEC': 0.32, 'TTED': 8, 'NE': 25, 'ICE': 0.90, 'TCFO': 4.0, 'TCF': 4.2,
-            'TEO': 0.3, 'TER': 0.32, 'TD': 1.04, 'PD': 25,
-            
-            # COMPONENTES
-            'CMP1': 8.5, 'V1': 1250, 'CMP2': 7.8, 'V2': 750, 'CMP3': 8.2, 'V3': 500,
-            
-            # CAPITAL
-            'CCAP': 1000,
-        }
+        # Compatibility attribute retained for callers of metadata helpers.
+        # Runtime values must come from the questionnaire/model/template with
+        # provenance; the former dairy-scale example table is not a valid
+        # cross-sector default source.
+        self.enhanced_defaults = {}
     
     def extract_all_variables(self, questionary_result: QuestionaryResult) -> Dict[str, Any]:
         """Extraer todas las variables necesarias desde la base de datos"""
@@ -333,12 +266,15 @@ class VariableMapper:
         questionary_vars = self._extract_from_questionary(questionary_result)
         extracted_vars.update(questionary_vars)
 
-        # 2. Extraer desde variables del sistema (SIN fk_business).
-        #    Sólo RELLENA las que falten: las respuestas reales del cuestionario
-        #    (precio, costo, empleados…) NUNCA deben ser pisadas por los valores
-        #    por defecto de variable_test_data (que son ejemplos lácteos). Antes
-        #    se usaba .update(), lo que sobre-escribía PVP/CUIP/NEPP con 15.5/7.5/25
-        #    para toda empresa, haciendo que cada industria simulara idéntico.
+        # Synthetic/demo templates may declare product-scoped parameters in
+        # CompanyProfile with explicit provenance. They fill only values not
+        # entered in the questionnaire and never come from a global fixture.
+        template_vars = self._extract_from_template_profile(questionary_result)
+        for _k, _v in template_vars.items():
+            extracted_vars.setdefault(_k, _v)
+
+        # 2. El catálogo de variables define estructura, no observaciones. No
+        #    se importan valores desde fixtures globales de prueba.
         system_vars = self._extract_from_variable_system_fixed(questionary_result)
         for _k, _v in system_vars.items():
             extracted_vars.setdefault(_k, _v)
@@ -347,7 +283,7 @@ class VariableMapper:
         derived_vars = self._calculate_derived_variables(extracted_vars)
         extracted_vars.update(derived_vars)
         
-        # 4. Aplicar valores por defecto para variables faltantes
+        # 4. Compatibility hook: missing business values remain missing.
         complete_vars = self._apply_enhanced_defaults(extracted_vars)
         
         # 5. Validar y limpiar variables
@@ -391,52 +327,46 @@ class VariableMapper:
         return variables
     
     def _extract_from_variable_system_fixed(self, questionary_result: QuestionaryResult) -> Dict[str, Any]:
-        """CORREGIDO: Extraer variables del sistema SIN usar fk_business"""
-        
-        variables = {}
-        
+        """Return no values: the variable catalog has no provenance-bearing defaults."""
+        return {}
+
+    def _extract_from_template_profile(
+        self, questionary_result: QuestionaryResult
+    ) -> Dict[str, Any]:
+        """Read product-scoped, provenance-labelled template parameters."""
+        envelope = self._get_template_envelope(questionary_result)
+        values = envelope.get('values', {})
+        return dict(values) if isinstance(values, dict) else {}
+
+    def get_template_equation_expressions(
+        self, questionary_result: QuestionaryResult
+    ) -> List[str]:
+        """Return bounded safe-expression equations declared by a template."""
+        envelope = self._get_template_envelope(questionary_result)
+        equations = envelope.get('equations', [])
+        if not isinstance(equations, list):
+            return []
+        return [
+            expression.strip()
+            for expression in equations
+            if isinstance(expression, str)
+            and '=' in expression
+            and 0 < len(expression.strip()) <= 1000
+        ][:100]
+
+    def _get_template_envelope(
+        self, questionary_result: QuestionaryResult
+    ) -> Dict[str, Any]:
         try:
-            # NUEVO: Cargar variables desde variable_test_data
-            from variable.data.variable_test_data import variables_data
-            logger.info(f"Cargando {len(variables_data)} variables desde variable_test_data")
-            
-            for var_data in variables_data:
-                initials = var_data['initials']
-                default_value = var_data.get('default_value', 0)
-                
-                if initials in self.variable_mapping:
-                    try:
-                        value = float(default_value) if default_value is not None else 0.0
-                        variables[initials] = value
-                    except (ValueError, TypeError):
-                        variables[initials] = 0.0
-            
-            logger.info(f"Cargadas {len(variables)} variables desde variable_test_data")
-            
-        except ImportError:
-            logger.warning("No se pudo cargar variable_test_data")
-            # Fallback al código original
-            try:
-                product = questionary_result.fk_questionary.fk_product
-                business = product.fk_business
-                
-                system_variables = Variable.objects.filter(is_active=True)
-                
-                for sys_var in system_variables:
-                    if sys_var.initials in self.variable_mapping:
-                        if hasattr(sys_var, 'default_value') and sys_var.default_value:
-                            try:
-                                value = float(sys_var.default_value)
-                                variables[sys_var.initials] = value
-                            except (ValueError, TypeError):
-                                pass
-                
-                logger.info(f"Extracted {len(variables)} variables from variable system")
-                
-            except Exception as e:
-                logger.error(f"Error extracting from variable system: {str(e)}")
-        
-        return variables
+            product = questionary_result.fk_questionary.fk_product
+            profile = product.fk_business.company_profile
+            registry = (profile.custom_kpis or {}).get('legacy_product_parameters', {})
+            envelope = registry.get(str(product.id), {})
+            if envelope.get('provenance') != 'SYNTHETIC_TEMPLATE':
+                return {}
+            return dict(envelope)
+        except (AttributeError, TypeError):
+            return {}
     
     def _map_question_to_variable(self, question_text: str) -> Optional[str]:
         """Mapear texto de pregunta a variable usando nuestro diccionario"""
@@ -488,6 +418,16 @@ class VariableMapper:
             
             # Si es un string numérico
             if isinstance(answer_value, str):
+                if variable_type == 'ED':
+                    normalized = answer_value.strip().lower()
+                    if normalized in {'sí', 'si', 'yes', 'true', 'no', 'false'}:
+                        # The historical questionnaire stores whether seasonal
+                        # behavior exists, while this equation input is a
+                        # multiplier. Seasonal profiles are applied by the
+                        # scenario generator; the neutral base multiplier
+                        # avoids applying seasonality twice.
+                        return 1.0
+
                 # Limpiar string
                 cleaned = answer_value.strip().replace(',', '').replace('$', '').replace('%', '')
                 
@@ -562,12 +502,14 @@ class VariableMapper:
         derived = {}
         
         try:
-            # AGREGADO: Calcular EOG si no existe
-            if 'EOG' not in base_variables:
+            # EOG is derivable only when every factor is explicit.
+            if 'EOG' not in base_variables and all(
+                key in base_variables for key in ('ES', 'PE', 'QC')
+            ):
                 # EOG = Disponibilidad × Rendimiento × Calidad
-                availability = base_variables.get('ES', 0.85)  # Eficiencia estándar como disponibilidad
-                performance = base_variables.get('PE', 0.85)   # Productividad como rendimiento  
-                quality = base_variables.get('QC', 0.95)       # Calidad de producción
+                availability = base_variables['ES']
+                performance = base_variables['PE']
+                quality = base_variables['QC']
                 
                 derived['EOG'] = availability * performance * quality
                 logger.info(f"Calculated EOG = {derived['EOG']:.3f}")
@@ -575,7 +517,10 @@ class VariableMapper:
             # Resto de cálculos derivados existentes...
             # Capacidad de producción diaria si no está definida
             if 'CPROD' not in base_variables and all(k in base_variables for k in ['NEPP', 'MLP', 'TPE']):
-                derived['CPROD'] = (base_variables['NEPP'] * base_variables['MLP'] / base_variables['TPE']) * 0.8
+                if base_variables['TPE'] > 0:
+                    derived['CPROD'] = (
+                        base_variables['NEPP'] * base_variables['MLP'] / base_variables['TPE']
+                    )
             
             # Más cálculos derivados...
             
@@ -587,99 +532,12 @@ class VariableMapper:
         return derived
 
     def _apply_enhanced_defaults(self, extracted_variables: Dict[str, Any]) -> Dict[str, Any]:
-        """✅ MEJORADO: Aplicar defaults asegurando que NR esté presente"""
-        
-        complete_vars = extracted_variables.copy()
-        defaults_applied = 0
-        
-        # ✅ PRIORIDAD CRÍTICA: Asegurar variables financieras básicas primero
-        critical_financial_vars = ['IT', 'TG', 'GT', 'NR']
-        
-        for var_code, default_value in self.enhanced_defaults.items():
-            value_from_db = extracted_variables.get(var_code)
-            # Sólo comparar >0 sobre escalares numéricos: variables de serie
-            # (p. ej. DH, demanda histórica) llegan como lista y deben conservarse
-            # tal cual, sin romper el chequeo numérico.
-            if isinstance(value_from_db, (int, float, Decimal)) and value_from_db > 0:
-                complete_vars[var_code] = value_from_db  # ✅ PRIORIZAR BD
-            elif var_code not in complete_vars:
-                complete_vars[var_code] = default_value  # Solo default si BD vacía
-                
-                # Log especial para variables críticas
-                if var_code in critical_financial_vars:
-                    logger.info(f"✅ Aplicado default crítico {var_code}: {default_value}")
-        
-        # ✅ VERIFICACIÓN FINAL: Recalcular NR si hay inconsistencias
-        if 'NR' in complete_vars and complete_vars.get('GT') is not None and complete_vars.get('IT') is not None:
-            calculated_nr = complete_vars['GT'] / max(complete_vars['IT'], 1)
-            if abs(calculated_nr - complete_vars['NR']) > 0.1:  # Si hay gran diferencia
-                complete_vars['NR'] = calculated_nr
-                logger.info(f"✅ NR recalculado por consistencia: {calculated_nr}")
-        
-        # Ajustes contextuales
-        complete_vars = self._apply_contextual_adjustments(complete_vars)
-        
-        logger.info(f"✅ Aplicados {defaults_applied} valores por defecto")
-        return complete_vars
+        """Compatibility hook that intentionally preserves missing values."""
+        return dict(extracted_variables)
     
     def _apply_contextual_adjustments(self, variables: Dict[str, Any]) -> Dict[str, Any]:
-        """Aplicar ajustes contextuales a los valores por defecto"""
-        
-        adjusted_vars = variables.copy()
-        
-        # CORRECCIÓN CRÍTICA: Ajustar capacidad de producción según demanda
-        if 'DPH' in adjusted_vars or 'DE' in adjusted_vars:
-            expected_demand = adjusted_vars.get('DPH', adjusted_vars.get('DE', 2500))
-            
-            # Capacidad debe ser al menos 110% de la demanda esperada
-            min_capacity = expected_demand * 1.1
-            current_capacity = adjusted_vars.get('CPROD', 3000)
-            
-            if current_capacity < min_capacity:
-                adjusted_vars['CPROD'] = min_capacity
-                logger.info(f"Ajustada CPROD de {current_capacity} a {min_capacity} para cubrir demanda")
-        
-        # Ajustar capacidad de producción según número de empleados
-        if adjusted_vars.get('NEPP', 0) > 0:
-            required_capacity = adjusted_vars.get('CPROD', 3000)
-            current_employees = adjusted_vars['NEPP']
-            mLP = adjusted_vars.get('MLP', 480)
-            tpe = adjusted_vars.get('TPE', 30)
-            
-            # Calcular empleados necesarios
-            nepp_from_db = variables.get('NEPP')
-            if nepp_from_db is not None and nepp_from_db > 0:
-                adjusted_vars['NEPP'] = nepp_from_db  # ✅ USAR BD
-            else:
-                # Solo calcular si BD está vacía
-                required_employees = max(10, int((required_capacity * tpe) / mLP))
-                adjusted_vars['NEPP'] = required_employees
-        
-        # Ajustar costos fijos según tamaño de operación
-        if adjusted_vars.get('NEPP', 0) > 20:  # Operación grande
-            adjusted_vars['CFD'] = adjusted_vars.get('CFD', 1800) * 1.5
-            adjusted_vars['GMM'] = adjusted_vars.get('GMM', 3500) * 1.3
-        elif adjusted_vars.get('NEPP', 0) < 10:  # Operación pequeña
-            adjusted_vars['CFD'] = adjusted_vars.get('CFD', 1800) * 0.7
-            adjusted_vars['GMM'] = adjusted_vars.get('GMM', 3500) * 0.8
-        
-        # Ajustar inventarios según capacidad de producción
-        if adjusted_vars.get('CPROD', 0) > 0:
-            daily_production = adjusted_vars['CPROD']
-            adjusted_vars['IPF'] = max(daily_production * 2, adjusted_vars.get('IPF', 1000))
-            adjusted_vars['II'] = max(daily_production * 5, adjusted_vars.get('II', 5000))
-        
-        # Ajustar precios según contexto competitivo
-        if adjusted_vars.get('PC', 0) > 0:  # Si hay precio de competencia
-            comp_price = adjusted_vars['PC']
-            # ✅ SOLUCIÓN: Verificar BD primero
-            pvp_from_db = variables.get('PVP')
-            if pvp_from_db is not None and pvp_from_db > 0:
-                adjusted_vars['PVP'] = pvp_from_db  # ✅ USAR BD
-            elif 'PVP' not in variables:
-                adjusted_vars['PVP'] = comp_price * 0.98  # Solo ajustar si BD vacía
-        
-        return adjusted_vars
+        """Compatibility hook; assumptions belong to versioned templates."""
+        return dict(variables)
     
     def _validate_and_clean_variables(self, variables: Dict[str, Any]) -> Dict[str, Any]:
         """Validar y limpiar variables extraídas"""
@@ -734,9 +592,6 @@ class VariableMapper:
                 
             except (ValueError, TypeError) as e:
                 validation_issues.append(f"Could not clean {var_code}: {e}")
-                # Usar valor por defecto si existe
-                if var_code in self.enhanced_defaults:
-                    cleaned_vars[var_code] = self.enhanced_defaults[var_code]
         
         # Log validation issues
         if validation_issues:
@@ -750,7 +605,7 @@ class VariableMapper:
         metadata = {
             'code': variable_code,
             'alternative_names': self.variable_mapping.get(variable_code, []),
-            'default_value': self.enhanced_defaults.get(variable_code),
+            'default_value': None,
             'category': self._get_variable_category(variable_code),
             'data_type': self._get_variable_data_type(variable_code),
             'validation_rules': self._get_validation_rules(variable_code)
@@ -825,18 +680,13 @@ class VariableMapper:
                 report['variables_by_category'][category] = []
             report['variables_by_category'][category].append(var_code)
         
-        # Identificar variables con valores por defecto
-        for var_code, value in extracted_vars.items():
-            if var_code in self.enhanced_defaults and value == self.enhanced_defaults[var_code]:
-                report['variables_with_defaults'].append(var_code)
-        
         # Análisis de cobertura
-        total_expected = len(self.enhanced_defaults)
-        extracted_count = len(extracted_vars)
+        critical_inputs = ['PVP', 'CUIP', 'NEPP', 'CPROD', 'CPD']
+        extracted_count = sum(1 for item in critical_inputs if item in extracted_vars)
         report['coverage_analysis'] = {
-            'coverage_percentage': (extracted_count / total_expected) * 100,
+            'coverage_percentage': (extracted_count / len(critical_inputs)) * 100,
             'missing_critical_vars': [
-                var for var in ['PVP', 'CUIP', 'NEPP', 'CPROD', 'CPD'] 
+                var for var in critical_inputs
                 if var not in extracted_vars
             ]
         }

@@ -16,15 +16,23 @@ Se ejecutan en CPU (NumPy) en CI; la ruta GPU se ejercita en hosts con CuPy.
   python -m pytest simulate/tests/test_vectorized_engine.py -v
 """
 
+import warnings
+
 import numpy as np
 import pytest
+
+from modeling.safe_expression import ExpressionError
 
 from simulate.core.discrete_engine import (
     CompanyConfig, DiscreteEventEngine, OperationScenario,
 )
 from simulate.core.monte_carlo import MonteCarloConfig
 from simulate.core import gpu_backend
-from simulate.core.vectorized_engine import VectorizedMonteCarlo, can_vectorize
+from simulate.core.vectorized_engine import (
+    VectorizedMonteCarlo,
+    _evaluate_vector_expression,
+    can_vectorize,
+)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -77,10 +85,21 @@ def test_can_vectorize_accepts_standard_model():
     assert can_vectorize(_standard_company()) is True
 
 
+def test_can_vectorize_compares_explicit_demand_dispersion_contract():
+    company = CompanyConfig(
+        demand_variable='DE', revenue_variable='IT', cost_variable='TG', profit_variable='GT',
+        equations=[
+            _MockEquation('IT = DE + DSD'),
+            _MockEquation('TG = 0'),
+            _MockEquation('GT = IT - TG'),
+        ],
+    )
+
+    assert can_vectorize(company, demand_std=25.0) is True
+
+
 def test_can_vectorize_rejects_divergent_model():
-    # División por una constante cero: el motor escalar captura ZeroDivisionError
-    # y devuelve 0.0; el vectorizado (arrays) produce inf. El guard detecta la
-    # divergencia y devuelve False → el pipeline usará el motor escalar.
+    # Una división inválida se rechaza sin emitir warnings ni fabricar ceros.
     company = CompanyConfig(
         demand_variable='DE', revenue_variable='IT',
         cost_variable='TG', profit_variable='GT',
@@ -88,7 +107,20 @@ def test_can_vectorize_rejects_divergent_model():
         system_constants={'CERO': 0.0},
         total_periods=5,
     )
-    assert can_vectorize(company) is False
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('always')
+        assert can_vectorize(company) is False
+
+    assert not [item for item in caught if issubclass(item.category, RuntimeWarning)]
+
+
+def test_vector_expression_rejects_zero_denominator_without_non_finite_output():
+    with pytest.raises(ExpressionError, match='División por cero'):
+        _evaluate_vector_expression(
+            'DE / CERO',
+            {'DE': np.array([1.0, 2.0]), 'CERO': 0.0},
+            {},
+        )
 
 
 def test_vectorized_matches_scalar_per_cell():
@@ -110,6 +142,40 @@ def test_vectorized_matches_scalar_per_cell():
         for name, sval in (('IT', r.revenue), ('TG', r.costs), ('GT', r.profit)):
             vval = float(gpu_backend.asnumpy(xp.asarray(combined[name])).reshape(-1)[i])
             assert np.isclose(vval, float(sval), rtol=1e-9, atol=1e-6), f"{name}@{d}: {vval} != {sval}"
+
+
+def test_vectorized_table_uses_explicit_dispersion_not_demand_percentage():
+    xp = gpu_backend.get_array_module()
+    grid = xp.asarray([100.0, 400.0]).reshape(1, 2)
+    from simulate.core.vectorized_engine import _build_vectorized_table
+
+    table = _build_vectorized_table(
+        _standard_company(T=1),
+        {},
+        grid,
+        xp.asarray([1.0]).reshape(1, 1),
+        xp,
+        demand_std=25.0,
+    )
+
+    assert float(table['DSD']) == pytest.approx(25.0)
+    assert np.allclose(gpu_backend.asnumpy(table['CVD']), [[0.25, 0.0625]])
+
+
+def test_vectorized_table_leaves_dispersion_unavailable_without_source():
+    xp = gpu_backend.get_array_module()
+    from simulate.core.vectorized_engine import _build_vectorized_table
+
+    table = _build_vectorized_table(
+        _standard_company(T=1),
+        {},
+        xp.asarray([100.0]).reshape(1, 1),
+        xp.asarray([1.0]).reshape(1, 1),
+        xp,
+    )
+
+    assert 'DSD' not in table
+    assert 'CVD' not in table
 
 
 def test_vectorized_aggregate_matches_scalar():

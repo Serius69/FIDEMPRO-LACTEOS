@@ -328,13 +328,13 @@ class SimulationFinancialAnalyzer:
                     'storage_costs': float(vars.get('CA', 0)),
                     'wastage_costs': float(vars.get('CTM', 0)),
                     # Profit
-                    'gross_profit': float(vars.get('IB', 0)),
+                    'gross_profit': float(vars['IB']) if vars.get('IB') is not None else None,
                     'net_profit': float(vars.get('GT', 0)),
                     # Margins
-                    'gross_margin': float(vars.get('MB', 0)),
-                    'net_margin': float(vars.get('NR', 0)),
+                    'gross_margin': float(vars['MB']) if vars.get('MB') is not None else None,
+                    'net_margin': float(vars['NR']) if vars.get('NR') is not None else None,
                     # Other metrics
-                    'roi': float(vars.get('RI', 0)),
+                    'roi': float(vars['RI']) if vars.get('RI') is not None else None,
                     'break_even': float(vars.get('PED', 0)),
                     'cost_efficiency': float(vars.get('COST_EFFICIENCY', 0)),
                     # Operational data for context
@@ -346,10 +346,11 @@ class SimulationFinancialAnalyzer:
                 # Calculate additional metrics
                 if financial_data['revenue'] > 0:
                     financial_data['cost_ratio'] = financial_data['total_costs'] / financial_data['revenue']
-                    financial_data['ebitda'] = financial_data['gross_profit'] - financial_data['operating_costs']
                 else:
-                    financial_data['cost_ratio'] = 0
-                    financial_data['ebitda'] = -financial_data['operating_costs']
+                    financial_data['cost_ratio'] = None
+                # EBITDA is not derivable from gross profit and operating
+                # costs without an explicit depreciation/amortization policy.
+                financial_data['ebitda'] = float(vars['EBITDA']) if vars.get('EBITDA') is not None else None
                 
                 daily_financials.append(financial_data)
         
@@ -363,14 +364,16 @@ class SimulationFinancialAnalyzer:
         # Extract profit data
         revenues = [d['revenue'] for d in daily_financials]
         net_profits = [d['net_profit'] for d in daily_financials]
-        gross_margins = [d['gross_margin'] for d in daily_financials]
-        net_margins = [d['net_margin'] for d in daily_financials]
+        gross_margins = [d['gross_margin'] for d in daily_financials if d['gross_margin'] is not None]
+        net_margins = [d['net_margin'] for d in daily_financials if d['net_margin'] is not None]
+        roi_values = [d['roi'] for d in daily_financials if d['roi'] is not None]
+        ebitda_values = [d['ebitda'] for d in daily_financials if d['ebitda'] is not None]
         
         # Calculate statistics
         total_revenue = sum(revenues)
         total_profit = sum(net_profits)
-        avg_gross_margin = np.mean(gross_margins) if gross_margins else 0
-        avg_net_margin = np.mean(net_margins) if net_margins else 0
+        avg_gross_margin = np.mean(gross_margins) if gross_margins else None
+        avg_net_margin = np.mean(net_margins) if net_margins else None
         
         # Profitability trends
         profitable_days = sum(1 for p in net_profits if p > 0)
@@ -395,23 +398,23 @@ class SimulationFinancialAnalyzer:
             'average_profit_per_day': total_profit / len(net_profits) if net_profits else 0,
             'gross_margin': {
                 'average': avg_gross_margin,
-                'min': min(gross_margins) if gross_margins else 0,
-                'max': max(gross_margins) if gross_margins else 0,
-                'std': np.std(gross_margins) if len(gross_margins) > 1 else 0
+                'min': min(gross_margins) if gross_margins else None,
+                'max': max(gross_margins) if gross_margins else None,
+                'std': np.std(gross_margins) if len(gross_margins) > 1 else (0 if gross_margins else None)
             },
             'net_margin': {
                 'average': avg_net_margin,
-                'min': min(net_margins) if net_margins else 0,
-                'max': max(net_margins) if net_margins else 0,
-                'std': np.std(net_margins) if len(net_margins) > 1 else 0
+                'min': min(net_margins) if net_margins else None,
+                'max': max(net_margins) if net_margins else None,
+                'std': np.std(net_margins) if len(net_margins) > 1 else (0 if net_margins else None)
             },
             'profitable_days': profitable_days,
             'loss_days': loss_days,
             'profitability_rate': profitable_days / len(net_profits) if net_profits else 0,
             'profit_volatility': profit_cv,
             'break_even_day': break_even_day,
-            'roi_average': np.mean([d['roi'] for d in daily_financials]),
-            'ebitda_total': sum(d['ebitda'] for d in daily_financials)
+            'roi_average': np.mean(roi_values) if roi_values else None,
+            'ebitda_total': sum(ebitda_values) if ebitda_values else None
         }
     
     def _analyze_costs(self, daily_financials: List[Dict]) -> Dict[str, Any]:
@@ -527,7 +530,7 @@ class SimulationFinancialAnalyzer:
         revenues = [d['revenue'] for d in daily_financials]
         profits = [d['net_profit'] for d in daily_financials]
         costs = [d['total_costs'] for d in daily_financials]
-        margins = [d['net_margin'] for d in daily_financials]
+        margins = [d['net_margin'] for d in daily_financials if d['net_margin'] is not None]
         
         return {
             'revenue_trend': {
@@ -566,7 +569,9 @@ class SimulationFinancialAnalyzer:
         # Average values
         avg_revenue = total_revenue / len(daily_financials)
         avg_profit = total_profit / len(daily_financials)
-        avg_margin = np.mean([d['net_margin'] for d in daily_financials])
+        margins = [d['net_margin'] for d in daily_financials if d['net_margin'] is not None]
+        avg_margin = np.mean(margins) if margins else None
+        roi_values = [d['roi'] for d in daily_financials if d['roi'] is not None]
         
         # Best/worst days
         best_day = max(daily_financials, key=lambda x: x['net_profit'])
@@ -580,7 +585,7 @@ class SimulationFinancialAnalyzer:
             'average_daily_profit': avg_profit,
             'profit_margin': total_profit / total_revenue if total_revenue > 0 else 0,
             'average_margin': avg_margin,
-            'roi': np.mean([d['roi'] for d in daily_financials]),
+            'roi': np.mean(roi_values) if roi_values else None,
             'best_day_profit': best_day['net_profit'],
             'best_day_number': best_day['day'],
             'worst_day_profit': worst_day['net_profit'],
@@ -763,7 +768,7 @@ class SimulationFinancialAnalyzer:
                 'total_revenue': kpis.get('total_revenue', 0),
                 'total_profit': kpis.get('total_profit', 0),
                 'profit_margin': kpis.get('profit_margin', 0),
-                'roi': kpis.get('roi', 0)
+                'roi': kpis.get('roi')
             },
             'highlights': self._generate_highlights(kpis, profitability),
             'concerns': self._generate_concerns(profitability, risk_assessment),
@@ -847,7 +852,10 @@ class SimulationFinancialAnalyzer:
         
         # Check recent trends (last 7 days)
         recent_profits = [d['net_profit'] for d in daily_financials[-7:]]
-        recent_margins = [d['net_margin'] for d in daily_financials[-7:]]
+        recent_margins = [d['net_margin'] for d in daily_financials[-7:] if d['net_margin'] is not None]
+
+        if len(recent_margins) < 3:
+            return 'insufficient_data'
         
         # Calculate volatility and trend
         profit_volatility = np.std(recent_profits) / (abs(np.mean(recent_profits)) + 0.01)
@@ -885,9 +893,9 @@ class SimulationFinancialAnalyzer:
             health_score += 15
         
         # ROI check
-        if kpis.get('roi', 0) > 0.2:
+        if (kpis.get('roi') or 0) > 0.2:
             health_score += 20
-        elif kpis.get('roi', 0) > 0.1:
+        elif (kpis.get('roi') or 0) > 0.1:
             health_score += 10
         
         if health_score >= 70:
@@ -910,7 +918,7 @@ class SimulationFinancialAnalyzer:
             rate = profitability['profitability_rate'] * 100
             highlights.append(f"{rate:.0f}% de días fueron rentables")
         
-        if kpis.get('roi', 0) > 0.2:
+        if (kpis.get('roi') or 0) > 0.2:
             highlights.append(f"Alto retorno de inversión: {kpis['roi']:.1%}")
         
         if profitability.get('break_even_day'):
@@ -1086,7 +1094,7 @@ class SimulationFinancialAnalyzer:
                     'simulation_id': sim_id,
                     'total_profit': analysis['kpis']['total_profit'],
                     'profit_margin': analysis['kpis']['profit_margin'],
-                    'roi': analysis['kpis']['roi'],
+                    'roi': analysis['kpis'].get('roi'),
                     'risk_level': analysis['risk_assessment']['overall_risk'],
                     'health_status': analysis['summary']['status']
                 })
@@ -1097,7 +1105,8 @@ class SimulationFinancialAnalyzer:
         # Find best performer
         best_profit = max(comparisons, key=lambda x: x['total_profit'])
         best_margin = max(comparisons, key=lambda x: x['profit_margin'])
-        best_roi = max(comparisons, key=lambda x: x['roi'])
+        roi_comparisons = [item for item in comparisons if item.get('roi') is not None]
+        best_roi = max(roi_comparisons, key=lambda x: x['roi']) if roi_comparisons else None
         
         return {
             'comparisons': comparisons,

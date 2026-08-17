@@ -444,9 +444,11 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <h6 class="text-muted mb-1"><span title="Retorno sobre la inversión: cuánto ganaste por cada boliviano invertido. Un ROI del 20% significa que recuperas Bs. 1 más Bs. 0.20 de ganancia">ROI ⓘ</span></h6>
-                                    <h3 class="mb-0" data-kpi="roi">{{ roi_percentage }}%</h3>
+                                    <h3 class="mb-0" data-kpi="roi">{% if roi_available %}{{ roi_percentage }}%{% else %}N/A{% endif %}</h3>
                                     <div class="d-flex align-items-center mt-2">
-                                        {% if roi_percentage > 15 %}
+                                        {% if not roi_available %}
+                                            <span class="badge bg-secondary-subtle text-secondary">Falta inversión</span>
+                                        {% elif roi_percentage > 15 %}
                                             <span class="badge bg-success-subtle text-success">Excelente</span>
                                         {% elif roi_percentage > 8 %}
                                             <span class="badge bg-warning-subtle text-warning">Bueno</span>
@@ -525,7 +527,7 @@
                                 </div>
                                 <h6 class="mb-2">Score General</h6>
                                 <p class="text-muted small mb-3">
-                                    Basado en margen de beneficio, ROI y eficiencia operativa
+                                    Basado en los indicadores financieros disponibles y la eficiencia operativa
                                 </p>
                                 
                                 <!-- Performance Breakdown -->
@@ -539,7 +541,7 @@
                                     <div class="col-6">
                                         <div class="d-flex justify-content-between">
                                             <small class="text-muted">ROI:</small>
-                                            <small class="fw-medium">{{ roi_percentage }}%</small>
+                                            <small class="fw-medium">{% if roi_available %}{{ roi_percentage }}%{% else %}N/A{% endif %}</small>
                                         </div>
                                     </div>
                                     <div class="col-6">

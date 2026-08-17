@@ -410,6 +410,14 @@ class ForecastAPIView(APIView):
                         'params': analysis.distribution_params,
                         'ks_statistic': analysis.goodness_of_fit_ks,
                         'ks_pvalue': analysis.goodness_of_fit_pvalue,
+                        'test_name': analysis.goodness_of_fit_test,
+                        'fit_method': analysis.distribution_fit_method,
+                        'method_version': analysis.distribution_fit_method_version,
+                        'p_value_available': analysis.goodness_of_fit_pvalue is not None,
+                        'p_value_unavailable_reason': (
+                            None if analysis.goodness_of_fit_pvalue is not None
+                            else 'PARAMETERS_ESTIMATED_FROM_SAME_SAMPLE'
+                        ),
                     },
                     'trend': {
                         'direction': analysis.trend_direction,
@@ -488,6 +496,7 @@ class RiskAnalysisAPIView(APIView):
         demand_std = float(data.get('demand_std', demand_mean * 0.15))
         unit_price = float(data.get('unit_price', revenue / max(demand_mean, 1)))
         unit_cost = float(data.get('unit_cost', variable_costs / max(demand_mean, 1)))
+        investment = float(data['investment']) if data.get('investment') is not None else None
         n_iter = int(_clamp(data.get('n_iterations', 10000), 1000, 100000, 10000))
         confidence = _clamp(
             data.get('confidence_level', profile.confidence_level if profile else 0.95),
@@ -504,6 +513,7 @@ class RiskAnalysisAPIView(APIView):
                 unit_price=unit_price,
                 unit_cost=unit_cost,
                 fixed_costs=fixed_costs,
+                investment=investment,
             )
             mc_engine = MonteCarloEngine(config)
             mc_result = mc_engine.run()
@@ -517,6 +527,7 @@ class RiskAnalysisAPIView(APIView):
                 demand_std=demand_std,
                 unit_price=unit_price,
                 industry_sector=industry_sector,
+                investment=investment,
                 profit_samples=mc_result.demand_samples * unit_price - mc_result.demand_samples * unit_cost - fixed_costs,
                 min_profit_margin=profile.min_profit_margin_pct if profile else None,
                 max_cost_ratio=profile.max_cost_revenue_ratio if profile else None,
@@ -579,6 +590,7 @@ class ScenariosAPIView(APIView):
         demand_mean = float(data['demand_mean'])
         demand_std = float(data.get('demand_std', demand_mean * 0.15))
         unit_price = float(data.get('unit_price', revenue / max(demand_mean, 1)))
+        investment = float(data['investment']) if data.get('investment') is not None else None
 
         # Factores de demanda personalizados (optional override)
         custom_factors = data.get('demand_factors', {})
@@ -592,6 +604,7 @@ class ScenariosAPIView(APIView):
                 demand_std=demand_std,
                 unit_price=unit_price,
                 industry_sector=industry_sector,
+                investment=investment,
             )
 
             metrics = fa_engine.compute_metrics()
@@ -616,7 +629,7 @@ class ScenariosAPIView(APIView):
                             'total_costs': round(total_c, 2),
                             'gross_profit': round(gp, 2),
                             'profit_margin_pct': round((gp / rev * 100) if rev > 0 else 0, 2),
-                            'roi_pct': round((gp / total_c * 100) if total_c > 0 else 0, 2),
+                            'roi_pct': round((gp / investment * 100), 2) if investment and investment > 0 else None,
                             'is_profitable': gp > 0,
                         }
                     except (TypeError, ValueError):
@@ -905,6 +918,9 @@ class FullPipelineAPIView(APIView):
                 'probability_breakeven': agg.probability_breakeven,
                 'value_at_risk': agg.value_at_risk,
                 'expected_shortfall': agg.expected_shortfall,
+                'confidence_level': agg.confidence_level,
+                'var_semantics': 'lower_profit_quantile',
+                'cvar_semantics': 'lower_tail_mean_profit',
                 'n_scenarios': agg.n_scenarios,
                 'distribution_used': agg.distribution_used,
                 'scenarios': {
@@ -928,6 +944,10 @@ class FullPipelineAPIView(APIView):
                     'var_95': report.risk_metrics.var_95,
                     'cvar_95': report.risk_metrics.cvar_95,
                     'sharpe_ratio': report.risk_metrics.sharpe_ratio,
+                    'sortino_ratio': report.risk_metrics.sortino_ratio,
+                    'ratio_basis': report.risk_metrics.ratio_basis,
+                    'var_semantics': report.risk_metrics.var_semantics,
+                    'cvar_semantics': report.risk_metrics.cvar_semantics,
                 },
                 'recommendations': [r.to_dict() for r in report.recommendations],
                 'scenario_comparison': report.scenario_comparison,

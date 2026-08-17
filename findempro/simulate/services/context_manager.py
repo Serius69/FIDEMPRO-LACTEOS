@@ -9,12 +9,15 @@ from typing import Dict, List, Any, Optional
 import numpy as np
 import scipy.stats
 
+from modeling.statistics import DistributionFitError, METHOD_VERSION, fit_distributions
+
 from ..models import Simulation, ResultSimulation
 from .statistical_service import StatisticalService
 from .validation_service import SimulationValidationService
 from ..utils.chart_utils import ChartGenerator
 from ..utils.chart_demand_utils import ChartDemand
 from ..utils.simulation_financial_utils import SimulationFinancialAnalyzer
+from ..utils.statistical_contracts import stable_distribution_shape
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +31,7 @@ class SimulationContextManager:
         self.chart_generator = ChartGenerator()
         self.chart_demand = ChartDemand()
         self.financial_analyzer = SimulationFinancialAnalyzer()
+        self._rng = np.random.default_rng(0)
     
     def prepare_complete_context(self, simulation_id: int, simulation_instance: Simulation, 
                                results_simulation: List[ResultSimulation], 
@@ -142,6 +146,9 @@ class SimulationContextManager:
     def _setup_services(self, simulation_instance: Simulation):
         """Configura los servicios con las instancias necesarias"""
         try:
+            # Result projections are derived output, but must still be
+            # reproducible for the simulation that produced them.
+            self._rng = np.random.default_rng(getattr(simulation_instance, 'random_seed', None))
             business_instance = simulation_instance.fk_questionary_result.fk_questionary.fk_product.fk_business
             
             # Configurar servicio financiero
@@ -760,7 +767,7 @@ class SimulationContextManager:
                 
                 # Add controlled noise
                 noise_factor = min(sim_std * 0.1, 10)
-                noise = np.random.normal(0, noise_factor)
+                noise = self._rng.normal(0, noise_factor)
                 projected_value += noise
                 
                 # Ensure values stay within reasonable bounds
@@ -1096,14 +1103,16 @@ class SimulationContextManager:
                 return {}
             
             data_array = np.array(data)
+            shape = stable_distribution_shape(data_array)
             
             analysis = {
                 'basic_stats': {
                     'mean': float(np.mean(data_array)),
                     'std': float(np.std(data_array)),
                     'variance': float(np.var(data_array)),
-                    'skewness': float(scipy.stats.skew(data_array)),
-                    'kurtosis': float(scipy.stats.kurtosis(data_array)),
+                    'skewness': shape.skewness,
+                    'kurtosis': shape.kurtosis,
+                    'shape_statistics_status': shape.status,
                     'min': float(np.min(data_array)),
                     'max': float(np.max(data_array)),
                     'median': float(np.median(data_array)),
@@ -1117,9 +1126,13 @@ class SimulationContextManager:
                     'is_normal': False
                 },
                 'distribution_fit': {
-                    'best_fit': 'normal',
+                    'best_fit': None,
                     'fit_params': {},
-                    'goodness_of_fit': 0.0
+                    'statistic': None,
+                    'p_value': None,
+                    'valid': False,
+                    'unavailable_reason': 'NOT_COMPUTED',
+                    'method_version': METHOD_VERSION,
                 }
             }
             
@@ -1135,41 +1148,33 @@ class SimulationContextManager:
                 except Exception as e:
                     logger.warning(f"Error in normality test: {e}")
             
-            # Ajuste de distribuciones
+            # Ajuste v2: ranking por AIC y KS solo como distancia descriptiva.
             try:
-                distributions = [
-                    scipy.stats.norm,
-                    scipy.stats.lognorm,
-                    scipy.stats.expon,
-                    scipy.stats.gamma
-                ]
-                best_dist = None
-                best_fit = -np.inf
-                best_params = {}
-                
-                for dist in distributions:
-                    try:
-                        params = dist.fit(data_array)
-                        ks_stat, ks_p = scipy.stats.kstest(
-                            data_array, lambda x: dist.cdf(x, *params)
-                        )
-                        
-                        if ks_p > best_fit:
-                            best_fit = ks_p
-                            best_dist = dist.name
-                            best_params = params
-                            
-                    except Exception:
-                        continue
-                
-                if best_dist:
-                    analysis['distribution_fit'] = {
-                        'best_fit': best_dist,
-                        'fit_params': [float(p) for p in best_params],
-                        'goodness_of_fit': float(best_fit)
-                    }
-            except Exception as e:
+                fitted = fit_distributions(data_array.astype(float).tolist())
+                selected_name = fitted['ranking']['selected_distribution']
+                selected = next(
+                    item for item in fitted['candidates']
+                    if item['distribution'] == selected_name
+                )
+                analysis['distribution_fit'] = {
+                    'best_fit': selected_name,
+                    'fit_params': selected['parameters'],
+                    'statistic': selected['statistic'],
+                    'goodness_of_fit': selected['statistic'],
+                    'p_value': None,
+                    'test_name': selected['test_name'],
+                    'valid': True,
+                    'unavailable_reason': None,
+                    'p_value_unavailable_reason': selected['p_value_unavailable_reason'],
+                    'ranking_method': fitted['ranking']['criterion'],
+                    'method_version': METHOD_VERSION,
+                }
+            except (DistributionFitError, StopIteration) as e:
                 logger.warning(f"Error in distribution fitting: {e}")
+                analysis['distribution_fit']['unavailable_reason'] = (
+                    'INSUFFICIENT_SAMPLE' if len(data_array) < 5
+                    else 'NO_COMPATIBLE_DISTRIBUTION'
+                )
             
             return analysis
             

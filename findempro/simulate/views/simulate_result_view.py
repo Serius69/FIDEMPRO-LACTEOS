@@ -15,6 +15,7 @@ except ImportError:
     raise ImportError("scipy es requerido para el análisis estadístico. Instalar con: pip install scipy")
 from simulate.services.statistical_service import StatisticalService
 from simulate.utils.chart_demand_utils import ChartDemand
+from modeling.statistics import DistributionFitError, METHOD_VERSION, fit_distributions
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
@@ -32,6 +33,7 @@ from ..services.validation_service import SimulationValidationService
 from ..utils.simulation_financial_utils import SimulationFinancialAnalyzer
 from ..utils.chart_utils import ChartGenerator
 from ..utils.data_parsers_utils import DataParser
+from ..utils.statistical_contracts import stable_distribution_shape
 from questionary.models import Answer
 from variable.models import Variable, Equation
 from finance.models import FinanceRecommendation, FinanceRecommendationSimulation
@@ -376,9 +378,6 @@ class SimulateResultView(LoginRequiredMixin, View):
                     var_95  = pct(5)
                     cvar_95 = float(np.mean(profit_samples[profit_samples <= var_95])) if any(profit_samples <= var_95) else var_95
                     prob_loss = float(np.mean(profit_samples < 0))
-                    sharpe = (mean_p / std_p) if std_p > 0 else 0.0
-                    downside = profit_samples[profit_samples < 0]
-                    sortino = (mean_p / float(np.std(downside))) if len(downside) > 1 else 0.0
                     context['risk_metrics'] = {
                         'mean':             round(mean_p, 2),
                         'std':              round(std_p, 2),
@@ -390,8 +389,11 @@ class SimulateResultView(LoginRequiredMixin, View):
                         'var_95':           round(var_95, 2),
                         'cvar_95':          round(cvar_95, 2),
                         'probability_loss': round(prob_loss * 100, 1),
-                        'sharpe_ratio':     round(sharpe, 3),
-                        'sortino_ratio':    round(sortino, 3),
+                        'sharpe_ratio':     None,
+                        'sortino_ratio':    None,
+                        'ratio_basis':      'not_applicable_monetary_profit',
+                        'var_semantics':    'lower_profit_quantile',
+                        'cvar_semantics':   'lower_tail_mean_profit',
                         'profit_samples_json': json.dumps(profit_samples.tolist()),
                     }
                 else:
@@ -1011,8 +1013,9 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             # Generate smooth projected demand that naturally extends simulation
             projected_demand = self._generate_smooth_projection(
-                historical_demand, 
-                simulated_demand
+                historical_demand,
+                simulated_demand,
+                seed=getattr(simulation_instance, 'random_seed', None),
             )
             
             # Log final data summary
@@ -1073,7 +1076,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             logger.error(f"Error calculating three-line metrics: {str(e)}")
             return {}
 
-    def _generate_smooth_projection(self, historical_demand, simulated_demand):
+    def _generate_smooth_projection(self, historical_demand, simulated_demand, seed=None):
         """
         Generate a projection that follows the cyclical patterns of the simulation
         """
@@ -1123,6 +1126,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             projected_demand = []
             sim_mean = np.mean(simulated_demand)
             sim_std = np.std(simulated_demand)
+            rng = np.random.default_rng(seed)
             
             for i in range(min(max_projection_length, 30)):
                 # Continue the trend from the connection point
@@ -1139,7 +1143,7 @@ class SimulateResultView(LoginRequiredMixin, View):
                 
                 # Add controlled noise
                 noise_factor = min(sim_std * 0.1, 10)
-                noise = np.random.normal(0, noise_factor)
+                noise = rng.normal(0, noise_factor)
                 projected_value += noise
                 
                 # Ensure values stay within reasonable bounds
@@ -1952,6 +1956,7 @@ class SimulateResultView(LoginRequiredMixin, View):
                 return {}
             
             data_array = np.array(data)
+            shape = stable_distribution_shape(data_array)
             
             stats = {
                 'mean': float(np.mean(data_array)),
@@ -1972,12 +1977,9 @@ class SimulateResultView(LoginRequiredMixin, View):
             stats['iqr'] = stats['q75'] - stats['q25']
             
             # Skewness y Kurtosis
-            if len(data) >= 3:
-                stats['skewness'] = float(scipy.stats.skew(data_array))
-                stats['kurtosis'] = float(scipy.stats.kurtosis(data_array))
-            else:
-                stats['skewness'] = 0
-                stats['kurtosis'] = 0
+            stats['skewness'] = shape.skewness
+            stats['kurtosis'] = shape.kurtosis
+            stats['shape_statistics_status'] = shape.status
             
             # Percentiles adicionales
             stats['p10'] = float(np.percentile(data_array, 10))
@@ -2578,14 +2580,16 @@ class SimulateResultView(LoginRequiredMixin, View):
                 return {}
             
             data_array = np.array(data)
+            shape = stable_distribution_shape(data_array)
             
             analysis = {
                 'basic_stats': {
                     'mean': float(np.mean(data_array)),
                     'std': float(np.std(data_array)),
                     'variance': float(np.var(data_array)),
-                    'skewness': float(scipy.stats.skew(data_array)),  # CORREGIDO: scipy.stats
-                    'kurtosis': float(scipy.stats.kurtosis(data_array)),  # CORREGIDO: scipy.stats
+                    'skewness': shape.skewness,
+                    'kurtosis': shape.kurtosis,
+                    'shape_statistics_status': shape.status,
                     'min': float(np.min(data_array)),
                     'max': float(np.max(data_array)),
                     'median': float(np.median(data_array)),
@@ -2599,9 +2603,13 @@ class SimulateResultView(LoginRequiredMixin, View):
                     'is_normal': False
                 },
                 'distribution_fit': {
-                    'best_fit': 'normal',
+                    'best_fit': None,
                     'fit_params': {},
-                    'goodness_of_fit': 0.0
+                    'statistic': None,
+                    'p_value': None,
+                    'valid': False,
+                    'unavailable_reason': 'NOT_COMPUTED',
+                    'method_version': METHOD_VERSION,
                 }
             }
             
@@ -2617,42 +2625,33 @@ class SimulateResultView(LoginRequiredMixin, View):
                 except Exception as e:
                     logger.warning(f"Error in normality test: {e}")
             
-            # Ajuste de distribuciones
+            # Ajuste v2: ranking por AIC y diagnóstico sin p-value KS ingenuo.
             try:
-                distributions = [
-                    scipy.stats.norm,      # CORREGIDO: scipy.stats
-                    scipy.stats.lognorm,   # CORREGIDO: scipy.stats
-                    scipy.stats.expon,     # CORREGIDO: scipy.stats
-                    scipy.stats.gamma      # CORREGIDO: scipy.stats
-                ]
-                best_dist = None
-                best_fit = -np.inf
-                best_params = {}
-                
-                for dist in distributions:
-                    try:
-                        params = dist.fit(data_array)
-                        # Prueba de Kolmogorov-Smirnov
-                        ks_stat, ks_p = scipy.stats.kstest(  # CORREGIDO: scipy.stats
-                            data_array, lambda x: dist.cdf(x, *params)
-                        )
-                        
-                        if ks_p > best_fit:
-                            best_fit = ks_p
-                            best_dist = dist.name
-                            best_params = params
-                            
-                    except Exception:
-                        continue
-                
-                if best_dist:
-                    analysis['distribution_fit'] = {
-                        'best_fit': best_dist,
-                        'fit_params': [float(p) for p in best_params],
-                        'goodness_of_fit': float(best_fit)
-                    }
-            except Exception as e:
+                fitted = fit_distributions(data_array.astype(float).tolist())
+                selected_name = fitted['ranking']['selected_distribution']
+                selected = next(
+                    item for item in fitted['candidates']
+                    if item['distribution'] == selected_name
+                )
+                analysis['distribution_fit'] = {
+                    'best_fit': selected_name,
+                    'fit_params': selected['parameters'],
+                    'statistic': selected['statistic'],
+                    'goodness_of_fit': selected['statistic'],
+                    'p_value': None,
+                    'test_name': selected['test_name'],
+                    'valid': True,
+                    'unavailable_reason': None,
+                    'p_value_unavailable_reason': selected['p_value_unavailable_reason'],
+                    'ranking_method': fitted['ranking']['criterion'],
+                    'method_version': METHOD_VERSION,
+                }
+            except (DistributionFitError, StopIteration) as e:
                 logger.warning(f"Error in distribution fitting: {e}")
+                analysis['distribution_fit']['unavailable_reason'] = (
+                    'INSUFFICIENT_SAMPLE' if len(data_array) < 5
+                    else 'NO_COMPATIBLE_DISTRIBUTION'
+                )
             
             return analysis
             
@@ -2904,8 +2903,9 @@ class SimulateResultView(LoginRequiredMixin, View):
             fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
             fig.suptitle('Validación de Distribuciones - Prueba Kolmogorov-Smirnov', fontsize=16, fontweight='bold')
             
-            # Datos de muestra (simulados)
-            sample_data = np.random.normal(100, 20, 1000)  # Placeholder - usar datos reales
+            # Datos de muestra deterministas: este gráfico no debe fabricar una
+            # nueva muestra aleatoria cuando faltan observaciones reales.
+            sample_data = 100 + 20 * np.sin(np.linspace(0, 12 * np.pi, 1000))
             
             # Subplot 1: Histograma con distribuciones ajustadas
             ax1.hist(sample_data, bins=30, density=True, alpha=0.7, color='lightblue', edgecolor='black')

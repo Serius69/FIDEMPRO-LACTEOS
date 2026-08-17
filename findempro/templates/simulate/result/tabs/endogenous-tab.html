@@ -1500,23 +1500,12 @@ function loadDailyData(varName, days, mean, stdDev) {
         }
     });
     
-    // Si no hay datos reales, generar datos de ejemplo
+    // No presentar una serie sintética como si fueran observaciones reales.
     if (variableData.length === 0) {
-        for (let i = 1; i <= Math.min(days, 30); i++) {
-            const noise = (Math.random() - 0.5) * 2 * parseFloat(stdDev);
-            const value = parseFloat(mean) + noise;
-            const prevValue = i > 1 ? parseFloat(mean) + (Math.random() - 0.5) * 2 * parseFloat(stdDev) : value;
-            const variation = i > 1 ? ((value - prevValue) / prevValue * 100) : 0;
-            accumPercent += (value / parseFloat(mean)) * 100 / days;
-            
-            variableData.push({
-                day: i,
-                date: `Día ${i}`,
-                value: value,
-                variation: variation,
-                accumPercent: accumPercent
-            });
-        }
+        const row = tableBody.insertRow();
+        row.innerHTML = '<td colspan="5" class="text-center text-muted">NO DISPONIBLE: no hay observaciones para esta variable.</td>';
+        createSimpleChart([], varName);
+        return;
     }
     
     // Llenar tabla
@@ -2198,46 +2187,50 @@ function generateComparisonAnalysis(var1, data1, var2, data2) {
 // Configurar gráficos de variables
 function setupVariableCharts() {
     const chartContainers = document.querySelectorAll('.variable-chart-container');
+    const observations = _getAllVariablesExtracted();
     
     chartContainers.forEach(container => {
         const variableName = container.dataset.variable;
         const chartType = container.dataset.chartType || 'line';
         
-        // Simular datos para el gráfico
-        const data = generateMockChartData(variableName);
-        
+        const data = observations.flatMap((row, index) => {
+            const value = Number(row[variableName]);
+            return Number.isFinite(value)
+                ? [{day: row.day || index + 1, value: value}]
+                : [];
+        });
+
         // Crear mini gráfico
         createMiniChart(container, data, chartType);
     });
 }
 
-function generateMockChartData(variableName) {
-    // Generar datos simulados basados en el tipo de variable
-    const days = Array.from({length: 30}, (_, i) => i + 1);
-    const baseValue = Math.random() * 1000 + 100;
-    
-    return days.map(day => ({
-        day: day,
-        value: baseValue + (Math.random() - 0.5) * baseValue * 0.2
-    }));
-}
-
 function createMiniChart(container, data, type) {
+    container.replaceChildren();
+    if (data.length === 0) {
+        const unavailable = document.createElement('span');
+        unavailable.className = 'text-muted small';
+        unavailable.textContent = 'NO DISPONIBLE: sin datos';
+        container.appendChild(unavailable);
+        return;
+    }
     // Crear un canvas pequeño para el gráfico
     const canvas = document.createElement('canvas');
     canvas.width = 200;
     canvas.height = 100;
     container.appendChild(canvas);
     
-    // Aquí iría la lógica para crear el gráfico con Chart.js o similar
-    // Por simplicidad, solo agregamos un placeholder
+    // Vista estructurada: resume el rango real hasta que exista un renderer.
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#e9ecef';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#6c757d';
     ctx.font = '12px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('Mini Gráfico', canvas.width/2, canvas.height/2);
+    const values = data.map(point => point.value);
+    const min = Math.min(...values).toFixed(2);
+    const max = Math.max(...values).toFixed(2);
+    ctx.fillText(`Datos reales: ${min} – ${max}`, canvas.width/2, canvas.height/2);
 }
 
 // Inicializar cuando se muestre el tab

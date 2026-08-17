@@ -15,6 +15,9 @@ import math
 import numpy as np
 import pytest
 
+from modeling.safe_expression import ExpressionError
+from modeling.statistics import DistributionFitError
+
 from simulate.services.recommendation_service import (
     Recommendation as SvcRecommendation,
     RecommendationService,
@@ -116,8 +119,8 @@ class TestExpressionHelpers:
         assert result == pytest.approx(15.0)
 
     def test_eval_expression_division_by_zero(self):
-        result = _eval_expression('A/B', {'A': 10.0, 'B': 0.0})
-        assert result == pytest.approx(0.0)
+        with pytest.raises(ExpressionError, match='División por cero'):
+            _eval_expression('A/B', {'A': 10.0, 'B': 0.0})
 
     def test_eval_expression_missing_var(self):
         result = _eval_expression('A+UNKNOWN', {'A': 10.0})
@@ -242,6 +245,50 @@ class TestDiscreteEventEngine:
         # Después del período 0, DPH en período 1 debe reflejar los 1000 del período 0
         assert r1.variables['DPH'] == pytest.approx(1000.0)
 
+    def test_demand_dispersion_is_unavailable_without_explicit_source(self):
+        result = DiscreteEventEngine(_make_config()).run_period(
+            OperationScenario(period_index=0, demand_value=100.0)
+        )
+
+        assert 'DSD' not in result.variables
+        assert 'CVD' not in result.variables
+        assert result.metadata == {'demand_std': None, 'demand_std_source': None}
+
+    def test_scenario_demand_dispersion_is_explicit_and_provenance_labelled(self):
+        result = DiscreteEventEngine(_make_config()).run_period(
+            OperationScenario(
+                period_index=0,
+                demand_value=100.0,
+                demand_std=25.0,
+                demand_std_source='HISTORICAL_BUSINESS_DATA',
+            )
+        )
+
+        assert result.variables['DSD'] == pytest.approx(25.0)
+        assert result.variables['CVD'] == pytest.approx(0.25)
+        assert result.metadata['demand_std_source'] == 'HISTORICAL_BUSINESS_DATA'
+
+    def test_invalid_demand_dispersion_is_rejected(self):
+        engine = DiscreteEventEngine(_make_config())
+
+        with pytest.raises(ValueError, match='finita y no negativa'):
+            engine.run_period(
+                OperationScenario(period_index=0, demand_value=100.0, demand_std=float('nan'))
+            )
+
+    def test_rolling_dispersion_requires_two_prior_simulated_periods(self):
+        engine = DiscreteEventEngine(_make_config())
+        configured = dict(demand_std=20.0, demand_std_source='HISTORICAL_BUSINESS_DATA')
+
+        first = engine.run_period(OperationScenario(0, 100.0, **configured))
+        second = engine.run_period(OperationScenario(1, 200.0, **configured))
+        third = engine.run_period(OperationScenario(2, 300.0, **configured))
+
+        assert first.variables['DSD'] == pytest.approx(20.0)
+        assert second.variables['DSD'] == pytest.approx(20.0)
+        assert third.variables['DSD'] == pytest.approx(50.0)
+        assert third.metadata['demand_std_source'] == 'SIMULATED_WINDOW'
+
     def test_reset_state(self):
         """reset_state() debe volver el motor al estado inicial."""
         config = _make_config(initial_state={'X': 100.0})
@@ -320,13 +367,8 @@ class TestDiscreteEventEngine:
         result = engine.run_period(scenario)
         assert result.demand >= 0.0
 
-    def test_scalar_engine_sanitizes_inf_nan(self):
-        """La ruta escalar sanea inf/nan a 0.0 (paridad con el motor vectorizado).
-
-        Antes, un overflow de float (p. ej. 1e200*1e200 = inf, sin excepción en
-        Python) se propagaba a _extract_financials y envenenaba np.mean/np.percentile
-        en la agregación de simulation_service. Ahora se mapea a 0.0.
-        """
+    def test_scalar_engine_rejects_non_finite_financial_results(self):
+        """Un overflow no puede convertirse en ingreso o utilidad cero plausibles."""
         config = _make_config(
             equations=_make_equations(
                 'IT=DE*DE',   # DE grande → IT desborda a +inf
@@ -335,21 +377,10 @@ class TestDiscreteEventEngine:
             ),
         )
         engine = DiscreteEventEngine(config)
-        result = engine.run_period(
-            OperationScenario(period_index=0, demand_value=1e200, seasonality_factor=1.0)
-        )
-        # Todas las métricas financieras son finitas
-        assert math.isfinite(result.demand)
-        assert math.isfinite(result.revenue)
-        assert math.isfinite(result.costs)
-        assert math.isfinite(result.profit)
-        # Los valores no finitos (revenue/profit) se sanean a 0.0
-        assert result.revenue == 0.0
-        assert result.profit == 0.0
-        # Un array de estos resultados agrega a números finitos
-        arr = np.array([result.profit] * 100, dtype=float)
-        assert np.isfinite(np.mean(arr))
-        assert np.isfinite(np.percentile(arr, 5))
+        with pytest.raises(ExpressionError, match='no es un número finito|límites numéricos'):
+            engine.run_period(
+                OperationScenario(period_index=0, demand_value=1e200, seasonality_factor=1.0)
+            )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -390,11 +421,10 @@ class TestDistributionFactory:
         assert 0.0 <= ks <= 1.0
 
     def test_fit_best_insufficient_data(self):
-        """Con menos de 10 puntos retorna 'normal' con KS=1.0."""
+        """Una muestra insuficiente no fabrica un ajuste Normal."""
         data = np.array([1.0, 2.0, 3.0])
-        name, ks = DistributionFactory.fit_best(data)
-        assert name == 'normal'
-        assert ks == pytest.approx(1.0)
+        with pytest.raises(DistributionFitError, match='entre 5'):
+            DistributionFactory.fit_best(data)
 
 
 class TestScenarioGenerator:
@@ -434,6 +464,19 @@ class TestScenarioGenerator:
         gen = ScenarioGenerator(config)
         scenarios = gen.generate_for_period(0, n_scenarios=50)
         assert all(s.seasonality_factor == pytest.approx(0.5) for s in scenarios)
+
+    def test_configured_demand_dispersion_and_provenance_reach_scenarios(self):
+        config = _make_mc_config(
+            demand_std=123.0,
+            demand_std_source='HISTORICAL_BUSINESS_DATA',
+        )
+
+        scenarios = ScenarioGenerator(config).generate_for_period(0, n_scenarios=3)
+
+        assert [scenario.demand_std for scenario in scenarios] == [123.0] * 3
+        assert [scenario.demand_std_source for scenario in scenarios] == [
+            'HISTORICAL_BUSINESS_DATA'
+        ] * 3
 
     def test_reproducible_with_seed(self):
         """Mismo seed → mismos escenarios (reproducibilidad garantizada)."""
@@ -591,22 +634,19 @@ class TestComputeRiskMetrics:
         m = _compute_risk_metrics(profitable_profits)
         assert m.p1 <= m.p5 <= m.p10 <= m.p25 <= m.p50 <= m.p75 <= m.p90 <= m.p95 <= m.p99
 
-    def test_sharpe_ratio_with_risk_free_rate(self, profitable_profits):
+    def test_sharpe_is_unavailable_for_monetary_profit_samples(self, profitable_profits):
         metrics = _compute_risk_metrics(profitable_profits, risk_free_rate=1000.0)
-        assert metrics.sharpe_ratio is not None
-        expected = (np.mean(profitable_profits) - 1000.0) / np.std(profitable_profits, ddof=1)
-        assert metrics.sharpe_ratio == pytest.approx(expected, rel=1e-2)
+        assert metrics.sharpe_ratio is None
+        assert metrics.ratio_basis == "not_applicable_monetary_profit"
 
-    def test_sortino_ratio_present(self, profitable_profits):
-        """sortino_ratio debe estar presente cuando existen retornos negativos con varianza > 0."""
+    def test_sortino_is_unavailable_for_monetary_profit_samples(self, profitable_profits):
         rng = np.random.default_rng(55)
-        # Pérdidas con varianza propia (no constantes)
         losses = rng.normal(-1500.0, 300.0, 300)
         mixed = np.concatenate([profitable_profits, losses])
         metrics = _compute_risk_metrics(mixed, risk_free_rate=0.0)
-        assert metrics.sortino_ratio is not None
-        assert metrics.downside_std is not None
-        assert metrics.downside_std > 0.0
+        assert metrics.sortino_ratio is None
+        assert metrics.downside_std is None
+        assert metrics.ratio_basis == "not_applicable_monetary_profit"
 
     def test_sortino_none_when_no_losses(self):
         """Sortino es None cuando todos los profits son no-negativos."""
@@ -1115,6 +1155,19 @@ class TestRecommendationService:
         })
         titles = [r.title for r in recs]
         assert any('demanda' in t.lower() for t in titles)
+
+    def test_missing_financial_values_do_not_create_margin_or_cost_claims(
+        self, profitable_risk
+    ):
+        svc = RecommendationService()
+        recs = svc.generate(profitable_risk, {})
+        financial_metrics = {
+            rec.metric_name
+            for rec in recs
+            if rec.category == 'financiero'
+        }
+        assert 'margen_ganancia_pct' not in financial_metrics
+        assert 'ratio_costo_ingreso_pct' not in financial_metrics
 
     def test_capacity_underutilized(self, profitable_risk):
         svc = RecommendationService()
