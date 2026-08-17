@@ -1001,13 +1001,25 @@ class StatisticalService:
             raise ValueError("Arrays must have the same length")
         
         errors = actual - predicted
-        percentage_errors = np.where(actual != 0, errors / actual * 100, 0)
-        
+
+        # El error porcentual no existe cuando la observación es cero. Antes se
+        # sustituía por 0 —un acierto perfecto— y se promediaba junto al resto:
+        # el MAPE bajaba justamente en los puntos donde no se podía medir.
+        measurable = actual != 0
+        if np.any(measurable):
+            mape = float(np.mean(np.abs(errors[measurable] / actual[measurable] * 100)))
+        else:
+            mape = None
+
+        mean_absolute_error = float(np.mean(np.abs(errors)))
         return {
-            'mae': float(np.mean(np.abs(errors))),
+            'mae': mean_absolute_error,
             'mse': float(np.mean(errors ** 2)),
             'rmse': float(np.sqrt(np.mean(errors ** 2))),
-            'mape': float(np.mean(np.abs(percentage_errors))),
+            'mape': mape,
+            'mape_excluded_observations': int(np.count_nonzero(~measurable)),
             'bias': float(np.mean(errors)),
-            'tracking_signal': float(np.sum(errors) / np.mean(np.abs(errors))) if np.mean(np.abs(errors)) > 0 else 0,
+            'tracking_signal': (
+                float(np.sum(errors) / mean_absolute_error) if mean_absolute_error > 0 else None
+            ),
         }

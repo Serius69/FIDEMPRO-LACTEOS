@@ -540,3 +540,83 @@ def test_the_error_fallback_does_not_invent_a_value_or_a_perfect_error():
     assert fallback['average']['error_pct'] is None
     assert fallback['average']['confidence'] is None
     assert fallback['average']['status'] == 'UNAVAILABLE'
+
+
+def test_forecast_accuracy_metrics_do_not_score_a_zero_actual_as_a_perfect_hit():
+    """`np.where(actual != 0, err/actual*100, 0)` metía un 0% de error por cada
+    observación nula: el MAPE bajaba justamente donde no se podía medir."""
+    service = StatisticalService()
+    actual = np.asarray([100.0, 0.0, 200.0])
+    predicted = np.asarray([110.0, 50.0, 180.0])
+
+    metrics = service.perform_forecast_accuracy_metrics(actual, predicted)
+
+    # Sólo las dos observaciones no nulas entran en el MAPE: (10% + 10%) / 2.
+    assert metrics['mape'] == pytest.approx(10.0)
+    assert metrics['mape_excluded_observations'] == 1
+    # MAE/RMSE/bias sí usan todas las observaciones: no dependen de dividir.
+    assert metrics['mae'] == pytest.approx(np.mean([10.0, 50.0, 20.0]))
+
+
+def test_forecast_accuracy_metrics_report_unavailable_when_every_actual_is_zero():
+    metrics = StatisticalService().perform_forecast_accuracy_metrics(
+        np.asarray([0.0, 0.0]), np.asarray([1.0, 2.0])
+    )
+
+    assert metrics['mape'] is None
+    assert metrics['tracking_signal'] is not None
+
+
+# ── Fuga temporal: el holdout no puede haber visto el futuro ────────────────
+
+def _demand_service(values):
+    return DemandModelService(list(values), confidence_level=0.95)
+
+
+def test_holdout_mape_only_uses_information_available_at_the_origin():
+    """La predicción evaluada debe salir del tramo de entrenamiento, no de la serie
+    completa. Si el holdout viera el futuro, cambiar sólo el tramo de test movería
+    la predicción — y el MAPE dejaría de ser una validación."""
+    base = [100.0 + 2.0 * i for i in range(40)]
+    n_test = max(1, len(base) // 5)
+    train = base[:-n_test]
+
+    # Predicción honesta: entrenar con el prefijo y proyectar n_test períodos.
+    expected = _demand_service(train)._forecast_values(
+        np.asarray(train, dtype=float), n_test, 'linear'
+    )
+
+    # El servicio completo, con la serie entera, debe evaluar contra esa misma
+    # predicción: su MAPE tiene que coincidir con el calculado a mano.
+    service = _demand_service(base)
+    test = np.asarray(base[-n_test:], dtype=float)
+    manual = float(np.mean(np.abs((test - np.asarray(expected)) / test)) * 100)
+
+    assert service._calculate_mape('linear') == pytest.approx(round(manual, 2))
+
+
+def test_method_selection_for_validation_ignores_the_test_window():
+    """Elegir el método mirando toda la serie ya es fuga: la decisión usaría
+    observaciones que en el origen histórico no existían."""
+    # Prefijo perfectamente lineal (R² = 1.0) y ventana de test caótica que
+    # hunde el R² de la serie completa a ~0.23.
+    values = [100.0 + 5.0 * i for i in range(32)] + [
+        10.0, 900.0, 12.0, 880.0, 15.0, 860.0, 18.0, 840.0]
+    service = _demand_service(values)
+    n_test = max(1, len(values) // 5)
+
+    chosen_on_train = service._select_method(np.asarray(values[:-n_test], dtype=float))
+    chosen_on_all = service._select_method(np.asarray(values, dtype=float))
+
+    # La serie está construida para que ambas elecciones difieran; si no
+    # difirieran el test no probaría nada.
+    assert chosen_on_train != chosen_on_all
+
+    expected = service._forecast_values(
+        np.asarray(values[:-n_test], dtype=float), n_test, chosen_on_train
+    )
+    test = np.asarray(values[-n_test:], dtype=float)
+    mask = test != 0
+    manual = round(float(np.mean(np.abs((test[mask] - np.asarray(expected)[mask]) / test[mask])) * 100), 2)
+
+    assert service._calculate_mape('auto') == pytest.approx(manual)
