@@ -300,3 +300,243 @@ def test_prediction_validation_keeps_zero_actual_mape_unavailable():
     assert result["validation_status"] == "PASSED"
     assert result["accuracy_metrics"]["mean_absolute_percentage_error"] is None
     assert result["accuracy_metrics"]["mean_absolute_error"] == 0.25
+
+
+# ── Gráfico de ajuste de distribuciones: ni muestra inventada ni veredicto falso ──
+#
+# El gráfico quedó desincronizado del cierre de `distribution_fit_v2`. Aquel cierre
+# dejó `p_value=None` y `passes_test=None` a propósito — un p-value post-ajuste no
+# es válido y no se publica. El gráfico seguía asumiendo que existían: fabricaba la
+# muestra con una onda seno rotulada "Datos Observados", ordenaba los candidatos por
+# p-value y pintaba "✗ Falla" para lo que en realidad es "no disponible".
+
+def _diagnostic_without_p_values():
+    """Contrato real que hoy devuelve `_perform_ks_test_demand`."""
+    return {
+        'test_type': 'distribution_fit_diagnostic',
+        'sample_size': 40,
+        'distributions_tested': {
+            'normal': {
+                'statistic': 0.0812, 'p_value': None, 'params': (100.0, 12.0),
+                'passes_test': None, 'test_name': 'kolmogorov_smirnov_distance',
+                'p_value_unavailable_reason': 'ESTIMATED_PARAMETERS',
+            },
+            'lognormal': {
+                'statistic': 0.1310, 'p_value': None, 'params': (0.1, 0.0, 100.0),
+                'passes_test': None, 'test_name': 'kolmogorov_smirnov_distance',
+                'p_value_unavailable_reason': 'ESTIMATED_PARAMETERS',
+            },
+        },
+        'best_fit_distribution': 'normal',
+        'best_p_value': None,
+        'overall_passes': None,
+        'ranking_method': 'aic',
+    }
+
+
+def test_distribution_chart_does_not_invent_a_sample_when_there_is_none():
+    """Sin muestra real no hay gráfico. Antes dibujaba una onda seno."""
+    view = SimulateResultView()
+    diagnostic = _diagnostic_without_p_values()
+
+    assert view._create_distribution_comparison_chart(diagnostic) is None
+    assert view._create_distribution_comparison_chart({**diagnostic, 'sample': []}) is None
+
+
+def test_distribution_chart_renders_with_the_real_sample_and_no_p_values():
+    """Con muestra real debe producir imagen sin reventar por los p-value None."""
+    rng = np.random.default_rng(20260817)
+    diagnostic = {**_diagnostic_without_p_values(),
+                  'sample': rng.normal(100.0, 12.0, 200).tolist()}
+
+    chart = SimulateResultView()._create_distribution_comparison_chart(diagnostic)
+
+    assert isinstance(chart, str) and len(chart) > 0
+
+
+def test_distribution_chart_source_never_hardcodes_a_synthetic_series():
+    """Guardia de regresión sobre el archivo: la onda seno no puede volver."""
+    source = Path(__file__).resolve().parents[1] / 'views' / 'simulate_result_view.py'
+    text = source.read_text(encoding='utf-8')
+
+    assert 'np.sin(np.linspace' not in text
+    assert 'Distribuciones Ajustadas vs Datos Observados' not in text
+
+
+def test_distribution_chart_does_not_call_an_unavailable_verdict_a_failure():
+    """`passes_test=None` es 'no disponible', no 'falla'."""
+    view = SimulateResultView()
+
+    assert view._fit_verdict_label(None) == 'No disponible'
+    assert view._fit_verdict_label(True) != view._fit_verdict_label(None)
+    assert view._fit_verdict_label(False) != view._fit_verdict_label(None)
+
+
+# ── Métricas de comparación: un fallo no es un acierto ──────────────────────
+#
+# `_calculate_comparison_metrics` alimenta las estadísticas de demanda que ve el
+# usuario. Convertía cada caso imposible en un número con significado propio:
+# RMSE/MAE 0.0 (predicción perfecta), correlación 0, R² 0 (el modelo no explica
+# nada) y MAPE 100. Ninguno de esos se midió; todos se inventaron. Lo no medible
+# es `None`, igual que ya hace `StatisticalService`.
+
+def test_error_metrics_are_unavailable_instead_of_perfect_on_bad_input():
+    view = SimulateResultView()
+
+    for bad in ([], [np.nan, np.nan]):
+        assert view._calculate_rmse(np.asarray(bad, dtype=float),
+                                    np.asarray(bad, dtype=float)) is None
+        assert view._calculate_mae(np.asarray(bad, dtype=float),
+                                   np.asarray(bad, dtype=float)) is None
+        assert view._calculate_mape(np.asarray(bad, dtype=float),
+                                    np.asarray(bad, dtype=float)) is None
+
+
+def test_error_metrics_still_measure_when_the_data_is_usable():
+    view = SimulateResultView()
+    actual = np.asarray([10.0, 20.0, 30.0])
+    predicted = np.asarray([11.0, 18.0, 33.0])
+
+    assert view._calculate_rmse(actual, predicted) == pytest.approx(np.sqrt(14 / 3))
+    assert view._calculate_mae(actual, predicted) == pytest.approx(2.0)
+    assert view._calculate_mape(actual, predicted) == pytest.approx(
+        np.mean([10.0, 10.0, 10.0])
+    )
+
+
+def test_comparison_metrics_do_not_fabricate_zero_correlation_or_r_squared():
+    """Una sola observación no permite correlación ni R². Cero sería una afirmación."""
+    comparison = SimulateResultView()._calculate_comparison_metrics([100.0], [110.0])
+
+    assert comparison['correlation'] is None
+    assert comparison['r_squared'] is None
+
+
+def test_comparison_metrics_do_not_fabricate_zero_when_the_baseline_is_zero():
+    """Con media histórica 0 no hay porcentaje ni coeficiente de variación."""
+    comparison = SimulateResultView()._calculate_comparison_metrics(
+        [0.0, 0.0, 0.0], [5.0, 6.0, 7.0]
+    )
+
+    assert comparison['mean_diff_pct'] is None
+    assert comparison['cv_diff'] is None
+    # La diferencia de medias sí es medible y debe seguir estando.
+    assert comparison['mean_diff'] == pytest.approx(6.0)
+
+
+def test_comparison_metrics_measure_a_healthy_series():
+    comparison = SimulateResultView()._calculate_comparison_metrics(
+        [10.0, 20.0, 30.0, 40.0], [11.0, 21.0, 29.0, 41.0]
+    )
+
+    assert comparison['correlation'] == pytest.approx(1.0, abs=0.01)
+    assert comparison['r_squared'] is not None
+    assert comparison['rmse'] is not None
+
+
+def test_the_dead_accuracy_helpers_that_reported_100_percent_are_gone():
+    """`_calculate_deviation` devolvía 0.0 en except y el llamador lo leía como
+    `100 - 0 = 100% de precisión`, publicándolo además como 'fortaleza'. El
+    bloque completo no lo llamaba nadie; se elimina en vez de dejar la trampa."""
+    for dead in ('_calculate_deviation', '_determine_status',
+                 '_calculate_model_performance', '_generate_daily_comparisons'):
+        assert not hasattr(SimulateResultView, dead), dead
+
+
+def test_no_runtime_chart_asset_fabricates_its_own_series():
+    """U1 — ningún gráfico del runtime puede inventarse los datos que grafica.
+
+    `statistical-analysis.js` construía la distribución de frecuencias, la nube de
+    correlación "Histórico vs Simulado" y los residuos con `Math.random()`, y
+    `validation-charts.js` generaba así las series rotuladas "Valor Real" y
+    "Valor Simulado". Eran afirmaciones estadísticas fabricadas: un residuo o una
+    correlación inventados son indistinguibles de los medidos para quien mira.
+
+    La guardia anterior sólo cubría `pValue = … Math.random`, así que estos
+    quedaban fuera.
+    """
+    project_root = Path(__file__).resolve().parents[2]
+    sources = [
+        project_root / "static/js/simulate/tabs/statistical-analysis.js",
+        project_root / "static/js/components/validation-charts.js",
+    ]
+
+    def strip_comments(text: str) -> str:
+        """Los comentarios explican el defecto ya cerrado; se mira el código."""
+        without_block = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+        return "\n".join(
+            line for line in without_block.split("\n")
+            if not line.lstrip().startswith("//")
+        )
+
+    for path in sources:
+        code = strip_comments(path.read_text(encoding="utf-8"))
+        assert "Math.random" not in code, path.name
+
+
+# ── F2 — la "confianza" de cada método de comparación no puede ser un literal ──
+
+def _comparison_methods(values, real_value=100.0):
+    return SimulationValidationService()._calculate_multiple_comparisons(
+        list(values), real_value, 'IT'
+    )
+
+
+def test_method_confidence_is_derived_from_the_sample_not_hardcoded():
+    """`trimmed_mean` declaraba 0.9, `weighted` 0.8 y `final_period` 0.85/0.6.
+
+    Eran literales: no salían de los datos, y sin embargo pesaban un 20% en la
+    elección del método "mejor". Dos muestras con dispersión muy distinta
+    producían exactamente la misma confianza.
+    """
+    tight = _comparison_methods([100.0, 100.5, 99.5, 100.2, 99.8, 100.1])
+    loose = _comparison_methods([100.0, 300.0, 10.0, 250.0, 5.0, 180.0])
+
+    for method in ('trimmed_mean', 'weighted', 'final_period'):
+        assert method in tight and method in loose, method
+        assert tight[method]['confidence'] is not None
+        assert loose[method]['confidence'] is not None
+        # Una muestra concentrada no puede tener la misma confianza que una dispersa.
+        assert tight[method]['confidence'] > loose[method]['confidence'], method
+
+
+def test_method_confidence_is_bounded_and_unavailable_when_undefined():
+    methods = _comparison_methods([100.0, 101.0, 99.0, 100.5, 99.5])
+    measured = [m['confidence'] for m in methods.values() if m['confidence'] is not None]
+
+    assert measured, 'ningún método logró medir la dispersión'
+    assert all(0.0 <= value <= 1.0 for value in measured)
+    # `final_period` toma un solo valor con esta muestra: una observación no tiene
+    # dispersión, así que su confianza debe faltar en vez de inventarse.
+    assert methods['final_period']['confidence'] is None
+
+    # Con estimador cero la dispersión relativa no está definida.
+    zeroed = _comparison_methods([0.0, 0.0, 0.0, 0.0, 0.0], real_value=10.0)
+    assert all(method['confidence'] is None for method in zeroed.values())
+
+
+def test_unavailable_confidence_does_not_become_a_default_score():
+    """`.get('confidence', 0.5)` inventaba media confianza para lo no medido."""
+    service = SimulationValidationService()
+    methods = {
+        'average': {'method': 'a', 'status': 'PRECISE', 'error_pct': 1.0,
+                    'confidence': None, 'simulated_value': 100.0},
+        'median': {'method': 'm', 'status': 'PRECISE', 'error_pct': 1.0,
+                   'confidence': 0.9, 'simulated_value': 100.0},
+    }
+    best = service._select_best_comparison_method(methods, 'IT')
+
+    # El que sí tiene confianza medida no puede perder contra uno sin medir.
+    assert best['method'] == 'median'
+
+
+def test_the_error_fallback_does_not_invent_a_value_or_a_perfect_error():
+    """El `except` devolvía `simulated_value: 0` y `error_pct: 100.0` medidos."""
+    fallback = SimulationValidationService()._calculate_multiple_comparisons(
+        [], 100.0, 'IT'
+    )
+
+    assert fallback['average']['simulated_value'] is None
+    assert fallback['average']['error_pct'] is None
+    assert fallback['average']['confidence'] is None
+    assert fallback['average']['status'] == 'UNAVAILABLE'

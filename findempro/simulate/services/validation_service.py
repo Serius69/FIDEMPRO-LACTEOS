@@ -489,17 +489,28 @@ class SimulationValidationService:
             for method_name, method_data in comparison_methods.items():
                 # Calculate composite score
                 status_score = status_scores.get(method_data['status'], 0)
-                error_score = max(0, 100 - method_data['error_pct'])  # Lower error = higher score
-                confidence_score = method_data.get('confidence', 0.5) * 100
+                error_pct = method_data.get('error_pct')
+                if error_pct is None:
+                    continue  # Sin error medido no hay nada que puntuar.
+                error_score = max(0, 100 - error_pct)  # Lower error = higher score
                 reliability_score = method_reliability.get(method_name, 0.5) * 100
-                
-                # Weighted composite score
+
+                # La confianza no disponible se excluye del promedio en vez de
+                # sustituirse por 0.5: un default es una medición inventada, y
+                # además premiaba a los métodos que no supieron medirla.
+                confidence = method_data.get('confidence')
+                weights = {'status': 0.4, 'error': 0.3, 'confidence': 0.2, 'reliability': 0.1}
                 composite_score = (
-                    status_score * 0.4 +        # 40% weight on status
-                    error_score * 0.3 +         # 30% weight on error
-                    confidence_score * 0.2 +    # 20% weight on confidence
-                    reliability_score * 0.1     # 10% weight on method reliability
+                    status_score * weights['status'] +
+                    error_score * weights['error'] +
+                    reliability_score * weights['reliability']
                 )
+                if confidence is None:
+                    # Renormaliza sobre los términos realmente medidos.
+                    measured = 1.0 - weights['confidence']
+                    composite_score /= measured
+                else:
+                    composite_score += confidence * 100 * weights['confidence']
                 
                 logger.debug(f"Method {method_name} for {var_key}: score={composite_score:.2f}, "
                            f"status={method_data['status']}, error={method_data['error_pct']:.2f}%")
@@ -564,6 +575,23 @@ class SimulationValidationService:
             logger.error(f"Error determining validation status for {var_key}: {str(e)}")
             return 'ERROR'
     
+    @staticmethod
+    def _estimator_confidence(simulated_values, estimator):
+        """Dispersión relativa de la muestra alrededor del estimador, en [0, 1].
+
+        No es una confianza estadística: es un indicador de estabilidad, el mismo
+        para los cinco métodos. Antes tres de ellos declaraban literales (0.9, 0.8,
+        0.85/0.6) que no salían de los datos y sin embargo pesaban un 20% en la
+        elección del método "mejor": dos muestras con dispersión opuesta recibían
+        idéntica confianza. `None` cuando no está definida — nunca un default.
+        """
+        values = np.asarray(simulated_values, dtype=float)
+        values = values[np.isfinite(values)]
+        if values.size < 2 or estimator is None or not np.isfinite(estimator) or estimator == 0:
+            return None
+        relative_dispersion = float(np.std(values)) / abs(float(estimator))
+        return float(min(1.0, max(0.0, 1.0 - relative_dispersion)))
+
     def _calculate_multiple_comparisons(self, simulated_values, real_value, var_key):
         """
         IMPROVED: Calculate multiple comparison methods to find the best fit
@@ -581,7 +609,7 @@ class SimulationValidationService:
                 'simulated_value': avg_simulated,
                 'error_pct': avg_error,
                 'status': avg_status,
-                'confidence': 1.0 - (np.std(simulated_values) / abs(avg_simulated)) if avg_simulated != 0 else 0
+                'confidence': self._estimator_confidence(simulated_values, avg_simulated)
             }
             
             # Method 2: Median (more robust to outliers)
@@ -594,7 +622,7 @@ class SimulationValidationService:
                 'simulated_value': median_simulated,
                 'error_pct': median_error,
                 'status': median_status,
-                'confidence': 1.0 - (np.std(simulated_values) / abs(median_simulated)) if median_simulated != 0 else 0
+                'confidence': self._estimator_confidence(simulated_values, median_simulated)
             }
             
             # Method 3: Trimmed mean (remove outliers)
@@ -609,7 +637,7 @@ class SimulationValidationService:
                     'simulated_value': trimmed_simulated,
                     'error_pct': trimmed_error,
                     'status': trimmed_status,
-                    'confidence': 0.9  # High confidence due to outlier removal
+                    'confidence': self._estimator_confidence(simulated_values, trimmed_simulated)
                 }
             
             # Method 4: Weighted average (recent values more important)
@@ -623,7 +651,7 @@ class SimulationValidationService:
                 'simulated_value': weighted_simulated,
                 'error_pct': weighted_error,
                 'status': weighted_status,
-                'confidence': 0.8
+                'confidence': self._estimator_confidence(simulated_values, weighted_simulated)
             }
             
             # Method 5: Final period average (last 30% of simulation)
@@ -638,19 +666,22 @@ class SimulationValidationService:
                 'simulated_value': final_simulated,
                 'error_pct': final_error,
                 'status': final_status,
-                'confidence': 0.85 if len(final_values) >= 3 else 0.6
+                'confidence': self._estimator_confidence(final_values, final_simulated)
             }
             
             return comparisons
             
         except Exception as e:
             logger.error(f"Error calculating multiple comparisons for {var_key}: {str(e)}")
+            # Nada medible: ni un valor simulado inventado, ni un 100% de error
+            # que después se promedia como si se hubiera observado.
             return {'average': {
                 'method': 'Fallback Average',
-                'simulated_value': np.mean(simulated_values) if simulated_values else 0,
-                'error_pct': 100.0,
-                'status': 'ERROR',
-                'confidence': 0.0
+                'simulated_value': None,
+                'error_pct': None,
+                'status': 'UNAVAILABLE',
+                'confidence': None,
+                'unavailable_reason': 'COMPARISON_FAILED',
             }}
     
     
@@ -3846,6 +3877,10 @@ class SimulationValidationService:
             return {
                 'test_type': 'distribution_fit_diagnostic',
                 'sample_size': len(simulated_demands),
+                # La muestra real sobre la que se ajustó. El gráfico la necesita:
+                # sin ella dibujaba una serie inventada rotulada como observada.
+                # Es un diagnóstico de request, no se persiste.
+                'sample': [float(value) for value in simulated_demands],
                 'distributions_tested': ks_results,
                 'best_fit_distribution': best_fit,
                 'best_p_value': None,
