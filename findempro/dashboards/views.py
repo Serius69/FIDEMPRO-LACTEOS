@@ -17,6 +17,7 @@ from django.views.decorators.http import require_http_methods
 from django.db import transaction
 import logging
 import json
+import math
 
 # Imports locales
 from variable.models import Variable
@@ -560,28 +561,52 @@ def dashboard_summary_api(request):
             fk_product__fk_business=business, is_active=True
         ).count()
 
-        results_agg = ResultSimulation.objects.filter(
+        # `ResultSimulation` no tiene columnas `revenue`/`costs`/`net_profit`: los
+        # importes viven dentro del JSON `variables`. El `aggregate` sobre esos
+        # nombres lanzaba `FieldError`, así que este endpoint devolvía 500 en
+        # **todas** las llamadas. Los promedios se calculan sobre las claves
+        # canónicas: IT = ingresos totales, TG = gastos totales, GT = ganancias.
+        results = ResultSimulation.objects.filter(
             fk_simulation__fk_questionary_result__fk_questionary__fk_product__fk_business=business,
             is_active=True,
-        ).aggregate(
-            avg_revenue=Avg('revenue'),
-            avg_costs=Avg('costs'),
-            avg_profit=Avg('net_profit'),
-        )
+        ).values_list('variables', flat=True)
 
-        avg_revenue = float(results_agg['avg_revenue'] or 0)
-        avg_costs = float(results_agg['avg_costs'] or 0)
-        avg_profit = float(results_agg['avg_profit'] or 0)
-        profit_margin = round((avg_profit / avg_revenue * 100) if avg_revenue else 0, 2)
+        def _average(key):
+            """Promedio de las filas que sí traen el importe. `None` si no hay ninguna.
 
-        if profit_margin >= 20:
-            financial_health = 'excellent'
-        elif profit_margin >= 10:
-            financial_health = 'good'
-        elif profit_margin >= 0:
-            financial_health = 'fair'
+            Una fila sin el dato se excluye; no se cuenta como cero. Antes un
+            negocio sin resultados obtenía Bs 0.00 de ingresos y un margen de 0%
+            que la escala clasificaba como salud 'fair': un veredicto financiero
+            sobre algo que nunca se midió.
+            """
+            values = []
+            for variables in results:
+                raw = (variables or {}).get(key)
+                try:
+                    value = float(raw)
+                except (TypeError, ValueError):
+                    continue
+                if math.isfinite(value):
+                    values.append(value)
+            return sum(values) / len(values) if values else None
+
+        avg_revenue = _average('IT')
+        avg_costs = _average('TG')
+        avg_profit = _average('GT')
+
+        if avg_revenue is None or avg_profit is None or avg_revenue == 0:
+            profit_margin = None
+            financial_health = 'unavailable'
         else:
-            financial_health = 'poor'
+            profit_margin = round(avg_profit / avg_revenue * 100, 2)
+            if profit_margin >= 20:
+                financial_health = 'excellent'
+            elif profit_margin >= 10:
+                financial_health = 'good'
+            elif profit_margin >= 0:
+                financial_health = 'fair'
+            else:
+                financial_health = 'poor'
 
         return JsonResponse({
             'success': True,
