@@ -1124,24 +1124,31 @@ class SimulateShowView(BaseSimulationView, View):
             return 'No evaluada'
     
     def _calculate_skewness(self, data_array):
-        """Calcular skewness de forma simple"""
+        """Asimetría descriptiva, o ``None`` si no se puede calcular.
+
+        Devuelve ``None`` —no ``0.0``— cuando faltan observaciones, la desviación
+        es nula o el cálculo falla. Un 0.0 ahí no es "no se pudo": afirma que la
+        distribución es simétrica, que es justo lo que el resto de este módulo
+        evita (la selección por AIC ya devuelve ``None`` y su motivo en vez de
+        inventar un p-value).
+        """
         try:
             n = len(data_array)
             if n < 3:
-                return 0.0
+                return None
             
             mean = np.mean(data_array)
             std = np.std(data_array)
             
             if std == 0:
-                return 0.0
+                return None
             
             # Fórmula simple de skewness
             skew = np.sum(((data_array - mean) / std) ** 3) / n
             return float(skew)
         except Exception as e:
             logger.error(f"Error calculating skewness: {e}")
-            return 0.0
+            return None
 
     def _log_service_status(self):
         """Registrar estado de servicios disponibles"""
