@@ -64,6 +64,7 @@ export default function ModelBuilder() {
   const [diagrams, setDiagrams] = useState<Record<string, { title: string; nodes: { id: string; label: string; kind: string }[]; edges: { source: string; target: string; relation: string }[] }>>({})
   const [causalTarget, setCausalTarget] = useState('')
   const [causalPolarity, setCausalPolarity] = useState<'positive' | 'negative'>('positive')
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -77,6 +78,11 @@ export default function ModelBuilder() {
       setName(model.name)
       setScenarios(scenarioResponse.scenarios)
       setDiagrams(diagramResponse.diagrams)
+    }).catch((err) => {
+      // Sin este catch, un 403/404 (p. ej. un modelo de otro dueño) sólo hacía
+      // desaparecer el spinner y renderizaba el constructor completo con una
+      // spec vacía: indistinguible de un modelo legítimamente vacío.
+      setLoadError(err instanceof Error ? err.message : 'No se pudo cargar el modelo.')
     }).finally(() => setLoading(false))
   }, [id])
 
@@ -247,6 +253,12 @@ export default function ModelBuilder() {
   }
 
   if (loading) return <div role="status" className="flex h-full items-center justify-center"><Loader2 className="h-7 w-7 animate-spin text-muted-foreground" /></div>
+
+  if (loadError) return <div role="alert" className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+    <p className="text-sm font-semibold">No se pudo cargar el modelo</p>
+    <p className="max-w-md text-xs text-muted-foreground">{loadError}</p>
+    <Link to="/models" className="text-xs underline">Volver a modelos</Link>
+  </div>
 
   return <div className="flex h-full flex-col overflow-hidden">
     <header className="flex shrink-0 items-center justify-between border-b border-border px-6 py-3">

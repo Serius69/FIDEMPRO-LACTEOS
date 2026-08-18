@@ -2,19 +2,26 @@ import { useState } from 'react'
 import { OnboardingGuiado } from '@/components/OnboardingGuiado'
 import { ResultadoSimulacion } from '@/components/ResultadoSimulacion'
 
+// Un percentil ausente vale null, no 0: "no lo calculamos" no es "da cero".
 interface Escenarios {
-  p5: number
-  p50: number
-  p95: number
+  p5: number | null
+  p50: number | null
+  p95: number | null
 }
 
 interface EstadoOnboarding {
-  fase: 'formulario' | 'calculando' | 'resultado'
+  fase: 'formulario' | 'calculando' | 'resultado' | 'error'
   escenarios: Escenarios | null
   tipoNegocio: string
   horizonte: number
   nombreNegocio: string
   error: string | null
+}
+
+function numeroObservado(valor: unknown): number | null {
+  if (valor == null) return null
+  const n = Number(valor)
+  return Number.isFinite(n) ? n : null
 }
 
 export default function OnboardingPage() {
@@ -50,9 +57,9 @@ export default function OnboardingPage() {
       setEstado({
         fase: 'resultado',
         escenarios: {
-          p5: data.p5 ?? data.percentil_5 ?? 0,
-          p50: data.p50 ?? data.percentil_50 ?? 0,
-          p95: data.p95 ?? data.percentil_95 ?? 0,
+          p5: numeroObservado(data.p5 ?? data.percentil_5),
+          p50: numeroObservado(data.p50 ?? data.percentil_50),
+          p95: numeroObservado(data.p95 ?? data.percentil_95),
         },
         tipoNegocio: String(respuestas.tipo_negocio || 'comercio'),
         horizonte: Number(respuestas.horizonte) || 12,
@@ -60,12 +67,17 @@ export default function OnboardingPage() {
         error: null,
       })
     } catch (err) {
+      // Antes esto inventaba una proyección de ejemplo (-2500 / 8500 / 22000) y
+      // la mostraba en la MISMA vista de resultado: el usuario leía cifras que
+      // nadie calculó como si fueran las de su negocio. Un fallo se muestra
+      // como un fallo.
       setEstado(prev => ({
         ...prev,
-        fase: 'resultado',
-        // Fallback demo si la API falla — muestra igual el resultado
-        escenarios: { p5: -2500, p50: 8500, p95: 22000 },
-        error: 'Usamos datos de ejemplo — conectá tu API para resultados reales.',
+        fase: 'error',
+        escenarios: null,
+        error: err instanceof Error
+          ? `No pudimos calcular tu proyección: ${err.message}`
+          : 'No pudimos calcular tu proyección.',
       }))
     }
   }
@@ -103,6 +115,33 @@ export default function OnboardingPage() {
           <p className="text-xs text-muted-foreground/60">
             Calculamos escenarios para tu negocio
           </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (estado.fase === 'error') {
+    return (
+      <div className="flex-1 overflow-auto bg-background">
+        <div className="max-w-2xl mx-auto mt-8 px-4 space-y-4">
+          <div
+            role="alert"
+            className="rounded-lg border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-600 dark:text-red-400"
+          >
+            <p className="font-semibold">No se pudo calcular la proyección</p>
+            <p className="mt-1">{estado.error}</p>
+            <p className="mt-2 text-xs opacity-80">
+              No mostramos cifras de ejemplo: serían inventadas y no dicen nada
+              sobre tu negocio.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={reiniciar}
+            className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted"
+          >
+            Volver a intentar
+          </button>
         </div>
       </div>
     )
