@@ -20,8 +20,7 @@ WORKDIR /build
 COPY requirements/base.txt requirements/base.txt
 COPY requirements/production.txt requirements/production.txt
 
-RUN pip install --user --no-cache-dir -r requirements/production.txt && \
-    pip install --user --no-cache-dir "setuptools<80"
+RUN pip install --user --no-cache-dir -r requirements/production.txt
 
 # ─────────────────────────────────────────────
 # STAGE 2: Runtime — imagen final mínima
@@ -41,9 +40,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     curl \
     && rm -rf /var/lib/apt/lists/*
-
-# setuptools<80 — versions 80+ removed pkg_resources as top-level module
-RUN pip install --no-cache-dir "setuptools<80"
 
 # Usuario no-root
 RUN useradd -m -u 1000 -s /bin/bash appuser

@@ -135,7 +135,17 @@ CORS_ALLOW_CREDENTIALS = True
 # Static files — WhiteNoise con compresión
 # ─────────────────────────────────────────────
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# Django 5.1 eliminó STATICFILES_STORAGE: si se deja, se ignora EN SILENCIO y los
+# estáticos vuelven al backend por defecto, perdiendo la compresión de WhiteNoise
+# sin que nada falle. La configuración viva es STORAGES.
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+    },
+}
 
 # ─────────────────────────────────────────────
 # REST Framework — producción (solo JSON, auth requerida)

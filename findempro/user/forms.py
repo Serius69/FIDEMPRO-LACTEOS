@@ -415,6 +415,9 @@ class UserProfileForm(forms.ModelForm):
     
     website = forms.URLField(
         required=False,
+        # Django 6.0 cambia el esquema por defecto de http a https; declararlo
+        # fija el comportamiento y coincide con el placeholder del propio campo.
+        assume_scheme='https',
         widget=forms.URLInput(attrs={
             'class': 'form-control',
             'placeholder': 'https://tu-sitio-web.com',
@@ -426,6 +429,9 @@ class UserProfileForm(forms.ModelForm):
     
     linkedin = forms.URLField(
         required=False,
+        # Django 6.0 cambia el esquema por defecto de http a https; declararlo
+        # fija el comportamiento y coincide con el placeholder del propio campo.
+        assume_scheme='https',
         widget=forms.URLInput(attrs={
             'class': 'form-control',
             'placeholder': 'https://linkedin.com/in/tu-perfil',
@@ -436,6 +442,9 @@ class UserProfileForm(forms.ModelForm):
     
     github = forms.URLField(
         required=False,
+        # Django 6.0 cambia el esquema por defecto de http a https; declararlo
+        # fija el comportamiento y coincide con el placeholder del propio campo.
+        assume_scheme='https',
         widget=forms.URLInput(attrs={
             'class': 'form-control',
             'placeholder': 'https://github.com/tu-usuario',

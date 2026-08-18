@@ -171,7 +171,9 @@ AUTH_PASSWORD_VALIDATORS = [
 LOGIN_REDIRECT_URL = "/"
 LOGIN_URL = "account_login"
 ACCOUNT_LOGOUT_ON_GET = os.getenv('ACCOUNT_LOGOUT_ON_GET', 'True').lower() in ('true', '1')
-ACCOUNT_EMAIL_REQUIRED = True
+# Reemplaza a ACCOUNT_EMAIL_REQUIRED, deprecado en django-allauth 65. Declara los
+# mismos campos que regían antes: email y usuario obligatorios en el registro.
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = True
 ACCOUNT_EMAIL_VERIFICATION = os.getenv('ACCOUNT_EMAIL_VERIFICATION', 'optional')
 ACCOUNT_RATE_LIMITS = {
@@ -261,7 +263,7 @@ CELERY_ALWAYS_EAGER = os.getenv('CELERY_ALWAYS_EAGER', 'False').lower() in ('tru
 LANGUAGE_CODE = 'es'
 TIME_ZONE = 'America/La_Paz'
 USE_I18N = True
-USE_L10N = True
+# USE_L10N se eliminó en Django 5.0: la localización de formatos es incondicional.
 USE_TZ = True
 
 # ─────────────────────────────────────────────

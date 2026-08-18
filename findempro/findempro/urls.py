@@ -84,6 +84,12 @@ urlpatterns = [
     path('social-auth/', include('social_django.urls', namespace='social')),
     
     # API Documentation
+    # drf-yasg >= 1.21.12 avisa que `format` dejará de llevar el punto y sugiere
+    # SWAGGER_SETTINGS['USE_COMPAT_RENDERERS'] = False. Probado: con esa opción
+    # estas dos rutas devuelven 404 — el sufijo `.json`/`.yaml` deja de resolver—
+    # mientras /swagger/ y /redoc/ siguen bien. Se mantiene el renderer compat a
+    # propósito; migrarlo exige cambiar también este patrón y es un cambio de la
+    # superficie pública de la API, no de esta actualización de seguridad.
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0),
             name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
