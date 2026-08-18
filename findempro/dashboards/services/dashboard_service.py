@@ -391,10 +391,12 @@ class DashboardService:
                 turnover_factor = min(100, (metrics.revenue / metrics.inventory) * 10)
                 factors.append(turnover_factor)
             
-            return sum(factors) / len(factors) if factors else 0
+            # Sin ningún factor computable el score es desconocido, no 0.
+            return sum(factors) / len(factors) if factors else None
             
         except Exception:
-            return 0.0
+            logger.exception("No se pudo calcular el score de eficiencia")
+            return None
 
     @classmethod
     def _get_enhanced_business_stats(cls, business_id: int, products: List[Product], simulations: List[Simulation]) -> Dict[str, int]:
@@ -593,8 +595,11 @@ class DashboardService:
 
             for rec_data in recommendations_query:
                 try:
-                    data_value = rec_data.get('avg_metric') or 0.5
-                    data_percentage = float(data_value) * 100
+                    # `or 0.5` inventaba una métrica del 50% cuando la
+                    # recomendación no tenía ninguna —y además pisaba un 0
+                    # legítimamente medido. Si no hay métrica, no se muestra.
+                    data_value = rec_data.get('avg_metric')
+                    data_percentage = float(data_value) * 100 if data_value is not None else None
                     
                     recommendations.append({
                         'id': rec_data['latest_id'],
@@ -649,13 +654,14 @@ class DashboardService:
                 'roi_percentage': metrics.roi,
                 'efficiency_score': metrics.efficiency_score,
                 'net_profit': metrics.profit,
-                'cost_ratio': (metrics.costs / metrics.revenue * 100) if metrics.revenue > 0 else 0
+                # Sin ingresos el ratio es indefinido, no 0%.
+                'cost_ratio': (metrics.costs / metrics.revenue * 100) if metrics.revenue > 0 else None
             }
             
             # KPIs adicionales
             kpis.update({
-                'revenue_per_product': metrics.revenue / max(1, metrics.inventory) if metrics.inventory > 0 else 0,
-                'demand_fulfillment': (metrics.production / metrics.demand * 100) if metrics.demand > 0 else 0,
+                'revenue_per_product': metrics.revenue / metrics.inventory if metrics.inventory > 0 else None,
+                'demand_fulfillment': (metrics.production / metrics.demand * 100) if metrics.demand > 0 else None,
                 'operational_efficiency': metrics.efficiency_score,
                 'financial_health': cls._calculate_financial_health_score(metrics)
             })
@@ -669,16 +675,21 @@ class DashboardService:
             
         except Exception as e:
             logger.error(f"Error calculating enhanced KPIs: {e}")
+            # Un fallo al calcular no es un negocio en cero: se devuelve
+            # "no disponible" para que la vista no presente el error como
+            # un resultado. `financial_health: 0` se mapeaba a estado 'poor'
+            # y el usuario leía "necesita mejoras significativas" cuando lo
+            # que había pasado era una excepción.
             return {
-                'profit_margin_percentage': 0,
+                'profit_margin_percentage': None,
                 'roi_percentage': None,
-                'efficiency_score': 0,
-                'net_profit': 0,
-                'cost_ratio': 0,
-                'revenue_per_product': 0,
-                'demand_fulfillment': 0,
-                'operational_efficiency': 0,
-                'financial_health': 0
+                'efficiency_score': None,
+                'net_profit': None,
+                'cost_ratio': None,
+                'revenue_per_product': None,
+                'demand_fulfillment': None,
+                'operational_efficiency': None,
+                'financial_health': None
             }
 
     @classmethod
@@ -849,17 +860,28 @@ class DashboardService:
             # Factor de eficiencia
             factors.append(metrics.efficiency_score)
             
-            return sum(factors) / len(factors) if factors else 0
+            # Sin ningún factor computable el score es desconocido, no 0.
+            return sum(factors) / len(factors) if factors else None
             
         except Exception:
-            return 0
+            logger.exception("No se pudo calcular el score de rendimiento del producto")
+            return None
 
     @classmethod
     def _generate_business_summary(cls, metrics: BusinessMetrics, kpis: Dict) -> Dict[str, str]:
         """Genera resumen del negocio"""
         try:
-            financial_health = kpis.get('financial_health', 0)
-            
+            financial_health = kpis.get('financial_health')
+
+            if financial_health is None:
+                return {
+                    'status': 'unknown',
+                    'message': ('No se pudo calcular la salud financiera del '
+                                'negocio con los datos disponibles.'),
+                    'health_score': None,
+                    'key_metric': 'Salud Financiera: no disponible'
+                }
+
             if financial_health > 80:
                 status = 'excellent'
                 message = 'El negocio muestra un rendimiento excepcional en todos los indicadores.'
@@ -922,23 +944,25 @@ class DashboardService:
             },
             'recommendations': [],
             'recent_activity': [],
+            # Dashboard vacío: el estado ya decía 'no_data', pero los KPIs
+            # venían en 0 y se pintaban como cifras observadas.
             'business_kpis': {
-                'profit_margin_percentage': 0,
+                'profit_margin_percentage': None,
                 'roi_percentage': None,
-                'efficiency_score': 0,
-                'net_profit': 0,
-                'cost_ratio': 0,
-                'revenue_per_product': 0,
-                'demand_fulfillment': 0,
-                'operational_efficiency': 0,
-                'financial_health': 0
+                'efficiency_score': None,
+                'net_profit': None,
+                'cost_ratio': None,
+                'revenue_per_product': None,
+                'demand_fulfillment': None,
+                'operational_efficiency': None,
+                'financial_health': None
             },
             'business_alerts': [],
             'top_products': [],
             'summary': {
                 'status': 'no_data',
                 'message': 'No hay datos disponibles.',
-                'health_score': 0,
+                'health_score': None,
                 'key_metric': 'Sin información'
             },
             'last_updated': timezone.now().isoformat()
