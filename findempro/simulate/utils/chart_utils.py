@@ -2495,11 +2495,10 @@ class ChartGenerator:
     
     def generate_validation_comparison_chart(self, real_values, projected_values, simulated_values, dates=None):
         """
-        Generate validation comparison chart with exact simulated data (no smoothing)
-        and projections that follow simulation pattern
+        Generate validation comparison chart from supplied series without smoothing.
         """
         try:
-            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10), 
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10),
                                         gridspec_kw={'height_ratios': [3, 1]})
             
             # Clean data - MANTENER VALORES ORIGINALES EXACTOS
@@ -2549,7 +2548,7 @@ class ChartGenerator:
                         # Solo conversión básica, sin operaciones matemáticas
                         exact_sim_values.append(float(val))
                     except (ValueError, TypeError):
-                        exact_sim_values.append(0.0)
+                        exact_sim_values.append(np.nan)
                 
                 # Plot con línea discontinua marcada
                 ax1.plot(sim_periods, exact_sim_values,
@@ -2564,7 +2563,7 @@ class ChartGenerator:
                         zorder=2)
                 
                 # Media simulada
-                sim_mean = np.mean(exact_sim_values)
+                sim_mean = np.nanmean(exact_sim_values)
                 ax1.axhline(y=sim_mean, color='#2ca02c', linestyle=':', alpha=0.5,
                         label=f'Media Simulada: {sim_mean:.1f}')
 
@@ -2572,64 +2571,24 @@ class ChartGenerator:
             if projected_values and real_values and simulated_values:
                 # Calcular desde dónde empezar la proyección
                 proj_start_period = len(real_values) + 1
-                max_simulation_period = len(simulated_values)
-                
-                # Si la simulación se extiende más allá de los datos reales
-                if max_simulation_period > len(real_values):
-                    # NUEVA ESTRATEGIA: Hacer que la proyección siga el patrón de la simulación
+                # Preserve the supplied forecast exactly; a chart must not blend
+                # it with simulated values or synthesize additional observations.
+                proj_periods = list(range(proj_start_period, proj_start_period + len(projected_values)))
                     
-                    # Tomar la parte de simulación que va después de los datos reales
-                    sim_for_projection = simulated_values[len(real_values):]
-                    
-                    # Si tenemos datos de simulación posteriores, usarlos como base
-                    if sim_for_projection:
-                        # Crear proyección basada en el patrón de simulación
-                        projection_adjusted = []
-                        
-                        # Usar los valores de simulación como referencia
-                        for i, sim_val in enumerate(sim_for_projection):
-                            if i < len(projected_values):
-                                # Combinar proyección original con patrón de simulación
-                                # 70% simulación, 30% proyección original para mantener cierta diferencia
-                                adjusted_val = sim_val * 0.7 + projected_values[i] * 0.3
-                                projection_adjusted.append(adjusted_val)
-                            else:
-                                # Si se acabó la proyección original, continuar con patrón de simulación
-                                # Añadir ligera variación para que no sea idéntica
-                                variation = np.random.normal(0, abs(sim_val) * 0.05)  # 5% de variación
-                                projection_adjusted.append(sim_val + variation)
-                        
-                        # Si necesitamos más días, extender con tendencia
-                        remaining_sim = sim_for_projection[len(projection_adjusted):]
-                        if remaining_sim:
-                            projection_adjusted.extend(remaining_sim)
-                        
-                        projected_values = projection_adjusted
-                    
-                    # Períodos de proyección
-                    proj_periods = list(range(proj_start_period, proj_start_period + len(projected_values)))
-                    
-                    # Conectar último valor real con primer valor proyectado
-                    if real_values and projected_values:
-                        ax1.plot([len(real_values), proj_periods[0]], 
-                                [real_values[-1], projected_values[0]], 
-                                color='#d62728', linestyle=':', linewidth=2, alpha=0.8)
-                    
-                    # Plot de proyección
-                    ax1.plot(proj_periods, projected_values,
-                            color='#d62728',        # Rojo
-                            linestyle=':',          # Línea punteada
-                            marker='s', 
-                            markersize=4, 
-                            linewidth=3,
-                            label='📈 Proyección Extendida (Sigue Simulación)', 
-                            alpha=0.9, 
-                            zorder=1)
-                    
-                    # Media proyectada
-                    proj_mean = np.mean(projected_values)
-                    ax1.axhline(y=proj_mean, color='#d62728', linestyle=':', alpha=0.5,
-                            label=f'Media Proyectada: {proj_mean:.1f}')
+                ax1.plot([len(real_values), proj_periods[0]],
+                         [real_values[-1], projected_values[0]],
+                         color='#d62728', linestyle=':', linewidth=2, alpha=0.8)
+                ax1.plot(
+                    proj_periods, projected_values,
+                    color='#d62728', linestyle=':', marker='s', markersize=4,
+                    linewidth=3, label='📈 Proyección suministrada',
+                    alpha=0.9, zorder=1,
+                )
+                proj_mean = np.mean(projected_values)
+                ax1.axhline(
+                    y=proj_mean, color='#d62728', linestyle=':', alpha=0.5,
+                    label=f'Media Proyectada: {proj_mean:.1f}',
+                )
 
             # Línea de transición
             if real_values:
@@ -2639,7 +2598,7 @@ class ChartGenerator:
             # === CONFIGURACIÓN DEL GRÁFICO PRINCIPAL ===
             ax1.set_xlabel('Período de Tiempo', fontsize=12, fontweight='bold')
             ax1.set_ylabel('Demanda (Litros)', fontsize=12, fontweight='bold')
-            ax1.set_title('🔍 Validación: Real vs Simulada (Exacta) vs Proyectada (Sigue Simulación)', 
+            ax1.set_title('🔍 Validación: Real vs Simulada vs Proyección suministrada',
                         fontsize=16, fontweight='bold', pad=20)
 
             # Leyenda mejorada
@@ -2670,7 +2629,7 @@ class ChartGenerator:
                     
                     # Usar los datos simulados exactos (sin suavizado)
                     for i in range(min_len):
-                        if real_values[i] != 0:
+                        if real_values[i] != 0 and np.isfinite(exact_sim_values[i]):
                             # Error con datos simulados exactos
                             error = ((exact_sim_values[i] - real_values[i]) / real_values[i]) * 100
                             errors.append(error)
@@ -4516,37 +4475,35 @@ class ChartGenerator:
             from io import BytesIO
             import base64
             import numpy as np
-            
+
             # Extraer datos diarios
             dias = []
-            ingresos = []
-            gastos = []
             ganancias = []
             margen_porcentaje = []
-            
+
             for day_idx, day_data in enumerate(all_variables_extracted):
+                if not isinstance(day_data, dict) or 'GT' not in day_data:
+                    continue
+                try:
+                    ganancia_dia = float(day_data['GT'])
+                    ingreso_dia = float(day_data['IT']) if 'IT' in day_data else None
+                except (TypeError, ValueError):
+                    continue
+                if not np.isfinite(ganancia_dia):
+                    continue
+                if ingreso_dia is not None and not np.isfinite(ingreso_dia):
+                    ingreso_dia = None
                 dias.append(day_idx + 1)
-                
-                ingreso_dia = day_data.get('IT', 0)
-                gasto_dia = day_data.get('TG', 0)
-                ganancia_dia = day_data.get('GT', 0)
-                
-                ingresos.append(ingreso_dia)
-                gastos.append(gasto_dia)
                 ganancias.append(ganancia_dia)
-                
-                # Calcular margen porcentual
-                if ingreso_dia > 0:
+
+                if ingreso_dia is not None and ingreso_dia > 0:
                     margen = (ganancia_dia / ingreso_dia) * 100
                 else:
-                    margen = 0
+                    margen = np.nan
                 margen_porcentaje.append(margen)
-            
-            # Si no hay datos, usar datos de ejemplo
-            if not dias or all(g == 0 for g in ganancias):
-                dias = list(range(1, 11))
-                ganancias = [100, 150, 80, 200, 120, 180, 90, 160, 140, 110]
-                margen_porcentaje = [15, 18, 12, 25, 16, 22, 14, 20, 17, 13]
+
+            if not dias:
+                return None
             
             # Crear figura
             fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), facecolor='white')
@@ -4576,7 +4533,10 @@ class ChartGenerator:
             ax1.tick_params(colors='#333333')
             
             # Gráfico 2: Margen porcentual
-            colors_margen = ['#2E8B57' if m >= 0 else '#DC143C' for m in margen_porcentaje]
+            colors_margen = [
+                '#9CA3AF' if not np.isfinite(m) else ('#2E8B57' if m >= 0 else '#DC143C')
+                for m in margen_porcentaje
+            ]
             
             bars = ax2.bar(dias, margen_porcentaje, color=colors_margen, alpha=0.7, 
                         edgecolor='#333333', linewidth=0.5)
@@ -4595,7 +4555,7 @@ class ChartGenerator:
             
             # Agregar valores en barras significativas
             for bar, margen in zip(bars, margen_porcentaje):
-                if abs(margen) > 5:  # Solo mostrar si es significativo
+                if np.isfinite(margen) and abs(margen) > 5:
                     height = bar.get_height()
                     ax2.text(bar.get_x() + bar.get_width()/2., 
                             height + (1 if height >= 0 else -3),
@@ -5186,22 +5146,24 @@ class ChartGenerator:
             ventas_diarias = []
             
             for day_idx, day_data in enumerate(all_variables_extracted):
+                if not isinstance(day_data, dict):
+                    continue
+                if 'demand_mean' not in day_data or 'TPV' not in day_data:
+                    continue
+                try:
+                    demand_value = float(day_data['demand_mean'])
+                    sales_value = float(day_data['TPV'])
+                except (TypeError, ValueError):
+                    continue
+                if not np.isfinite(demand_value) or not np.isfinite(sales_value):
+                    continue
                 dias.append(day_idx + 1)
-                demanda_real.append(day_data.get('demand_mean', 0))
-                ventas_diarias.append(day_data.get('TPV', 0))
-            
-            # Si no hay datos suficientes, usar datos de ejemplo
-            if len(dias) < 7 or all(d == 0 for d in demanda_real):
-                dias = list(range(1, 31))  # 30 días
-                # Simular datos con tendencia y variabilidad
-                base_demand = 100
-                trend = np.linspace(0, 20, 30)  # Tendencia creciente
-                noise = np.random.normal(0, 10, 30)  # Ruido
-                demanda_real = base_demand + trend + noise
-                
-                # Ventas ligeramente menores que demanda
-                ventas_diarias = demanda_real * np.random.uniform(0.85, 0.98, 30)
-            
+                demanda_real.append(demand_value)
+                ventas_diarias.append(sales_value)
+
+            if len(dias) < 2:
+                return None
+
             # Convertir a pandas para facilitar cálculo de promedio móvil
             df = pd.DataFrame({
                 'dia': dias,
@@ -5210,10 +5172,11 @@ class ChartGenerator:
             })
             
             # Calcular promedios móviles de 7 días
-            window_size = min(7, len(df) // 2)  # Ajustar ventana si hay pocos datos
-            
-            df['demanda_ma7'] = df['demanda'].rolling(window=window_size, center=True).mean()
-            df['ventas_ma7'] = df['ventas'].rolling(window=window_size, center=True).mean()
+            window_size = min(7, len(df))
+
+            # Trailing windows preserve temporal truth at every displayed origin.
+            df['demanda_ma7'] = df['demanda'].rolling(window=window_size).mean()
+            df['ventas_ma7'] = df['ventas'].rolling(window=window_size).mean()
             
             # Crear figura
             fig, ax = plt.subplots(figsize=(12, 7), facecolor='white')

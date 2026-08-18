@@ -39,16 +39,19 @@ Business (tipo N)
 python manage.py scrape_bolivia_data            # escribe bolivia_market_data.json
 python manage.py scrape_bolivia_data --dry-run  # sólo muestra
 
-# 2) Sembrar los 19 tipos (usuario demo 'demo_bolivia')
-python manage.py seed_bolivia                    # sólo elementos (rápido)
-python manage.py seed_bolivia --run-sim          # además corre 1 simulación por negocio
+# 2) One-click: un negocio demo + simulación persistida (seed 42)
+python manage.py seed_bolivia
+
+# Variantes
+python manage.py seed_bolivia --no-run-sim       # sólo elementos
 python manage.py seed_bolivia --types 4,5,16     # sólo algunos tipos
+python manage.py seed_bolivia --types 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19
 python manage.py seed_bolivia --user sergio      # asignar a un usuario existente
 python manage.py seed_bolivia --force            # recrea aunque ya exista
 ```
 
 El comando es **idempotente**: no duplica un negocio del mismo tipo para el mismo
-usuario (salvo `--force`).
+usuario ni vuelve a ejecutar una simulación ya completada (salvo `--force`).
 
 ### Onboarding web (selector de rubro)
 

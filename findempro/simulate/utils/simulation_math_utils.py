@@ -17,6 +17,8 @@ from decimal import Decimal, ROUND_HALF_UP
 from collections import defaultdict, deque
 import copy
 
+from modeling.safe_expression import ExpressionError, evaluate_expression
+
 logger = logging.getLogger(__name__)
 
 
@@ -74,10 +76,12 @@ class EquationSolver:
                         missing_deps = self.dependencies[var] - set(result_vars.keys())
                         if missing_deps:
                             logger.debug(f"Missing dependencies for {var}: {missing_deps}")
-                            # Crear valores por defecto para dependencias faltantes
-                            for dep in missing_deps:
-                                if dep not in result_vars:
-                                    result_vars[dep] = self._get_default_value(dep)
+                            # A missing input is not an observation.  Do not
+                            # manufacture a financial/operational value just
+                            # to make an equation executable; the caller can
+                            # inspect the missing-variable report and supply
+                            # an explicit input or model equation.
+                            continue
                         
                         # Calcular nueva valor
                         new_value = self.equations[var](result_vars)
@@ -93,9 +97,10 @@ class EquationSolver:
                         
                     except Exception as e:
                         logger.error(f"Error calculating {var}: {str(e)}")
-                        # Usar valor por defecto en caso de error
-                        if var not in result_vars:
-                            result_vars[var] = self._get_default_value(var)
+                        # A failed equation remains unavailable.  Returning a
+                        # placeholder here would turn a model error into a
+                        # seemingly valid business result.
+                        continue
             
             # Verificar convergencia
             if not changes:
@@ -112,7 +117,6 @@ class EquationSolver:
             'NSC': 0.90,
             'EOG': 0.68,  # PE * FU * 0.95
             'NR': 0.15,
-            'MB': 0.30,
             'ES': 0.85,
             'EE': 0.80,
             'QC': 0.95,
@@ -236,8 +240,8 @@ class SimulationMathEngine:
         
         # Otras ecuaciones importantes
         self.equation_solver.register_equation(
-            'RI', {'GT', 'TG'}, 
-            lambda v: v.get('GT', 0) / max(v.get('TG', 1), 1)
+            'RI', {'GT', 'INV'},
+            lambda v: v.get('GT', 0) / v['INV'] if v.get('INV', 0) > 0 else None
         )
         
         # Ecuación de recursos humanos corregida
@@ -264,12 +268,14 @@ class SimulationMathEngine:
                 # Crear función de cálculo
                 calc_function = self._create_calculation_function(expression)
                 
-                # Registrar en el solver
-                self.equation_solver.register_equation(
-                    variable_name, 
-                    set(dependencies), 
-                    calc_function
-                )
+                # Never let legacy fixture equations overwrite canonical
+                # financial contracts registered above (notably ROI).
+                if variable_name not in self.equation_solver.equations:
+                    self.equation_solver.register_equation(
+                        variable_name,
+                        set(dependencies),
+                        calc_function
+                    )
                 
             logger.info("Ecuaciones adicionales registradas exitosamente")
             
@@ -306,21 +312,9 @@ class SimulationMathEngine:
                         pattern = r'\b' + re.escape(var) + r'\b'
                         expr = re.sub(pattern, str(val), expr)
                 
-                # Contexto seguro de evaluación
-                safe_dict = {
-                    '__builtins__': {},
-                    'max': max, 'min': min, 'abs': abs, 'round': round,
-                    'sqrt': lambda x: x ** 0.5,
-                    'ceil': lambda x: int(x) + (1 if x > int(x) else 0),
-                    'floor': lambda x: int(x),
-                    'mean': lambda x: sum(x) / len(x) if isinstance(x, list) else x,
-                    'std': lambda x: np.std(x) if isinstance(x, list) else 0,
-                }
-                
-                result = eval(expr, safe_dict)
-                return float(result)
-                
-            except Exception as e:
+                return evaluate_expression(expr, values={name: float(value) for name, value in variables.items()})
+
+            except (ExpressionError, TypeError, ValueError) as e:
                 logger.debug(f"Error evaluando expresión {rhs}: {e}")
                 return 0.0
         
@@ -682,46 +676,62 @@ class SimulationMathEngine:
         
         return validated_vars
     
-    def calculate_basic_variables(self, demand: float, day: int) -> Dict[str, Any]:
-        """Método de respaldo para cálculo básico de variables MEJORADO"""
-        
-        basic_vars = {
-            'DPH': demand,
-            'TPV': demand * 0.95,  # 95% de satisfacción de demanda
-            'IT': demand * 0.95 * 15.50,  # Ingresos estimados
-            'CTAI': demand * 0.95 * 8.20,
-            'GO': 1800 + (48000 / 30),  # Gastos operativos diarios
-            'TG': (1800 + (48000 / 30)) * 1.3,  # Gastos totales estimados
-            'NSC': 0.95,  # Nivel de servicio base
-            'PE': 0.85,   # Productividad base
-            'FU': 0.80,   # Utilización base
-            'QC': 0.95,   # Calidad por defecto
-            'EOG': 0.85 * 0.80 * 0.95,  # OEE básico: PE * FU * QC
-            'day': day
+    def calculate_basic_variables(
+        self, demand: float, day: int, *, financial_inputs: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Return a transparent incomplete result when required inputs are absent.
+
+        The former fallback invented price, cost, payroll, service-level and
+        efficiency values.  That made an exception look like a valid business
+        result.  Legacy callers may still provide an explicit precomputed
+        financial block, but the no-argument fallback is intentionally
+        non-financial and must remain visible to the caller.
+        """
+        if not isinstance(financial_inputs, dict):
+            return {
+                "DPH": float(demand),
+                "day": day,
+                "_financial_status": "incomplete",
+                "_metadata": {
+                    "calculation_method": "incomplete_missing_inputs",
+                    "financial_status": "incomplete",
+                    "missing_inputs": ["units_sold", "unit_price", "variable_cost", "fixed_cost"],
+                },
+            }
+
+        required = ("units_sold", "unit_price", "variable_cost", "fixed_cost")
+        if any(key not in financial_inputs for key in required):
+            return {
+                "DPH": float(demand),
+                "day": day,
+                "_financial_status": "incomplete",
+                "_metadata": {
+                    "calculation_method": "incomplete_missing_inputs",
+                    "financial_status": "incomplete",
+                    "missing_inputs": [key for key in required if key not in financial_inputs],
+                },
+            }
+
+        units_sold = float(financial_inputs["units_sold"])
+        unit_price = float(financial_inputs["unit_price"])
+        variable_cost = float(financial_inputs["variable_cost"])
+        fixed_cost = float(financial_inputs["fixed_cost"])
+        revenue = units_sold * unit_price
+        total_cost = units_sold * variable_cost + fixed_cost
+        return {
+            "DPH": float(demand),
+            "TPV": units_sold,
+            "IT": revenue,
+            "CTAI": units_sold * variable_cost,
+            "GO": fixed_cost,
+            "TG": total_cost,
+            "GT": revenue - total_cost,
+            "MB": (revenue - units_sold * variable_cost) / revenue if revenue else None,
+            "NR": (revenue - total_cost) / revenue if revenue else None,
+            "day": day,
+            "_financial_status": "explicit_inputs",
+            "_metadata": {"calculation_method": "explicit_financial_inputs", "financial_status": "complete"},
         }
-        
-        gmm_daily = 3500 / 30
-        transport_basic = 200  # Transporte básico estimado
-        storage_basic = 150   # Almacenamiento básico
-        mermas_basic = basic_vars['TPV'] * 0.01 * 15.50 * 0.7  # 1% mermas
-        basic_vars['GG'] = gmm_daily + transport_basic + storage_basic + mermas_basic + basic_vars['CTAI']
-        
-        # Calcular gastos totales y ganancia
-        basic_vars['TG'] = basic_vars['GO'] + basic_vars['GG']
-        basic_vars['GT'] = basic_vars['IT'] - basic_vars['TG']
-        
-        # Calcular márgenes básicos
-        if basic_vars['IT'] > 0:
-            basic_vars['NR'] = basic_vars['GT'] / basic_vars['IT']
-            basic_vars['MB'] = (basic_vars['IT'] * 0.7) / basic_vars['IT']  # 70% margen bruto estimado
-        else:
-            basic_vars['NR'] = 0
-            basic_vars['MB'] = 0
-        
-        # CORRECCIÓN: Calcular IDG usando EOG
-        basic_vars['IDG'] = basic_vars['EOG'] * 0.4 + basic_vars['NSC'] * 0.3 + min(basic_vars['NR'] + 0.5, 1.0) * 0.3
-        
-        return basic_vars
     
     def simulate_complete_day(self, 
                             current_demand: float,
@@ -747,9 +757,21 @@ class SimulationMathEngine:
             financial_valid = self._final_financial_check(day_results)
             if not financial_valid:
                 logger.warning("🚨 Simulación falló validación financiera final")
-                # Usar cálculo básico como respaldo
+                # Preserve the failure as an explicit incomplete result; do
+                # not replace it with synthetic financial assumptions.
                 day_results = self.calculate_basic_variables(current_demand, 1)
                 day_results['_fallback_used'] = True
+
+            if day_results.get('_financial_status') == 'incomplete':
+                day_results['_state'] = {
+                    'IPF': day_results.get('IPF'),
+                    'II': day_results.get('II'),
+                    '_day': day_results.get('_day', 1) + 1,
+                    '_last_demand': current_demand,
+                    '_last_sales': day_results.get('TPV'),
+                    '_last_production': day_results.get('QPL'),
+                }
+                return day_results
             
             # 3. CORRECCIÓN: Verificar que EOG e IDG se calcularon
             if day_results.get('EOG', 0) == 0:
@@ -804,7 +826,7 @@ class SimulationMathEngine:
         except Exception as e:
             logger.error(f"Error in complete day simulation: {str(e)}")
             
-            # Método de respaldo con cálculos básicos MEJORADO
+            # Preserve the exception as a transparent incomplete result.
             logger.warning("Falling back to basic calculation method")
             fallback_results = self.calculate_basic_variables(current_demand, 1)
             fallback_results['_metadata'] = {
@@ -896,8 +918,8 @@ class SimulationMathEngine:
                 additional['COST_EFFICIENCY'] = 0
         
         # Índice de productividad de capital
-        capital_invested = 50000  # Valor por defecto
-        if variables.get('GT', 0) > 0:
+        capital_invested = variables.get('INV')
+        if capital_invested is not None and capital_invested > 0 and variables.get('GT', 0) > 0:
             additional['CAPITAL_PRODUCTIVITY'] = variables['GT'] / capital_invested
         
         return additional

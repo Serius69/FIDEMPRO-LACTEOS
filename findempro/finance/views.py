@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse, HttpResponseForbidden, HttpResponseServerError
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponseServerError, Http404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
@@ -30,8 +30,11 @@ def finance_list_view(request):
         date_filter = request.GET.get('date_filter', '')
         status_filter = request.GET.get('status_filter', '')
         
-        # Filtrar decisiones financieras
-        financial_decisions = FinancialDecision.objects.select_related('fk_business').order_by('-id')
+        # Filtrar decisiones financieras — restringido al dueño real
+        # (fk_business -> fk_user). Cierra IDOR de la app finance.
+        financial_decisions = FinancialDecision.objects.select_related('fk_business').filter(
+            fk_business__fk_user=request.user
+        ).order_by('-id')
         
         if search_query:
             financial_decisions = financial_decisions.filter(
@@ -49,8 +52,8 @@ def finance_list_view(request):
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
         
-        # Obtener businesses para el formulario
-        businesses = Business.objects.filter(is_active=True).order_by('name')
+        # Obtener businesses del usuario para el formulario (no exponer los de otros)
+        businesses = Business.objects.filter(is_active=True, fk_user=request.user).order_by('name')
         
         context = {
             'financial_decisions': page_obj,
@@ -119,8 +122,11 @@ def update_financial_decision_view(request, pk):
     Vista para actualizar una decisión financiera existente
     """
     try:
-        financial_decision = get_object_or_404(FinancialDecision, pk=pk)
-        
+        # Restringido al dueño real (cierra IDOR)
+        financial_decision = get_object_or_404(
+            FinancialDecision, pk=pk, fk_business__fk_user=request.user
+        )
+
         if request.method == 'POST':
             form = FinancialDecisionForm(
                 request.POST, 
@@ -183,8 +189,11 @@ def delete_financial_decision_view(request, pk):
     Vista para eliminar (desactivar) una decisión financiera
     """
     try:
-        financial_decision = get_object_or_404(FinancialDecision, pk=pk)
-        
+        # Restringido al dueño real (cierra IDOR)
+        financial_decision = get_object_or_404(
+            FinancialDecision, pk=pk, fk_business__fk_user=request.user
+        )
+
         if request.method in ['POST', 'DELETE']:
             # Soft delete - solo desactivar
             financial_decision.is_active = False
@@ -220,8 +229,11 @@ def get_financial_decision_details_view(request, pk):
     """
     try:
         if request.method == 'GET':
-            financial_decision = get_object_or_404(FinancialDecision, pk=pk)
-            
+            # Restringido al dueño real (cierra IDOR)
+            financial_decision = get_object_or_404(
+                FinancialDecision, pk=pk, fk_business__fk_user=request.user
+            )
+
             decision_details = {
                 'id': financial_decision.id,
                 'name': financial_decision.name,
@@ -238,13 +250,14 @@ def get_financial_decision_details_view(request, pk):
                 'success': True,
                 'data': decision_details
             })
-            
-    except FinancialDecision.DoesNotExist:
+
+    except Http404:
+        # get_object_or_404 con filtro de dueño -> 404 si no le pertenece.
         return JsonResponse({
             'success': False,
             'message': 'Decisión financiera no encontrada'
         }, status=404)
-    
+
     except Exception as e:
         return JsonResponse({
             'success': False,
@@ -259,8 +272,11 @@ def get_finance_recommendation_details_view(request, pk):
     """
     try:
         if request.method == 'GET':
-            recommendation = get_object_or_404(FinanceRecommendation, pk=pk)
-            
+            # Restringido al dueño real (cierra IDOR)
+            recommendation = get_object_or_404(
+                FinanceRecommendation, pk=pk, fk_business__fk_user=request.user
+            )
+
             recommendation_details = {
                 'id': recommendation.id,
                 'name': recommendation.name,
@@ -276,13 +292,14 @@ def get_finance_recommendation_details_view(request, pk):
                 'success': True,
                 'data': recommendation_details
             })
-            
-    except FinanceRecommendation.DoesNotExist:
+
+    except Http404:
+        # get_object_or_404 con filtro de dueño -> 404 si no le pertenece.
         return JsonResponse({
             'success': False,
             'message': 'Recomendación financiera no encontrada'
         }, status=404)
-    
+
     except Exception as e:
         return JsonResponse({
             'success': False,
@@ -299,19 +316,20 @@ def bulk_delete_financial_decisions_view(request):
         try:
             decision_ids = request.POST.getlist('decision_ids[]')
             if decision_ids:
-                FinancialDecision.objects.filter(
-                    id__in=decision_ids
+                # Restringido al dueño real (cierra IDOR de borrado masivo)
+                deleted_count = FinancialDecision.objects.filter(
+                    id__in=decision_ids, fk_business__fk_user=request.user
                 ).update(is_active=False)
-                
+
                 messages.success(
-                    request, 
-                    f'{len(decision_ids)} decisiones financieras eliminadas exitosamente!'
+                    request,
+                    f'{deleted_count} decisiones financieras eliminadas exitosamente!'
                 )
                 
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({
                         'success': True,
-                        'message': f'{len(decision_ids)} decisiones eliminadas exitosamente!'
+                        'message': f'{deleted_count} decisiones eliminadas exitosamente!'
                     })
             else:
                 messages.warning(request, 'No se seleccionaron decisiones para eliminar.')

@@ -28,6 +28,8 @@ import numpy as np
 from scipy import stats
 from scipy.stats import norm, lognorm, gamma, uniform, expon
 
+from modeling.statistics import DistributionFitError, fit_distributions
+
 from simulate.core.discrete_engine import OperationScenario
 from simulate.core.gbm import (
     calibrar_gbm_desde_niveles,
@@ -60,6 +62,7 @@ class MonteCarloConfig:
     distribution: str = 'normal'
     demand_mean: float = 1_000.0
     demand_std: float = 150.0
+    demand_std_source: str = 'CONFIGURED'
     demand_min: Optional[float] = None  # para distribución uniforme
     demand_max: Optional[float] = None  # para distribución uniforme
 
@@ -148,7 +151,8 @@ class MonteCarloConfig:
             random_seed=getattr(simulation, 'random_seed', None),
             distribution=distribution,
             demand_mean=demand_stats['mean'],
-            demand_std=max(demand_stats['std'], 1e-6),
+            demand_std=demand_stats['std'],
+            demand_std_source='HISTORICAL_BUSINESS_DATA',
             gbm_drift=gbm_drift,
             gbm_volatility=gbm_vol,
             gbm_s0=gbm_s0,
@@ -168,21 +172,28 @@ class MonteCarloConfig:
         DistributionFactory.fit_best() para seleccionar el mejor ajuste KS
         sobre los datos históricos de demanda.
         """
+        _MAP = {1: 'normal', 2: 'exponential', 3: 'lognormal',
+                4: 'gamma',  5: 'uniform',      6: 'poisson',
+                7: 'gbm'}
+        configured_distribution = _MAP.get(dist_type, 'normal')
         if (
             company_profile is not None
             and getattr(company_profile, 'distribution_preference', None) == 'auto'
         ):
-            best_dist, ks = DistributionFactory.fit_best(demand_history)
-            logger.info(
-                "distribution_preference='auto': mejor ajuste = %s (KS=%.4f)",
-                best_dist, ks,
-            )
-            return best_dist
-
-        _MAP = {1: 'normal', 2: 'exponential', 3: 'lognormal',
-                4: 'gamma',  5: 'uniform',      6: 'poisson',
-                7: 'gbm'}
-        return _MAP.get(dist_type, 'normal')
+            try:
+                best_dist, distance = DistributionFactory.fit_best(demand_history)
+                logger.info(
+                    "distribution_preference='auto': candidato AIC = %s (distancia=%.4f)",
+                    best_dist, distance,
+                )
+                return best_dist
+            except DistributionFitError as exc:
+                logger.warning(
+                    "Ajuste automático no disponible (%s); se conserva la distribución configurada %s.",
+                    exc,
+                    configured_distribution,
+                )
+        return configured_distribution
 
     def resolve_gbm_params(self) -> Tuple[float, float, float]:
         """
@@ -238,8 +249,8 @@ class AggregatedResult:
     # Métricas de riesgo
     probability_of_loss: float
     probability_breakeven: float
-    value_at_risk: float         # VaR al nivel de confianza configurado
-    expected_shortfall: float    # CVaR / ES
+    value_at_risk: float         # Cuantil inferior firmado de utilidad
+    expected_shortfall: float    # Media firmada de la cola inferior
 
     # Intervalos de confianza
     demand_ci_lower: float
@@ -339,30 +350,17 @@ class DistributionFactory:
             (nombre_distribución, estadístico_KS)
         """
         data = np.asarray(data, dtype=float)
-        data_pos = data[data > 0]
-        if len(data_pos) < 10:
-            return 'normal', 1.0
-
-        candidates = [
-            ('normal',      norm),
-            ('lognormal',   lognorm),
-            ('gamma',       gamma),
-            ('exponential', expon),
-        ]
-        best_name, best_ks = 'normal', float('inf')
-
-        for name, dist_cls in candidates:
-            try:
-                params = dist_cls.fit(data_pos)
-                ks, _ = stats.kstest(data_pos, dist_cls.cdf, args=params)
-                if ks < best_ks:
-                    best_ks, best_name = ks, name
-            except Exception:
-                continue
+        fitted = fit_distributions(data.tolist(), data_semantics='continuous')
+        best_name = fitted['ranking']['selected_distribution']
+        diagnostic = next(
+            item for item in fitted['candidates']
+            if item['distribution'] == best_name
+        )
+        best_ks = diagnostic['statistic']
 
         logger.info(
-            "Mejor distribución ajustada: %s (KS=%.4f, n=%d)",
-            best_name, best_ks, len(data_pos),
+            "Mejor distribución ajustada por AIC: %s (distancia=%.4f, n=%d)",
+            best_name, best_ks, len(data),
         )
         return best_name, best_ks
 
@@ -394,7 +392,14 @@ class ScenarioGenerator:
         factors = self.config.seasonality_factors
         if not factors:
             return 1.0
-        return factors[period_idx % len(factors)]
+        # ``period_idx`` es un ÍNDICE DE DÍA (0-based) del horizonte de simulación,
+        # pero ``seasonality_factors`` son 12 factores MENSUALES. Hay que mapear
+        # día → mes con la MISMA convención de 30 días/mes que usa
+        # ``Simulation.duration_in_days`` (meses × 30) y envolver por año.
+        # Bug previo: ``period_idx % len(factors)`` indexaba por día módulo 12,
+        # comprimiendo el año entero a un ciclo de 12 días.
+        month_idx = (period_idx // 30) % len(factors)
+        return factors[month_idx]
 
     def _sample_demand(self, n: int) -> np.ndarray:
         """
@@ -450,6 +455,8 @@ class ScenarioGenerator:
                 seasonality_factor=seasonal,
                 price_variation=float(pv),
                 cost_variation=float(cv),
+                demand_std=self.config.demand_std,
+                demand_std_source=self.config.demand_std_source,
             )
             for d, pv, cv in zip(demands, price_vars, cost_vars)
         ]
@@ -498,6 +505,8 @@ class ScenarioGenerator:
                     seasonality_factor=seasonality[t],
                     price_variation=float(pv),
                     cost_variation=float(cv),
+                    demand_std=self.config.demand_std,
+                    demand_std_source=self.config.demand_std_source,
                 )
                 for d, pv, cv in zip(all_demands[t], all_price_vars[t], all_cost_vars[t])
             ]
@@ -623,6 +632,7 @@ def _make_aggregate_cache_key(config: MonteCarloConfig) -> str:
         'distribution': config.distribution,
         'demand_mean': round(config.demand_mean, 6),
         'demand_std': round(config.demand_std, 6),
+        'demand_std_source': config.demand_std_source,
         'demand_min': config.demand_min,
         'demand_max': config.demand_max,
         'seasonality_factors': list(config.seasonality_factors),

@@ -1,5 +1,6 @@
 import re
 import logging
+import os
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Variable, Equation, EquationResult
 from product.models import Product
@@ -10,10 +11,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.conf import settings
-import openai
 from django.http import JsonResponse
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ObjectDoesNotExist
@@ -21,10 +21,44 @@ from sympy import symbols, Eq, solve
 from django.db.models import Q, Count
 from django.db import models
 
-# Set OpenAI API key
-openai.api_key = settings.OPENAI_API_KEY
-
 logger = logging.getLogger(__name__)
+
+
+def _generate_with_claude(prompt, max_tokens):
+    """Genera texto con Claude sin convertir la ausencia/falla del LLM en un 500."""
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return None
+
+    try:
+        import anthropic
+
+        response = anthropic.Anthropic(api_key=api_key).messages.create(
+            model=getattr(settings, "ANTHROPIC_MODEL", "claude-sonnet-5"),
+            max_tokens=max_tokens,
+            cache_control={"type": "ephemeral"},
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text_blocks = [
+            block.text for block in response.content
+            if getattr(block, "type", None) == "text"
+        ]
+        return "".join(text_blocks).strip() or None
+    except Exception:
+        logger.warning("Claude no disponible; se usará el fallback local.", exc_info=True)
+        return None
+
+
+def _fallback_initials(variable_name):
+    words = variable_name.split()
+    initials = ''.join(word[0].upper() for word in words[:4] if word)
+    return initials.ljust(4, 'X')[:4]
+
+
+def _normalise_initials(generated, variable_name):
+    initials = re.sub(r"[^A-Za-z0-9]", "", generated or "").upper()
+    return initials[:4] if len(initials) >= 4 else _fallback_initials(variable_name)
+
 
 class AppsView(LoginRequiredMixin, TemplateView):
     pass
@@ -32,6 +66,29 @@ class AppsView(LoginRequiredMixin, TemplateView):
 def _is_ajax(request):
     """Reemplazo de HttpRequest.is_ajax(), eliminado en Django 3.1+."""
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+
+def _variables_for_user(request):
+    """Queryset de Variable restringido al DUEÑO real (cierra IDOR de esta app).
+
+    La propiedad se establece por la cadena fk_product -> fk_business -> fk_user,
+    igual que ``_reports_for_user`` en report/views.py y el filtro directo usado
+    en finance/views.py. No filtra ``is_active`` para no cambiar el comportamiento
+    previo de los handlers (que ya operaban sobre variables inactivas).
+    """
+    return Variable.objects.filter(fk_product__fk_business__fk_user=request.user)
+
+
+def _equations_for_user(request):
+    """Queryset de Equation restringido al DUEÑO real (cierra IDOR de esta app).
+
+    ``Equation`` no tiene fk_product/fk_business directo; ``fk_variable1`` es la
+    única FK obligatoria (variable2-5 son opcionales), así que la cadena de
+    propiedad se resuelve a través de ella.
+    """
+    return Equation.objects.filter(
+        fk_variable1__fk_product__fk_business__fk_user=request.user
+    )
 
 VARIABLES_PER_PAGE2 = 24
 
@@ -200,7 +257,8 @@ VARIABLES_PER_PAGE = 4
 @login_required
 def variable_overview(request, pk):
     try:
-        variable = get_object_or_404(Variable, pk=pk)
+        # Restringido al dueño real (cierra IDOR).
+        variable = get_object_or_404(_variables_for_user(request), pk=pk)
         product_id = variable.fk_product.id
         variable_id = variable.id
 
@@ -238,7 +296,10 @@ def variable_overview(request, pk):
         }
         
         return render(request, "variable/variable-overview.html", context)
-        
+
+    except Http404:
+        # get_object_or_404 con filtro de dueño -> 404 real si no existe o no le pertenece.
+        raise
     except Exception as e:
         logger.error(f"Error en variable_overview: {str(e)}")
         messages.error(request, f"Ocurrió un error al cargar la variable: {str(e)}")
@@ -248,11 +309,10 @@ def variable_overview(request, pk):
 def create_or_update_variable_view(request, pk=None):
     variable = None
     if pk:
-        try:
-            variable = get_object_or_404(Variable, pk=pk)
-        except:
-            pass
-    
+        # Restringido al dueño real (cierra IDOR): 404 si no existe o no le pertenece,
+        # en vez de tragarse el error y caer silenciosamente al flujo de creación.
+        variable = get_object_or_404(_variables_for_user(request), pk=pk)
+
     if request.method == 'POST':
         form = VariableForm(request.POST, request.FILES, instance=variable)
         try:
@@ -261,29 +321,15 @@ def create_or_update_variable_view(request, pk=None):
                 if pk is None:
                     variable_name = form.cleaned_data.get('name', '')
                     
-                    # Generar iniciales con fallback
-                    try:
-                        if hasattr(settings, 'OPENAI_API_KEY') and settings.OPENAI_API_KEY:
-                            initial_prompt = f"Generate the initials of the variable, but only use 4 characters. Do not include additional advertisements or instructions. Provide the initials for the next variable: {variable_name}"
-
-                            response = openai.completions.create(
-                                model="gpt-3.5-turbo-instruct",
-                                prompt=initial_prompt,
-                                max_tokens=5,
-                                stop=None
-                            )
-                            initials = response.choices[0].text.strip()
-                        else:
-                            raise Exception("OpenAI API key not configured")
-                            
-                    except Exception as openai_error:
-                        logger.error(f"OpenAI error: {openai_error}", exc_info=True)
-                        # Fallback: generar iniciales del nombre
-                        words = variable_name.split()
-                        initials = ''.join([word[0].upper() for word in words[:4] if word])
-                        if len(initials) < 4:
-                            initials = initials.ljust(4, 'X')
-                        initials = initials[:4]
+                    initial_prompt = (
+                        "Generate initials for the following variable using exactly "
+                        "four characters. Return only the initials: "
+                        f"{variable_name}"
+                    )
+                    initials = _normalise_initials(
+                        _generate_with_claude(initial_prompt, max_tokens=8),
+                        variable_name,
+                    )
 
                     form.instance.initials = initials
 
@@ -320,7 +366,8 @@ def create_or_update_variable_view(request, pk=None):
 def delete_variable_view(request, pk):
     try:
         if request.method == 'POST':
-            variable = get_object_or_404(Variable, pk=pk)
+            # Restringido al dueño real (cierra IDOR).
+            variable = get_object_or_404(_variables_for_user(request), pk=pk)
             variable.is_active = False
             variable.save()
             messages.success(request, "Variable eliminada exitosamente")
@@ -328,7 +375,9 @@ def delete_variable_view(request, pk):
         else:
             messages.error(request, "Método de petición inválido")
             return HttpResponse("Método de petición inválido", status=405)
-            
+
+    except Http404:
+        raise
     except Exception as e:
         logger.error(f"Error al eliminar variable: {str(e)}")
         messages.error(request, f"Ocurrió un error al eliminar la variable: {str(e)}")
@@ -338,7 +387,8 @@ def delete_variable_view(request, pk):
 def get_variable_details_view(request, pk):
     try:
         if request.method == 'GET':
-            variable = get_object_or_404(Variable, id=pk)
+            # Restringido al dueño real (cierra IDOR).
+            variable = get_object_or_404(_variables_for_user(request), id=pk)
             variable_details = {
                 "name": variable.name,
                 "type": variable.type,
@@ -349,7 +399,9 @@ def get_variable_details_view(request, pk):
                 "description": variable.description,
             }
             return JsonResponse(variable_details)
-    except ObjectDoesNotExist:
+    except (Http404, ObjectDoesNotExist):
+        # get_object_or_404 lanza Http404 (no ObjectDoesNotExist) al no encontrar
+        # coincidencia; se capturan ambas por robustez.
         return JsonResponse({"error": "La variable no existe"}, status=404)
     except Exception as e:
         logger.error(f"Error al obtener detalles: {str(e)}")
@@ -359,11 +411,10 @@ def get_variable_details_view(request, pk):
 def create_or_update_equation_view(request, pk=None):
     equation = None
     if pk:
-        try:
-            equation = get_object_or_404(Equation, pk=pk)
-        except:
-            pass
-    
+        # Restringido al dueño real (cierra IDOR): 404 si no existe o no le
+        # pertenece, en vez de tragarse el error y caer al flujo de creación.
+        equation = get_object_or_404(_equations_for_user(request), pk=pk)
+
     if request.method in ['POST', 'PUT']:
         form = EquationForm(request.POST, request.FILES, instance=equation)
         try:
@@ -424,17 +475,20 @@ def create_or_update_equation_view(request, pk=None):
 @login_required
 def delete_equation_view(request, pk):
     try:
-        equation = get_object_or_404(Equation, pk=pk)
+        # Restringido al dueño real (cierra IDOR).
+        equation = get_object_or_404(_equations_for_user(request), pk=pk)
         variable_pk = equation.fk_variable1.pk if equation.fk_variable1 else None
         equation.is_active = False
         equation.save()
         messages.success(request, "Ecuación eliminada exitosamente")
-        
+
         if variable_pk:
             return redirect("variable:variable.overview", pk=variable_pk)
         else:
             return redirect("variable:variable.list")
-            
+
+    except Http404:
+        raise
     except Exception as e:
         logger.error(f"Error al eliminar ecuación: {str(e)}")
         messages.error(request, f"Ocurrió un error al eliminar la ecuación: {str(e)}")
@@ -444,7 +498,8 @@ def delete_equation_view(request, pk):
 def get_equation_details(request, pk):
     try:
         if request.method == 'GET':
-            equation = get_object_or_404(Equation, id=pk)
+            # Restringido al dueño real (cierra IDOR).
+            equation = get_object_or_404(_equations_for_user(request), id=pk)
             equation_details = {
                 "name": equation.name,
                 "expression": equation.expression,
@@ -457,7 +512,9 @@ def get_equation_details(request, pk):
                 "description": equation.description,
             }
             return JsonResponse(equation_details)
-    except ObjectDoesNotExist:
+    except (Http404, ObjectDoesNotExist):
+        # get_object_or_404 lanza Http404 (no ObjectDoesNotExist) al no encontrar
+        # coincidencia; se capturan ambas por robustez.
         return JsonResponse({"error": "La ecuación no existe"}, status=404)
     except Exception as e:
         logger.error(f"Error al obtener detalles de ecuación: {str(e)}")
@@ -520,18 +577,8 @@ def generate_variable_questions(request, variable):
         django_variable = f"{variable.name} = models.{variable.get_type_display()}Field()"
         prompt = f"Create a question to gather and add precise data to a financial test form for the company's Variable:\n\n{django_variable}\n\nQuestion:"
         
-        if hasattr(settings, 'OPENAI_API_KEY') and settings.OPENAI_API_KEY:
-            response = openai.completions.create(
-                model="gpt-3.5-turbo-instruct",
-                prompt=prompt,
-                max_tokens=100,
-                n=1,
-                stop=None,
-            )
-            question = [choice.text.strip() for choice in response.choices]
-        else:
-            # Fallback question
-            question = [f"¿Cuál es el valor para {variable.name}?"]
+        generated = _generate_with_claude(prompt, max_tokens=100)
+        question = [generated or f"¿Cuál es el valor para {variable.name}?"]
             
     except Exception as e:
         logger.error(f"Error generando pregunta: {e}", exc_info=True)

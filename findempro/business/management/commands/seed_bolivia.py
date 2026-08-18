@@ -1,19 +1,18 @@
 """
 manage.py seed_bolivia
 ======================
-Siembra negocios demo para los 19 tipos de empresa de Bolivia, cada uno con
-productos, variables, ecuaciones, cuestionario y respuestas (incluido histórico
-de demanda) listos para simular.
+Siembra un negocio demo boliviano con productos, variables, ecuaciones,
+cuestionario, respuestas y una simulación Monte Carlo persistida.
 
 Reutiliza el motor de simulación validado (181 variables / 91 ecuaciones) y
 parametriza los valores con datos reales del mercado boliviano
 (``business.data.bolivia_industries``, refrescables por ``scrape_bolivia_data``).
 
 Ejemplos:
-    python manage.py seed_bolivia                     # todos los tipos, usuario demo
-    python manage.py seed_bolivia --types 4,5,16      # sólo panadería, carnicería, restaurante
+    python manage.py seed_bolivia                     # demo tipo 7 + simulación
+    python manage.py seed_bolivia --types 4,5,16      # varios rubros
     python manage.py seed_bolivia --user sergio        # asignar a un usuario existente
-    python manage.py seed_bolivia --run-sim            # además ejecuta 1 simulación por negocio
+    python manage.py seed_bolivia --no-run-sim         # sólo datos, sin ejecutar Monte Carlo
     python manage.py seed_bolivia --force              # recrea aunque ya existan
     python manage.py seed_bolivia --types 4 --regions "El Alto,Santa Cruz,Oruro"
                                                        # variantes regionales de panadería
@@ -34,15 +33,18 @@ DEMO_USERNAME = "demo_bolivia"
 
 
 class Command(BaseCommand):
-    help = "Siembra los 19 tipos de empresa boliviana con datos listos para simular."
+    help = "Crea un negocio demo boliviano con una simulación Monte Carlo reproducible."
 
     def add_arguments(self, parser):
-        parser.add_argument("--types", type=str, default="",
-                            help="Lista de BusinessType a sembrar, separados por coma (default: todos).")
+        parser.add_argument("--types", type=str, default="7",
+                            help="BusinessType a sembrar, separados por coma (default: 7).")
         parser.add_argument("--user", type=str, default=DEMO_USERNAME,
                             help=f"Username dueño de los negocios (default: {DEMO_USERNAME}, se crea si no existe).")
-        parser.add_argument("--run-sim", action="store_true",
-                            help="Ejecuta una simulación Monte Carlo por negocio tras sembrar.")
+        parser.add_argument("--run-sim", action="store_true", dest="run_sim",
+                            help="Ejecuta la simulación (comportamiento por defecto).")
+        parser.add_argument("--no-run-sim", action="store_false", dest="run_sim",
+                            help="Omite la creación y ejecución de la simulación.")
+        parser.set_defaults(run_sim=True)
         parser.add_argument("--mc-scenarios", type=int, default=200,
                             help="Escenarios Monte Carlo si se usa --run-sim (default: 200).")
         parser.add_argument("--force", action="store_true",
@@ -89,7 +91,7 @@ class Command(BaseCommand):
                     failed.append(bt)
                     continue
                 if before and not opts["force"]:
-                    skipped.append((bt, spec.business_name))
+                    skipped.append((bt, spec.business_name, business.id))
                     self.stdout.write(f"  · tipo {bt:2} {spec.business_name:32} ya existía (omitido)")
                 else:
                     seeded.append((bt, spec.business_name, business.id))
@@ -103,7 +105,9 @@ class Command(BaseCommand):
                 self.stderr.write(self.style.ERROR(f"  ✗ tipo {bt}: {exc}"))
 
         if opts["run_sim"]:
-            self._run_simulations(user, [s[2] for s in seeded], opts["mc_scenarios"])
+            self._run_simulations(
+                user, [item[2] for item in seeded + skipped], opts["mc_scenarios"]
+            )
 
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS(
@@ -179,6 +183,7 @@ class Command(BaseCommand):
         from simulate.services.simulation_service import SimulationService
 
         svc = SimulationService()
+        failed = []
         self.stdout.write(self.style.MIGRATE_HEADING(
             f"Ejecutando 1 simulación por negocio (n={mc_scenarios})…"))
 
@@ -190,6 +195,7 @@ class Command(BaseCommand):
                 ).first()
                 fdp = ProbabilisticDensityFunction.objects.filter(fk_business=business).first()
                 if not (qr and fdp):
+                    failed.append(bid)
                     self.stderr.write(self.style.WARNING(f"  tipo {business.type}: sin qresult/fdp, se omite"))
                     continue
 
@@ -205,12 +211,25 @@ class Command(BaseCommand):
                     demand_history = []
 
                 with transaction.atomic():
-                    sim = Simulation.objects.create(
-                        quantity_time=30, unit_time="days", fk_fdp=fdp,
-                        demand_history=demand_history, fk_questionary_result=qr,
-                        confidence_level=0.95, random_seed=42, is_active=True,
+                    sim, _ = Simulation.objects.get_or_create(
+                        fk_fdp=fdp,
+                        fk_questionary_result=qr,
+                        random_seed=42,
+                        defaults={
+                            "quantity_time": 30,
+                            "unit_time": "days",
+                            "demand_history": demand_history,
+                            "confidence_level": 0.95,
+                            "is_active": True,
+                        },
                     )
-                res = svc.run_full_pipeline(sim, n_monte_carlo=mc_scenarios)
+                if sim.is_completed:
+                    self.stdout.write(
+                        f"  · tipo {business.type:2} sim={sim.id} ya estaba lista"
+                    )
+                    continue
+
+                res = svc.run_and_save(sim, n_monte_carlo=mc_scenarios)
                 periods = res.get("period_results") or []
                 first = periods[0] if periods else {}
                 self.stdout.write(self.style.SUCCESS(
@@ -220,4 +239,9 @@ class Command(BaseCommand):
                 ))
             except Exception as exc:  # noqa: BLE001
                 logger.exception("Fallo simulación negocio %s", bid)
+                failed.append(bid)
                 self.stderr.write(self.style.ERROR(f"  ✗ negocio {bid}: {exc}"))
+        if failed:
+            raise CommandError(
+                f"No se pudieron dejar listas las simulaciones de los negocios: {failed}"
+            )

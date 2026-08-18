@@ -392,45 +392,21 @@
                                         Parámetros Adicionales
                                     </h6>
                                     <div class="row">
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <div class="field-group">
-                                                <label class="field-label">
-                                                    Tasa de Descuento
-                                                    <i class="ri-information-line help-tooltip" 
-                                                       title="Tasa utilizada para calcular el VAN"></i>
+                                                <label class="field-label" for="{{ form.tasa_descuento_anual.id_for_label }}">
+                                                    {{ form.tasa_descuento_anual.label }}
+                                                    <i class="ri-information-line help-tooltip"
+                                                       title="{{ form.tasa_descuento_anual.help_text }}"></i>
                                                 </label>
                                                 <div class="input-group">
-                                                    <input type="number" class="form-control" id="tasaDescuento" 
-                                                           value="12" min="0" max="100" step="0.1">
+                                                    {{ form.tasa_descuento_anual }}
                                                     <span class="input-group-text">% anual</span>
                                                 </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="field-group">
-                                                <label class="field-label">
-                                                    Inflación Esperada
-                                                    <i class="ri-information-line help-tooltip" 
-                                                       title="Tasa de inflación anual esperada"></i>
-                                                </label>
-                                                <div class="input-group">
-                                                    <input type="number" class="form-control" id="inflacion" 
-                                                           value="5" min="0" max="50" step="0.1">
-                                                    <span class="input-group-text">% anual</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="field-group">
-                                                <label class="field-label">
-                                                    Impuestos
-                                                    <i class="ri-information-line help-tooltip" 
-                                                       title="Tasa de impuestos sobre utilidades"></i>
-                                                </label>
-                                                <div class="input-group">
-                                                    <input type="number" class="form-control" id="impuestos" 
-                                                           value="30" min="0" max="100" step="0.1">
-                                                    <span class="input-group-text">%</span>
+                                                {% if form.tasa_descuento_anual.errors %}
+                                                    <div class="error-message">{{ form.tasa_descuento_anual.errors.0 }}</div>
+                                                {% endif %}
+                                                <div class="form-text">La inflación y los impuestos no se aplican hasta que exista un contrato financiero explícito para ellos.</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -466,7 +442,7 @@
                                     <div class="preview-metric neutral" id="marginMetric">
                                         <div class="metric-content">
                                             <small class="metric-label">Margen por Unidad:</small>
-                                            <span class="metric-value" id="preview-margin">$0.00</span>
+                                            <span class="metric-value" id="preview-margin">Bs 0.00</span>
                                         </div>
                                     </div>
                                     
@@ -479,22 +455,22 @@
                                     
                                     <div class="preview-metric neutral" id="roiMetric">
                                         <div class="metric-content">
-                                            <small class="metric-label">ROI Mensual:</small>
-                                            <span class="metric-value" id="preview-roi">0.00%</span>
+                                            <small class="metric-label">ROI del Horizonte:</small>
+                                            <span class="metric-value" id="preview-roi">N/A</span>
                                         </div>
                                     </div>
                                     
                                     <div class="preview-metric neutral" id="profitMetric">
                                         <div class="metric-content">
                                             <small class="metric-label">Utilidad Neta (Mes 1):</small>
-                                            <span class="metric-value" id="preview-profit">$0.00</span>
+                                            <span class="metric-value" id="preview-profit">Bs 0.00</span>
                                         </div>
                                     </div>
                                     
                                     <div class="preview-metric neutral" id="paybackMetric">
                                         <div class="metric-content">
                                             <small class="metric-label">Período de Recuperación:</small>
-                                            <span class="metric-value" id="preview-payback">∞ meses</span>
+                                            <span class="metric-value" id="preview-payback">N/A</span>
                                         </div>
                                     </div>
                                 </div>

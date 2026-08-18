@@ -22,6 +22,8 @@ import pandas as pd
 from scipy import stats
 from scipy.stats import norm, lognorm, gamma, expon, uniform
 
+from simulate.utils.statistical_contracts import stable_distribution_shape
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,14 +41,17 @@ class DemandAnalysis:
     min: float
     max: float
     cv: float                    # Coeficiente de variación (std/mean)
-    skewness: float
-    kurtosis: float
+    skewness: Optional[float]
+    kurtosis: Optional[float]
 
     # Distribución ajustada
     best_distribution: str
     distribution_params: Dict
     goodness_of_fit_ks: float    # KS statistic (menor = mejor ajuste)
-    goodness_of_fit_pvalue: float
+    goodness_of_fit_pvalue: Optional[float]
+    goodness_of_fit_test: str
+    distribution_fit_method: str
+    distribution_fit_method_version: str
 
     # Tendencia
     trend_slope: float           # Pendiente de la tendencia lineal
@@ -117,6 +122,10 @@ class DemandModelService:
         data = np.array(historical_data, dtype=float)
         if len(data) < 5:
             raise ValueError("Se requieren al menos 5 puntos de datos históricos.")
+        if not np.all(np.isfinite(data)):
+            raise ValueError("Los datos históricos deben ser finitos.")
+        if not 0 < confidence_level < 1:
+            raise ValueError("confidence_level debe estar entre 0 y 1 (exclusivos).")
 
         self.data = data
         self.confidence_level = confidence_level
@@ -131,6 +140,7 @@ class DemandModelService:
         mean = float(np.mean(d))
         std = float(np.std(d, ddof=1)) if self._n > 1 else 0.0
         cv = (std / mean) if mean != 0 else 0.0
+        shape = stable_distribution_shape(d)
 
         return {
             'mean': mean,
@@ -139,8 +149,9 @@ class DemandModelService:
             'min': float(np.min(d)),
             'max': float(np.max(d)),
             'cv': cv,
-            'skewness': float(stats.skew(d)),
-            'kurtosis': float(stats.kurtosis(d)),
+            'skewness': shape.skewness,
+            'kurtosis': shape.kurtosis,
+            'shape_statistics_status': shape.status,
             'q1': float(np.percentile(d, 25)),
             'q3': float(np.percentile(d, 75)),
             'iqr': float(np.percentile(d, 75) - np.percentile(d, 25)),
@@ -161,30 +172,60 @@ class DemandModelService:
 
     # ── Ajuste de distribución ─────────────────────────────────────────────────
 
-    def fit_distribution(self) -> Tuple[str, Dict, float, float]:
+    def fit_distribution(self) -> Tuple[str, Dict, float, Optional[float]]:
         """
         Ajusta las distribuciones candidatas y retorna la mejor.
 
         Returns:
-            (nombre, parámetros, ks_statistic, p_value)
+            (nombre, parámetros, distancia KS, p_value). El p-value es ``None``
+            porque los parámetros se estiman con la misma muestra.
         """
-        # Usar solo datos positivos para distribuciones con soporte (0, ∞)
-        data_pos = self.data[self.data > 0]
-        if len(data_pos) < 5:
-            data_pos = self.data
+        if float(np.ptp(self.data)) <= 0:
+            raise ValueError("No hay una distribución candidata compatible con datos sin variación.")
 
         best_name = 'normal'
         best_ks = float('inf')
-        best_pval = 0.0
+        best_pval = None
+        best_aic = float('inf')
         best_params = {}
 
         for name, dist in self.DISTRIBUTIONS.items():
             try:
-                params = dist.fit(data_pos)
-                ks_stat, p_val = stats.kstest(data_pos, dist.cdf, args=params)
-                if ks_stat < best_ks:
+                # A candidate must support the complete effective sample. Data
+                # is never dropped merely to make a positive-support fit work.
+                if name in {'lognormal', 'gamma'} and np.any(self.data <= 0):
+                    continue
+                if name == 'exponential' and np.any(self.data < 0):
+                    continue
+                fit_data = self.data
+                params = dist.fit(fit_data)
+                params_array = np.asarray(params, dtype=float)
+                if not np.all(np.isfinite(params_array)):
+                    continue
+                # A zero-scale/zero-variance fit is not a usable stochastic
+                # distribution.  Treat it as a rejected candidate instead of
+                # persisting parameters that later produce NaN/constant draws.
+                if name == 'normal' and params[1] <= 0:
+                    continue
+                if name == 'uniform' and params[1] <= 0:
+                    continue
+                if name == 'lognormal' and params[0] <= 0:
+                    continue
+                if name == 'gamma' and (params[0] <= 0 or params[2] <= 0):
+                    continue
+                if name == 'exponential' and params[1] <= 0:
+                    continue
+                # Parameters come from this same sample, so only the real KS
+                # distance is retained; the naive fitted-sample p-value is not
+                # computed or exposed.
+                ks_stat = stats.kstest(fit_data, dist.cdf, args=params).statistic
+                log_likelihood = float(np.sum(dist.logpdf(fit_data, *params)))
+                if not np.isfinite(ks_stat) or not np.isfinite(log_likelihood):
+                    continue
+                aic = 2 * len(params) - 2 * log_likelihood
+                if (aic, ks_stat, name) < (best_aic, best_ks, best_name):
+                    best_aic = aic
                     best_ks = ks_stat
-                    best_pval = p_val
                     best_name = name
                     # Guardar params como dict legible
                     if name == 'normal':
@@ -200,6 +241,21 @@ class DemandModelService:
             except Exception:
                 continue
 
+        if not best_params or not np.isfinite(best_ks):
+            raise ValueError("No hay una distribución candidata compatible con los datos.")
+        self._last_fit_diagnostic = {
+            'method_version': 'distribution_fit_v2',
+            'test_name': 'kolmogorov_smirnov_distance',
+            'statistic': float(best_ks),
+            'p_value': None,
+            'p_value_unavailable_reason': 'PARAMETERS_ESTIMATED_FROM_SAME_SAMPLE',
+            'n_observations': self._n,
+            'valid': True,
+            'unavailable_reason': None,
+            'fit_method': 'scipy_mle',
+            'ranking_method': 'AIC_THEN_KS_DISTANCE',
+            'aic': float(best_aic),
+        }
         return best_name, best_params, best_ks, best_pval
 
     # ── Análisis de tendencia ──────────────────────────────────────────────────
@@ -297,42 +353,30 @@ class DemandModelService:
         - 'exponential_smoothing': suavizamiento exponencial
         - 'auto': selecciona el mejor según R²
         """
+        if periods < 1:
+            raise ValueError("periods debe ser al menos 1.")
         trend = self.analyze_trend()
         alpha = (1 - self.confidence_level) / 2
 
+        requested_method = method
         if method == 'auto':
-            method = 'linear' if trend['r2'] > 0.5 else 'exponential_smoothing'
+            method = self._select_method(self.data)
 
-        forecasted = []
-        if method == 'linear':
-            last_x = self._n - 1
-            for i in range(1, periods + 1):
-                forecasted.append(trend['intercept'] + trend['slope'] * (last_x + i))
+        forecasted = self._forecast_values(self.data, periods, method)
 
-        elif method == 'moving_average':
-            window = min(7, self._n)
-            last_ma = float(np.mean(self.data[-window:]))
-            forecasted = [last_ma] * periods
-
-        elif method == 'exponential_smoothing':
-            alpha_es = 0.3
-            s = float(self.data[0])
-            for val in self.data[1:]:
-                s = alpha_es * val + (1 - alpha_es) * s
-            # Proyección: nivel suavizado + tendencia acumulada
-            forecasted = [max(0.0, s + trend['slope'] * (i + 1)) for i in range(periods)]
-
-        else:
-            raise ValueError(f"Método '{method}' no soportado.")
-
-        # Intervalo de confianza: basado en el error estándar de los datos
-        std_err = float(np.std(self.data, ddof=1)) if self._n > 1 else 0.0
+        # Intervalo de predicción basado en residuos del modelo, no en la
+        # dispersión bruta de la serie (que mezcla tendencia y error).
+        fitted = self._fitted_values(self.data, method)
+        residuals = self.data - fitted
+        std_err = float(np.std(residuals, ddof=1)) if len(residuals) > 1 else 0.0
         z = stats.norm.ppf(1 - alpha)
         ci_lower = [max(0.0, v - z * std_err) for v in forecasted]
         ci_upper = [v + z * std_err for v in forecasted]
 
-        # MAPE sobre datos históricos (validación interna)
-        mape = self._calculate_mape(method, trend)
+        # MAPE sobre un holdout temporal, usando exactamente el método elegido.
+        # Production selection may use all history, but validation selection
+        # must be made from the training slice only.
+        mape = self._calculate_mape('auto' if requested_method == 'auto' else method)
 
         return DemandForecast(
             periods=periods,
@@ -344,7 +388,58 @@ class DemandModelService:
             mape=mape,
         )
 
-    def _calculate_mape(self, method: str, trend: Dict) -> Optional[float]:
+    @staticmethod
+    def _select_method(data: np.ndarray) -> str:
+        """Select a method using only the supplied time-series prefix."""
+        if len(data) < 3:
+            return 'exponential_smoothing'
+        x = np.arange(len(data), dtype=float)
+        _, _, r_value, _, _ = stats.linregress(x, data)
+        return 'linear' if r_value ** 2 > 0.5 else 'exponential_smoothing'
+
+    def _forecast_values(self, data: np.ndarray, periods: int, method: str) -> List[float]:
+        """Forecast helper used identically for production and holdout data."""
+        if method == 'linear':
+            x = np.arange(len(data), dtype=float)
+            slope, intercept, _, _, _ = stats.linregress(x, data)
+            return [float(intercept + slope * (len(data) + i)) for i in range(periods)]
+        if method == 'moving_average':
+            window = min(7, len(data))
+            last_ma = float(np.mean(data[-window:]))
+            return [last_ma] * periods
+        if method == 'exponential_smoothing':
+            alpha_es = 0.3
+            s = float(data[0])
+            for val in data[1:]:
+                s = alpha_es * val + (1 - alpha_es) * s
+            x = np.arange(len(data), dtype=float)
+            slope, _, _, _, _ = stats.linregress(x, data)
+            return [max(0.0, s + slope * (i + 1)) for i in range(periods)]
+        raise ValueError(f"Método '{method}' no soportado.")
+
+    def _fitted_values(self, data: np.ndarray, method: str) -> np.ndarray:
+        """Build in-sample fitted values for residual-based intervals."""
+        if method == 'linear':
+            x = np.arange(len(data), dtype=float)
+            slope, intercept, _, _, _ = stats.linregress(x, data)
+            return intercept + slope * x
+        if method == 'moving_average':
+            fitted = np.empty(len(data), dtype=float)
+            fitted[0] = data[0]
+            for index in range(1, len(data)):
+                window = min(7, index)
+                fitted[index] = np.mean(data[max(0, index - window):index])
+            return fitted
+        if method == 'exponential_smoothing':
+            alpha_es = 0.3
+            fitted = np.empty(len(data), dtype=float)
+            fitted[0] = data[0]
+            for index in range(1, len(data)):
+                fitted[index] = alpha_es * data[index - 1] + (1 - alpha_es) * fitted[index - 1]
+            return fitted
+        raise ValueError(f"Método '{method}' no soportado.")
+
+    def _calculate_mape(self, method: str) -> Optional[float]:
         """
         Calcula MAPE (Mean Absolute Percentage Error) por validación cruzada simple.
         Usa el último 20% de los datos como conjunto de test.
@@ -359,14 +454,9 @@ class DemandModelService:
         if len(train) < 3:
             return None
 
+        evaluation_method = self._select_method(train) if method == 'auto' else method
         try:
-            if method == 'linear':
-                x_train = np.arange(len(train), dtype=float)
-                slope, intercept, _, _, _ = stats.linregress(x_train, train)
-                preds = intercept + slope * np.arange(len(train), len(train) + n_test, dtype=float)
-            else:
-                preds = np.full(n_test, float(np.mean(train)))
-
+            preds = np.asarray(self._forecast_values(train, n_test, evaluation_method), dtype=float)
             mask = test != 0
             if np.any(mask):
                 return round(
@@ -411,6 +501,9 @@ class DemandModelService:
             distribution_params=dist_params,
             goodness_of_fit_ks=ks_stat,
             goodness_of_fit_pvalue=ks_pval,
+            goodness_of_fit_test='kolmogorov_smirnov_distance',
+            distribution_fit_method='scipy_mle',
+            distribution_fit_method_version='distribution_fit_v2',
             trend_slope=trend['slope'],
             trend_intercept=trend['intercept'],
             trend_r2=trend['r2'],

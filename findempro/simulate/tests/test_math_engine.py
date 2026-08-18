@@ -87,6 +87,14 @@ def base_financials():
 
 class TestMonteCarloEngine:
 
+    def test_simulation_config_rejects_invalid_financial_and_confidence_inputs(self):
+        with pytest.raises(ValueError, match='confidence_level'):
+            SimulationConfig(confidence_level=1.0)
+        with pytest.raises(ValueError, match='unit_cost'):
+            SimulationConfig(unit_cost=-1)
+        with pytest.raises(ValueError, match='demand_min'):
+            SimulationConfig(demand_min=10, demand_max=5)
+
     def test_result_returns_correct_type(self, base_config):
         engine = MonteCarloEngine(base_config)
         result = engine.run()
@@ -155,6 +163,14 @@ class TestMonteCarloEngine:
         result = engine.run()
         # CVaR (ES) siempre debe ser <= VaR (pérdida promedio en la cola peor)
         assert result.expected_shortfall <= result.value_at_risk_95
+
+    def test_risk_payload_exposes_configured_var_confidence(self):
+        config = SimulationConfig(n_iterations=1200, confidence_level=0.90, random_seed=4)
+        payload = MonteCarloEngine(config).to_dict()
+
+        assert payload['risk']['confidence_level'] == 0.90
+        assert payload['risk']['var_confidence_level'] == 0.90
+        assert payload['risk']['cvar_confidence_level'] == 0.90
 
     def test_scenarios_count_and_names(self, base_config):
         engine = MonteCarloEngine(base_config)
@@ -285,6 +301,12 @@ class TestMonteCarloEngine:
 
 class TestDemandModelService:
 
+    def test_demand_model_rejects_nonfinite_data_and_invalid_confidence(self):
+        with pytest.raises(ValueError, match='finitos'):
+            DemandModelService([1, 2, 3, 4, np.nan])
+        with pytest.raises(ValueError, match='confidence_level'):
+            DemandModelService([1, 2, 3, 4, 5], confidence_level=0)
+
     def test_raises_with_too_few_points(self):
         with pytest.raises(ValueError):
             DemandModelService([100, 200, 300])
@@ -354,6 +376,31 @@ class TestDemandModelService:
         # Todos los valores iguales a la última media móvil
         assert len(set(round(v, 4) for v in forecast.forecasted_values)) == 1
 
+    def test_holdout_mape_uses_selected_moving_average_method(self):
+        service = DemandModelService([1, 1, 1, 1, 1, 1, 1, 10, 20, 30])
+
+        forecast = service.forecast(periods=2, method='moving_average')
+        train = np.asarray([1, 1, 1, 1, 1, 1, 1, 10], dtype=float)
+        expected_prediction = np.mean(train[-7:])
+        expected = np.mean(np.abs((np.asarray([20, 30]) - expected_prediction) / np.asarray([20, 30]))) * 100
+
+        assert forecast.mape == round(float(expected), 2)
+
+    def test_auto_holdout_selection_uses_training_prefix(self, historical_trending, monkeypatch):
+        service = DemandModelService(historical_trending)
+        observed_lengths = []
+        original = service._select_method
+
+        def observe(data):
+            observed_lengths.append(len(data))
+            return original(data)
+
+        monkeypatch.setattr(service, '_select_method', observe)
+        service.forecast(periods=4, method='auto')
+
+        assert len(service.data) in observed_lengths
+        assert len(service.data) - max(1, len(service.data) // 5) in observed_lengths
+
     def test_exponential_smoothing_forecast(self, historical_stable):
         service = DemandModelService(historical_stable)
         forecast = service.forecast(periods=10, method='exponential_smoothing')
@@ -408,6 +455,13 @@ class TestFinancialAnalysisEngine:
         expected_net = expected_gross - base_financials['fixed_costs']
         assert abs(m.gross_profit - expected_gross) < 1e-4
         assert abs(m.net_profit - expected_net) < 1e-4
+        assert m.ebitda_proxy is None
+        assert m.operating_cash_flow is None
+
+    def test_financial_engine_rejects_negative_monetary_inputs(self, base_financials):
+        invalid = dict(base_financials, fixed_costs=-1)
+        with pytest.raises(ValueError, match='fixed_costs'):
+            FinancialAnalysisEngine(**invalid)
 
     def test_profit_margin_formula(self, base_financials):
         engine = FinancialAnalysisEngine(**base_financials)
@@ -418,8 +472,13 @@ class TestFinancialAnalysisEngine:
     def test_roi_formula(self, base_financials):
         engine = FinancialAnalysisEngine(**base_financials)
         m = engine.compute_metrics()
-        expected = (m.net_profit / m.total_costs) * 100
-        assert abs(m.roi_pct - expected) < 1e-4
+        assert m.roi_pct is None
+
+        invested = 200_000.0
+        invested_engine = FinancialAnalysisEngine(**base_financials, investment=invested)
+        invested_metrics = invested_engine.compute_metrics()
+        expected = (invested_metrics.net_profit / invested) * 100
+        assert abs(invested_metrics.roi_pct - expected) < 1e-4
 
     def test_cost_ratio_formula(self, base_financials):
         engine = FinancialAnalysisEngine(**base_financials)
@@ -503,9 +562,13 @@ class TestFinancialAnalysisEngine:
     def test_risk_metrics_range(self, base_financials):
         engine = FinancialAnalysisEngine(**base_financials)
         r = engine.compute_risk()
-        assert 0.0 <= r.probability_of_loss <= 1.0
-        assert 0.0 <= r.risk_score <= 100.0
-        assert r.risk_rating in ('bajo', 'moderado', 'alto', 'crítico')
+        assert r.available is False
+        assert r.unavailable_reason == 'INSUFFICIENT_PROFIT_SAMPLES'
+        assert r.probability_of_loss is None
+        assert r.value_at_risk_95 is None
+        assert r.expected_shortfall is None
+        assert r.risk_score is None
+        assert r.risk_rating is None
 
     def test_risk_with_monte_carlo_samples(self, base_financials):
         """Con muestras reales, las métricas deben ser más precisas."""
@@ -514,7 +577,17 @@ class TestFinancialAnalysisEngine:
         engine = FinancialAnalysisEngine(**base_financials, profit_samples=samples)
         r = engine.compute_risk()
         expected_prob_loss = float(np.mean(samples < 0))
+        assert r.available is True
+        assert r.unavailable_reason is None
         assert abs(r.probability_of_loss - expected_prob_loss) < 0.01
+
+    def test_risk_rejects_nonfinite_samples(self, base_financials):
+        engine = FinancialAnalysisEngine(
+            **base_financials,
+            profit_samples=np.array([1.0] * 11 + [np.nan]),
+        )
+        with pytest.raises(ValueError, match='valores finitos'):
+            engine.compute_risk()
 
     def test_recommendations_not_empty(self, base_financials):
         engine = FinancialAnalysisEngine(**base_financials)

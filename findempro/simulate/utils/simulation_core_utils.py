@@ -1,10 +1,11 @@
 # services/simulation_core.py - Versión Mejorada
 import logging
-import random
 import json
 import re
 from simulate.utils.variable_mapper import VariableMapper
 import numpy as np
+
+from modeling.safe_expression import ExpressionError, evaluate_expression
 import math
 
 from datetime import timedelta
@@ -23,6 +24,7 @@ from questionary.models import Answer, QuestionaryResult
 from variable.models import Variable, Equation
 
 from collections import defaultdict, deque
+from types import SimpleNamespace
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +35,16 @@ class SimulationCore:
         self.validator = SimulationValidator()
         self.cache_timeout = 3600
         self.batch_size = 100
-        
+
         # Mapeo mejorado y completo de preguntas a variables
         self.variable_mapper = VariableMapper()  # AGREGAR ESTA LÍNEA
         self.data_parser = DataParser()          # AGREGAR ESTA LÍNEA
+
+        # RNG del motor escalar. Por defecto sin semilla (equivalente al
+        # comportamiento previo con np.random global); execute_simulation lo
+        # re-crea con random_seed cuando la simulación lo especifica, para que
+        # el muestreo (_generate_demand_prediction) sea reproducible.
+        self._rng = np.random.default_rng()
 
     @transaction.atomic
     def create_simulation(self, form_data: Dict[str, Any]) -> Simulation:
@@ -70,6 +78,7 @@ class SimulationCore:
                 demand_history=json.dumps(validated_data['demand_history']),
                 fk_fdp=fk_fdp_instance,
                 demand_distribution=validated_data.get('demand_distribution', ''),
+                random_seed=validated_data.get('random_seed'),
                 is_active=True
             )
             
@@ -81,42 +90,78 @@ class SimulationCore:
             raise
 
     @transaction.atomic
-    def execute_simulation(self, simulation_instance: Simulation) -> None:
-        """Execute simulation with complete equation processing"""
+    def execute_simulation(self, simulation_instance: Simulation) -> Dict[str, Any]:
+        """
+        Execute simulation with complete equation processing.
+
+        Devuelve un resumen ``{'days_total', 'days_completed', 'days_skipped',
+        'skipped_day_indices'}``. Antes, un día que fallaba se descartaba con
+        ``except Exception: continue`` sin dejar ningún rastro: la simulación
+        terminaba con huecos en los resultados pero se reportaba como
+        "completada exitosamente". Ahora los días saltados se cuentan y se
+        exponen al llamador (la vista) para que pueda avisar en vez de fingir
+        éxito completo.
+        """
         try:
             nmd = int(simulation_instance.quantity_time)
             logger.info(f"Starting simulation execution for {nmd} days")
-            
+
+            # Semilla reproducible: si la simulación trae random_seed, el
+            # muestreo estocástico (_generate_demand_prediction) usa un RNG
+            # aislado con esa semilla en vez del estado global de np.random
+            # (que ignoraba random_seed por completo).
+            self._rng = np.random.default_rng(simulation_instance.random_seed)
+
             # Get all required data
             simulation_data = self._prepare_simulation_data(simulation_instance)
-            
+
             # Inicializar estado persistente desde cuestionario / CompanyProfile
             simulation_state = self._build_initial_state(simulation_instance)
-            
+
             # Process days sequentially
             results_to_save = []
-            
+            skipped_day_indices = []
+
             for day_index in range(nmd):
                 try:
                     # PASAR el estado a la simulación del día
                     day_results = self._simulate_single_day_complete(
                         simulation_instance, simulation_data, day_index, simulation_state
                     )
-                    
+
                     # ACTUALIZAR el estado con los resultados del día
                     self._update_simulation_state(simulation_state, day_results)
-                    
+
                     results_to_save.append((day_index, day_results))
                     logger.info(f"Day {day_index + 1} completed with {len(day_results['endogenous_results'])} variables calculated")
                 except Exception as e:
                     logger.error(f"Error simulating day {day_index}: {str(e)}")
+                    skipped_day_indices.append(day_index)
                     continue
-            
+
+            if skipped_day_indices and not results_to_save:
+                raise RuntimeError(
+                    "La simulación falló en todos los períodos; no se generaron resultados válidos."
+                )
+
             # Bulk save results
             self._bulk_save_results(simulation_instance, results_to_save)
-            
+
+            if skipped_day_indices:
+                logger.warning(
+                    f"Simulation {simulation_instance.id}: {len(skipped_day_indices)} "
+                    f"de {nmd} dias fallaron y se omitieron (indices: {skipped_day_indices})"
+                )
+
             logger.info(f"Simulation {simulation_instance.id} executed successfully")
-            
+
+            return {
+                'days_total': nmd,
+                'days_completed': len(results_to_save),
+                'days_skipped': len(skipped_day_indices),
+                'skipped_day_indices': skipped_day_indices,
+            }
+
         except Exception as e:
             logger.error(f"Error executing simulation {simulation_instance.id}: {str(e)}")
             raise
@@ -207,13 +252,22 @@ class SimulationCore:
             fk_product=product
         ).order_by('id')
         
-        equations = Equation.objects.filter(
+        equations = list(Equation.objects.filter(
             is_active=True,
             fk_area__fk_product=product
         ).select_related(
             'fk_variable1', 'fk_variable2', 'fk_variable3',
             'fk_variable4', 'fk_variable5', 'fk_area'
-        ).order_by('fk_area__name')
+        ).order_by('fk_area__name'))
+
+        template_equations = self.variable_mapper.get_template_equation_expressions(
+            simulation_instance.fk_questionary_result
+        )
+        if template_equations:
+            equations = [
+                SimpleNamespace(expression=expression, fk_area=None)
+                for expression in template_equations
+            ]
         
         variables = Variable.objects.filter(
             is_active=True,
@@ -237,7 +291,7 @@ class SimulationCore:
 
         return {
             'areas': list(areas),
-            'equations': list(equations),
+            'equations': equations,
             'variables': {v['initials']: v for v in variables},
             'answers': answers_list,
             'product': product
@@ -261,6 +315,12 @@ class SimulationCore:
             simulation_instance, variable_dict, day_index
         )
         logger.debug(f"Day {day_index + 1}: predicted demand = {predicted_demand:.2f}")
+
+        demand_history = self._parse_demand_history(simulation_instance.demand_history)
+        if not demand_history:
+            raise ValueError("La simulación no tiene observaciones históricas de demanda válidas.")
+        historical_demand_std = float(np.std(demand_history))
+        demand_std_source = 'HISTORICAL_BUSINESS_DATA'
         
         # CORRECCIÓN: Usar demanda simulada del día actual
         variable_dict['DE'] = predicted_demand
@@ -278,27 +338,23 @@ class SimulationCore:
                 # Usar ventana móvil de los últimos 7 días para DPH
                 window = simulation_state['previous_demands'][-7:]
                 variable_dict['DPH'] = float(np.mean(window))
-                variable_dict['DSD'] = float(np.std(window)) if len(window) > 1 else variable_dict['DPH'] * 0.1
-        
-        
+                if len(window) > 1:
+                    variable_dict['DSD'] = float(np.std(window))
+                    demand_std_source = 'SIMULATED_WINDOW'
+                else:
+                    variable_dict['DSD'] = historical_demand_std
+
+
         if day_index == 0:
             # Primer día: usar promedio del histórico real
-            demand_history = self._parse_demand_history(simulation_instance.demand_history)
-            if demand_history:
-                variable_dict['DPH'] = float(np.mean(demand_history))
-                variable_dict['DSD'] = float(np.std(demand_history))
-                variable_dict['CVD'] = variable_dict['DSD'] / max(variable_dict['DPH'], 1)
-            else:
-                # Fallback si no hay histórico
-                variable_dict['DPH'] = predicted_demand
-                variable_dict['DSD'] = predicted_demand * 0.1  # 10% de variación estimada
-                variable_dict['CVD'] = 0.1
+            variable_dict['DPH'] = float(np.mean(demand_history))
+            variable_dict['DSD'] = historical_demand_std
+            variable_dict['CVD'] = variable_dict['DSD'] / max(variable_dict['DPH'], 1)
         else:
             # Días posteriores: usar promedio móvil de días anteriores simulados
             window_size = min(7, day_index)  # Ventana de hasta 7 días
             previous_demands = []
-            demand_history = self._parse_demand_history(simulation_instance.demand_history)
-            variable_dict['DPH'] = float(np.mean(demand_history)) if demand_history else predicted_demand
+            variable_dict['DPH'] = float(np.mean(demand_history))
             
             # Obtener demandas de días anteriores desde los resultados almacenados
             if 'previous_results' in simulation_data:
@@ -311,13 +367,17 @@ class SimulationCore:
             
             if previous_demands:
                 variable_dict['DPH'] = float(np.mean(previous_demands))
-                variable_dict['DSD'] = float(np.std(previous_demands)) if len(previous_demands) > 1 else variable_dict.get('DSD', predicted_demand * 0.1)
+                if len(previous_demands) > 1:
+                    variable_dict['DSD'] = float(np.std(previous_demands))
+                    demand_std_source = 'SIMULATED_WINDOW'
+                else:
+                    variable_dict['DSD'] = historical_demand_std
                 variable_dict['CVD'] = variable_dict['DSD'] / max(variable_dict['DPH'], 1)
             else:
-                # Fallback: usar demanda actual
+                # Sin ventana simulada suficiente, conservar dispersión observada.
                 variable_dict['DPH'] = predicted_demand
-                variable_dict['DSD'] = variable_dict.get('DSD', predicted_demand * 0.1)
-                variable_dict['CVD'] = 0.1
+                variable_dict['DSD'] = historical_demand_std
+                variable_dict['CVD'] = variable_dict['DSD'] / max(variable_dict['DPH'], 1)
         
         # Actualizar DDP (Demanda Diaria Proyectada) con el nuevo DPH dinámico
         if 'ED' in variable_dict:  # Factor de estacionalidad
@@ -353,7 +413,9 @@ class SimulationCore:
             'variable_initials_dict': variable_dict,
             'predicted_demand': predicted_demand,
             'dynamic_dph': variable_dict.get('DPH', 0),
-            'demand_std': variable_dict.get('DSD', 0)
+            'demand_std': variable_dict.get('DSD', 0),
+            'demand_std_source': demand_std_source,
+            'demand_input_source': 'HISTORICAL_BUSINESS_DATA',
         }
 
     def _initialize_variables_from_questionnaire(self, answers, simulation_instance, day_index):
@@ -369,7 +431,7 @@ class SimulationCore:
         extracted_vars.update({
             'NMD': float(simulation_instance.quantity_time),
             'DIA': float(day_index + 1),
-            'random': lambda: random.random()
+            'random': lambda: float(self._rng.random())
         })
         
         # Parse demand history si existe
@@ -812,8 +874,10 @@ class SimulationCore:
         # Remove summation symbol
         expression = expression.replace('∑', '')
         
-        # Replace random() with actual value
-        expression = expression.replace('random()', str(random.random()))
+        # Replace random() with a value from the simulation-owned RNG.  This
+        # keeps legacy equations reproducible when a simulation seed exists
+        # and avoids coupling model results to process-global random state.
+        expression = expression.replace('random()', str(float(self._rng.random())))
         
         # AGREGAR: Manejar funciones especiales
         # Reemplazar mean(lista) por el valor calculado
@@ -847,31 +911,12 @@ class SimulationCore:
                     pattern = r'\b' + re.escape(var) + r'\b'
                     expression = re.sub(pattern, str(val), expression)
             
-            # Safe evaluation context - EXPANDIR ESTO
-            safe_dict = {
-                '__builtins__': {},
-                'max': max,
-                'min': min,
-                'abs': abs,
-                'round': round,
-                'pow': pow,
-                'sum': sum,
-                # AGREGAR ESTAS FUNCIONES:
-                'sqrt': lambda x: x ** 0.5,
-                'ceil': lambda x: int(x) + (1 if x > int(x) else 0),
-                'floor': lambda x: int(x),
-                'mean': lambda x: sum(x) / len(x) if isinstance(x, list) else x,
-                'std': lambda x: np.std(x) if isinstance(x, list) else 0,
-                'exp': lambda x: 2.71828 ** x,
-                'log': lambda x: np.log(x) if x > 0 else 0,
-            }
-            
-            # Evaluate
-            result = eval(expression, safe_dict)
-            return float(result)
-            
+            return evaluate_expression(expression, values={name: float(value) for name, value in variables.items()})
+
         except ZeroDivisionError:
             return 0.0
+        except (ExpressionError, TypeError, ValueError):
+            return None
         except Exception as e:
             logger.debug(f"Could not evaluate expression '{expression}': {e}")
             return None
@@ -992,10 +1037,10 @@ class SimulationCore:
             ctai = endogenous_results.get('CTAI', 0)
             endogenous_results['MB'] = (it - ctai) / it if it > 0 else 0
         
-        if 'RI' not in endogenous_results:
-            gt = endogenous_results.get('GT', 0)
-            investment = cfd * 30 + se_monthly  # Monthly investment approximation
-            endogenous_results['RI'] = (gt * 30) / investment if investment > 0 else 0
+        # ROI requires explicit invested capital. Operating costs and payroll
+        # are not interchangeable with an investment basis.
+        if 'RI' not in endogenous_results and endogenous_results.get('INV', 0) > 0:
+            endogenous_results['RI'] = endogenous_results.get('GT', 0) / endogenous_results['INV']
         
         # Inventory metrics
         if 'IPF' not in endogenous_results:
@@ -1223,32 +1268,32 @@ class SimulationCore:
                 logger.debug(f"  - {v}")
 
     def _generate_demand_prediction(self, simulation_instance, variable_dict, day_index):
-        """Generate realistic demand prediction using FDP"""
+        """Generate a conditional demand sample from observed historical data."""
         try:
             fdp = simulation_instance.fk_fdp
             demand_history = self._parse_demand_history(simulation_instance.demand_history)
-            
+
+            if not demand_history:
+                raise ValueError("Se requieren observaciones históricas de demanda para simular.")
+
+            demand_values = np.asarray(demand_history, dtype=float)
+            if not np.all(np.isfinite(demand_values)) or np.any(demand_values <= 0):
+                raise ValueError("La demanda histórica debe contener valores positivos y finitos.")
+
             # Calculate base statistics from REAL data
-            if demand_history and len(demand_history) > 0:
-                mean_demand = np.mean(demand_history)
-                std_demand = np.std(demand_history)
-                cv = std_demand / mean_demand if mean_demand > 0 else 0.1
-                
-                # Get last historical value for continuity
-                last_historical_value = demand_history[-1]
-                
-                # Calculate trend from historical data
-                if len(demand_history) > 1:
-                    x = np.arange(len(demand_history))
-                    z = np.polyfit(x, demand_history, 1)
-                    historical_trend = z[0]  # Slope of historical trend
-                else:
-                    historical_trend = 0
+            mean_demand = float(np.mean(demand_values))
+            std_demand = float(np.std(demand_values))
+            cv = std_demand / mean_demand
+
+            # Get last historical value for continuity
+            last_historical_value = float(demand_values[-1])
+
+            # Calculate trend from historical data
+            if len(demand_values) > 1:
+                x = np.arange(len(demand_values))
+                z = np.polyfit(x, demand_values, 1)
+                historical_trend = float(z[0])  # Slope of historical trend
             else:
-                mean_demand = variable_dict.get('DH', 2500)
-                std_demand = mean_demand * 0.1
-                cv = 0.1
-                last_historical_value = mean_demand
                 historical_trend = 0
             
             # Add seasonality from questionnaire
@@ -1259,53 +1304,59 @@ class SimulationCore:
             std_to_use = min(std_demand, max_std)
             
             # Generate prediction based on distribution type
+            # (usa self._rng, sembrado desde Simulation.random_seed en
+            # execute_simulation, en vez del estado global de np.random —
+            # para que dos corridas con la misma semilla den el mismo resultado)
             if fdp.distribution_type == 1:  # Normal
-                base_prediction = np.random.normal(mean_demand, std_to_use)
-                
+                base_prediction = self._rng.normal(mean_demand, std_to_use)
+
             elif fdp.distribution_type == 2:  # Exponential
                 scale = mean_demand  # Use mean as scale
-                base_prediction = np.random.exponential(scale)
-                
+                base_prediction = self._rng.exponential(scale) if scale > 0 else mean_demand
+
             elif fdp.distribution_type == 3:  # Log-Normal
                 if mean_demand > 0 and cv > 0:
                     sigma = np.sqrt(np.log(1 + cv**2))
                     mu = np.log(mean_demand) - sigma**2 / 2
-                    base_prediction = np.random.lognormal(mu, sigma)
+                    base_prediction = self._rng.lognormal(mu, sigma)
                 else:
                     base_prediction = mean_demand
-                    
+
             elif fdp.distribution_type == 4:  # Gamma
-                if std_to_use > 0:
+                if std_to_use > 0 and mean_demand > 0:
                     shape = (mean_demand / std_to_use) ** 2
                     scale = std_to_use ** 2 / mean_demand
-                    base_prediction = np.random.gamma(shape, scale)
+                    base_prediction = self._rng.gamma(shape, scale)
                 else:
                     base_prediction = mean_demand
-                    
+
             elif fdp.distribution_type == 5:  # Uniform
                 min_val = mean_demand - std_to_use
                 max_val = mean_demand + std_to_use
-                base_prediction = np.random.uniform(min_val, max_val)
-                
+                base_prediction = self._rng.uniform(min_val, max_val) if max_val > min_val else mean_demand
+
             else:
-                base_prediction = np.random.normal(mean_demand, std_to_use)
-            
+                base_prediction = self._rng.normal(mean_demand, std_to_use)
+
             # Apply continuity adjustment for first days
             if day_index < 7:
                 continuity_factor = 0.7 - (day_index * 0.1)  # Decreasing weight
-                base_prediction = (continuity_factor * last_historical_value + 
+                base_prediction = (continuity_factor * last_historical_value +
                                 (1 - continuity_factor) * base_prediction)
-            
+
             # Apply seasonality
             prediction = base_prediction * seasonality
-            
+
             # Apply trend with dampening
             trend_dampening = 0.3  # Reduce trend impact
-            trend_factor = 1 + (historical_trend / mean_demand) * trend_dampening * (day_index / 30)
+            if mean_demand > 0:
+                trend_factor = 1 + (historical_trend / mean_demand) * trend_dampening * (day_index / 30)
+            else:
+                trend_factor = 1
             prediction *= trend_factor
-            
+
             # Add small random walk
-            random_walk = np.random.normal(0, std_to_use * 0.05)
+            random_walk = self._rng.normal(0, std_to_use * 0.05)
             prediction += random_walk
             
             # Validate prediction within reasonable bounds
@@ -1321,10 +1372,9 @@ class SimulationCore:
             
         except Exception as e:
             logger.error(f"Error generating demand prediction: {str(e)}")
-            # Fallback to mean with small randomness
-            demand_history = self._parse_demand_history(simulation_instance.demand_history)
-            mean_demand = np.mean(demand_history) if demand_history else 2500
-            return max(1.0, mean_demand * (0.95 + random.random() * 0.1))
+            raise ValueError(
+                "No se pudo generar demanda sin datos históricos y parámetros válidos."
+            ) from e
 
     def _get_output_variable(self, equation):
         """Get the output variable from an equation"""
@@ -1390,7 +1440,17 @@ class SimulationCore:
         
         for day_index, day_data in results:
             endogenous_results = day_data['endogenous_results']
-            predicted_demand = day_data.get('predicted_demand', 0)
+            predicted_demand = day_data.get('predicted_demand')
+            if isinstance(predicted_demand, bool):
+                raise ValueError(f"Predicción de demanda inválida en el período {day_index}.")
+            try:
+                predicted_demand = float(predicted_demand)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Predicción de demanda inválida en el período {day_index}."
+                ) from exc
+            if not np.isfinite(predicted_demand) or predicted_demand <= 0:
+                raise ValueError(f"Predicción de demanda inválida en el período {day_index}.")
             
             # Check demand prediction validity
             if hist_mean > 0:
@@ -1398,7 +1458,7 @@ class SimulationCore:
                 if demand_deviation > 0.5:  # More than 50% deviation
                     logger.warning(f"Day {day_index}: High demand deviation {demand_deviation:.2%}")
             
-            demand_total = predicted_demand if predicted_demand > 0 else endogenous_results.get('DE', 2500)
+            demand_total = predicted_demand
             
             all_demands = demand_history_numeric + [demand_total]
             demand_std_dev = np.std(all_demands)
@@ -1420,7 +1480,13 @@ class SimulationCore:
             serializable_results['_metadata'] = {
                 'day_index': day_index,
                 'demand_prediction': predicted_demand,
-                'questionnaire_loaded': True
+                'questionnaire_loaded': True,
+                'demand_input_source': day_data.get(
+                    'demand_input_source', 'HISTORICAL_BUSINESS_DATA'
+                ),
+                'demand_std_source': day_data.get(
+                    'demand_std_source', 'HISTORICAL_BUSINESS_DATA'
+                ),
             }
             
             result_objects.append(

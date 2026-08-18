@@ -31,6 +31,32 @@ class StatisticalAnalysis {
         this.comparisonMetrics = this.extractComparisonMetrics();
     }
 
+    /**
+     * Series reales para los gráficos, o `null` si el servidor no las envió.
+     *
+     * Devuelve `null` a propósito: es preferible un panel que dice "no
+     * disponible" a un gráfico que parece evidencia y no lo es.
+     */
+    getObservedSeries() {
+        const payload = window.FINDEMPRO_STATISTICAL_SERIES;
+        if (!payload || typeof payload !== 'object') return null;
+        const { frequencies, pairs, residuals } = payload;
+        if (!frequencies || !Array.isArray(pairs) || !Array.isArray(residuals)) return null;
+        if (!pairs.length || !residuals.length) return null;
+        return { frequencies, pairs, residuals };
+    }
+
+    /** Estado explícito de "sin datos" en lugar de un gráfico inventado. */
+    renderUnavailable(ctx, message) {
+        const host = ctx.parentElement || ctx;
+        const notice = document.createElement('p');
+        notice.className = 'text-muted text-center my-4';
+        notice.setAttribute('role', 'status');
+        notice.textContent = message;
+        ctx.style.display = 'none';
+        host.appendChild(notice);
+    }
+
     extractStatisticalData() {
         const data = {
             historical: {
@@ -248,17 +274,15 @@ class StatisticalAnalysis {
         const ctx = document.getElementById('distributionChart');
         if (!ctx) return;
 
-        // Crear un gráfico de distribución de frecuencias simulado
-        const labels = [];
-        const historicalFreq = [];
-        const simulatedFreq = [];
-
-        // Generar datos de ejemplo para distribución
-        for (let i = 0; i < 10; i++) {
-            labels.push(`Rango ${i + 1}`);
-            historicalFreq.push(Math.floor(Math.random() * 20) + 5);
-            simulatedFreq.push(Math.floor(Math.random() * 20) + 5);
+        // Las frecuencias se construían con `Math.random()` y se rotulaban
+        // "Distribución Histórica" y "Distribución Simulada". Sin las series
+        // reales no hay histograma que mostrar: se declara no disponible.
+        const series = this.getObservedSeries();
+        if (!series) {
+            this.renderUnavailable(ctx, 'Distribución no disponible: faltan las series histórica y simulada.');
+            return;
         }
+        const { labels, historicalFreq, simulatedFreq } = series.frequencies;
 
         const config = {
             type: 'bar',
@@ -316,13 +340,14 @@ class StatisticalAnalysis {
         const ctx = document.getElementById('correlationChart');
         if (!ctx) return;
 
-        // Generar datos de dispersión simulados
-        const scatterData = [];
-        for (let i = 0; i < 50; i++) {
-            const x = Math.random() * 100;
-            const y = x + (Math.random() - 0.5) * 20; // Correlación positiva con ruido
-            scatterData.push({ x: x, y: y });
+        // Antes fabricaba una nube con correlación positiva incorporada: el
+        // gráfico "demostraba" una relación que nadie había medido.
+        const series = this.getObservedSeries();
+        if (!series) {
+            this.renderUnavailable(ctx, 'Correlación no disponible: faltan pares histórico/simulado.');
+            return;
         }
+        const scatterData = series.pairs;
 
         const config = {
             type: 'scatter',
@@ -373,14 +398,14 @@ class StatisticalAnalysis {
         const ctx = document.getElementById('residualChart');
         if (!ctx) return;
 
-        // Generar datos de residuos simulados
-        const residualData = [];
-        for (let i = 0; i < 30; i++) {
-            residualData.push({
-                x: i + 1,
-                y: (Math.random() - 0.5) * 10 // Residuos aleatorios
-            });
+        // Los residuos son la evidencia del ajuste del modelo. Inventarlos con
+        // ruido centrado en cero mostraba, literalmente, un modelo sin sesgo.
+        const series = this.getObservedSeries();
+        if (!series) {
+            this.renderUnavailable(ctx, 'Residuos no disponibles: falta la serie de errores del modelo.');
+            return;
         }
+        const residualData = series.residuals;
 
         const config = {
             type: 'scatter',
@@ -564,30 +589,20 @@ class StatisticalAnalysis {
             
             if (!valueContainer) return;
             
-            // Simular resultados de pruebas estadísticas
-            const pValue = Math.random();
-            const isSignificant = pValue > 0.05;
-            
             if (testName.includes('normalidad')) {
                 valueContainer.innerHTML = `
-                    <span class="badge ${isSignificant ? 'bg-success' : 'bg-warning'}">
-                        ${isSignificant ? 'Normal' : 'No Normal'}
-                    </span>
-                    <small class="d-block">p-value: ${pValue.toFixed(4)}</small>
+                    <span class="badge bg-secondary">No calculado</span>
+                    <small class="d-block">p-value: no disponible; use el diagnóstico backend</small>
                 `;
             } else if (testName.includes('medias')) {
                 valueContainer.innerHTML = `
-                    <span class="badge ${isSignificant ? 'bg-success' : 'bg-warning'}">
-                        ${isSignificant ? 'Iguales' : 'Diferentes'}
-                    </span>
-                    <small class="d-block">p-value: ${pValue.toFixed(4)}</small>
+                    <span class="badge bg-secondary">No calculado</span>
+                    <small class="d-block">p-value: no disponible en el navegador</small>
                 `;
             } else if (testName.includes('varianzas')) {
                 valueContainer.innerHTML = `
-                    <span class="badge ${isSignificant ? 'bg-success' : 'bg-warning'}">
-                        ${isSignificant ? 'Homogéneas' : 'Heterogéneas'}
-                    </span>
-                    <small class="d-block">p-value: ${pValue.toFixed(4)}</small>
+                    <span class="badge bg-secondary">No calculado</span>
+                    <small class="d-block">p-value: no disponible en el navegador</small>
                 `;
             }
         });
@@ -735,25 +750,14 @@ class StatisticalAnalysis {
     }
 
     performNormalityTest(data) {
-        // Implementación simplificada del test de Shapiro-Wilk
+        // El navegador no implementa una prueba inferencial calibrada.
         const n = data.length;
-        if (n < 3) return { statistic: 0, pValue: 1, isNormal: false };
-        
-        // Ordenar datos
-        const sorted = [...data].sort((a, b) => a - b);
-        
-        // Calcular estadístico W (simplificado)
-        const mean = sorted.reduce((a, b) => a + b, 0) / n;
-        const variance = sorted.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (n - 1);
-        
-        // Aproximación simple del estadístico
-        const w = 0.8 + Math.random() * 0.15; // Simulado
-        const pValue = w > 0.9 ? 0.1 + Math.random() * 0.4 : 0.01 + Math.random() * 0.04;
-        
         return {
-            statistic: w,
-            pValue: pValue,
-            isNormal: pValue > 0.05
+            statistic: null,
+            pValue: null,
+            isNormal: null,
+            available: false,
+            unavailableReason: n < 3 ? 'INSUFFICIENT_SAMPLE' : 'USE_BACKEND_DIAGNOSTIC'
         };
     }
 

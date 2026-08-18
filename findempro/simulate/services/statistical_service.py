@@ -26,10 +26,13 @@ from scipy.optimize import minimize
 from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 
+from modeling.statistics import DistributionFitError, METHOD_VERSION, fit_distributions
+
 from questionary.models import Answer
 from ..models import ProbabilisticDensityFunction
 from ..validators.simulation_validators import SimulationValidator
 from ..utils.data_parsers_utils import DataParser
+from ..utils.statistical_contracts import stable_distribution_shape
 
 # Set matplotlib to non-interactive mode
 matplotlib.use('Agg')
@@ -139,17 +142,27 @@ class StatisticalService:
                 
                 # Forecast accuracy metrics
                 try:
-                    stats['forecast_accuracy'] = {
-                        'mape': self._calculate_mape(historical_demand, simulated_values),
-                        'rmse': self._calculate_rmse(historical_demand, simulated_values),
-                        'mae': self._calculate_mae(historical_demand, simulated_values)
-                    }
+                    if len(historical_demand) != len(simulated_values):
+                        stats['forecast_accuracy'] = {
+                            'mape': None, 'rmse': None, 'mae': None,
+                            'status': 'unavailable',
+                            'reason': 'series_not_comparable',
+                        }
+                    else:
+                        stats['forecast_accuracy'] = {
+                            'mape': self._calculate_mape(historical_demand, simulated_values),
+                            'rmse': self._calculate_rmse(historical_demand, simulated_values),
+                            'mae': self._calculate_mae(historical_demand, simulated_values),
+                            'status': 'complete',
+                        }
                 except Exception as e:
                     logger.error(f"Error calculating forecast accuracy: {str(e)}")
                     stats['forecast_accuracy'] = {
-                        'mape': 0,
-                        'rmse': 0,
-                        'mae': 0
+                        'mape': None,
+                        'rmse': None,
+                        'mae': None,
+                        'status': 'unavailable',
+                        'reason': 'series_not_comparable',
                     }
         
         return stats
@@ -197,8 +210,8 @@ class StatisticalService:
     
     def _calculate_mape(self, actual, predicted):
         """Calculate Mean Absolute Percentage Error"""
-        if len(actual) == 0 or len(predicted) == 0:
-            return 0
+        if len(actual) == 0 or len(predicted) == 0 or len(actual) != len(predicted):
+            return None
         
         # Convert to numpy arrays
         actual = np.array(actual)
@@ -212,39 +225,29 @@ class StatisticalService:
         # Avoid division by zero
         mask = actual != 0
         if not np.any(mask):
-            return 0
+            return None
         
         return np.mean(np.abs((actual[mask] - predicted[mask]) / actual[mask])) * 100
     
     def _calculate_rmse(self, actual, predicted):
         """Calculate Root Mean Square Error"""
-        if len(actual) == 0 or len(predicted) == 0:
-            return 0
+        if len(actual) == 0 or len(predicted) == 0 or len(actual) != len(predicted):
+            return None
         
         # Convert to numpy arrays
         actual = np.array(actual)
         predicted = np.array(predicted)
-        
-        # Ensure same length
-        n = min(len(actual), len(predicted))
-        actual = actual[:n]
-        predicted = predicted[:n]
         
         return np.sqrt(np.mean((actual - predicted) ** 2))
     
     def _calculate_mae(self, actual, predicted):
         """Calculate Mean Absolute Error"""
-        if len(actual) == 0 or len(predicted) == 0:
-            return 0
+        if len(actual) == 0 or len(predicted) == 0 or len(actual) != len(predicted):
+            return None
         
         # Convert to numpy arrays
         actual = np.array(actual)
         predicted = np.array(predicted)
-        
-        # Ensure same length
-        n = min(len(actual), len(predicted))
-        actual = actual[:n]
-        predicted = predicted[:n]
         
         return np.mean(np.abs(actual - predicted))
     def _calculate_trend(self, data):
@@ -452,12 +455,13 @@ class StatisticalService:
             'histogram_image': visualizations.get('distribution_plot'),
             'demand_mean': basic_stats['mean'],
             'data_list': demand_data.tolist(),
-            'best_ks_p_value_floor': math.floor(best_distribution['ks_p_value'] * 100) / 100,
-            'best_ks_statistic_floor': math.floor(best_distribution['ks_statistic'] * 100) / 100,
+            'best_ks_p_value_floor': best_distribution['ks_p_value'],
+            'best_ks_statistic_floor': best_distribution['ks_statistic'],
+            'distribution_fit_diagnostic': best_distribution.get('diagnostic'),
             'selected_fdp': best_distribution['distribution'].id if best_distribution['distribution'] else None,
         }
     
-    def _calculate_basic_statistics(self, data: np.ndarray) -> Dict[str, float]:
+    def _calculate_basic_statistics(self, data: np.ndarray) -> Dict[str, Any]:
         """🔧 MEJORADO: Calculate comprehensive basic statistics with detailed logging"""
         try:
             logger.debug(f"Calculating basic statistics for {len(data)} data points")
@@ -465,6 +469,7 @@ class StatisticalService:
             # Cálculos estadísticos con logging
             mean_val = float(np.mean(data))
             std_val = float(np.std(data, ddof=1))  # 🔧 Usar ddof=1 para muestra
+            shape = stable_distribution_shape(data)
             
             logger.debug(f"Calculated - Mean: {mean_val}, Std: {std_val}")
             
@@ -481,8 +486,9 @@ class StatisticalService:
                 'q1': float(np.percentile(data, 25)),
                 'q3': float(np.percentile(data, 75)),
                 'iqr': float(np.percentile(data, 75) - np.percentile(data, 25)),
-                'skewness': float(stats.skew(data)),
-                'kurtosis': float(stats.kurtosis(data)),
+                'skewness': shape.skewness,
+                'kurtosis': shape.kurtosis,
+                'shape_statistics_status': shape.status,
             }
             
             # 🔧 VERIFICACIÓN FINAL
@@ -559,89 +565,89 @@ class StatisticalService:
             fk_business__fk_user=user  # ✅ CORRECTO: user en lugar de data
         ).order_by('-id')
         
-        best_result = {
+        best_result: Dict[str, Any] = {
             'distribution': None,
-            'ks_statistic': float('inf'),
-            'ks_p_value': 0.0,
-            'aic': float('inf'),
-            'parameters': {}
+            'ks_statistic': None,
+            'ks_p_value': None,
+            'aic': None,
+            'bic': None,
+            'parameters': {},
+            'diagnostic': {
+                'method_version': METHOD_VERSION,
+                'valid': False,
+                'statistic': None,
+                'p_value': None,
+                'unavailable_reason': 'NO_COMPATIBLE_DISTRIBUTION',
+            },
         }
-        
+
+        valid_results = []
         for dist in distributions:
             fit_result = self._test_distribution_fit(data, dist, basic_stats)
-            
-            # Select best based on p-value and AIC
-            if (fit_result['ks_p_value'] > best_result['ks_p_value'] or
-                (fit_result['ks_p_value'] == best_result['ks_p_value'] and
-                fit_result['aic'] < best_result['aic'])):
-                best_result = fit_result
-                best_result['distribution'] = dist
-        
+            if fit_result['valid']:
+                fit_result['distribution'] = dist
+                valid_results.append(fit_result)
+
+        if valid_results:
+            best_result = min(
+                valid_results,
+                key=lambda item: (item['aic'], item['ks_statistic'], item['distribution'].id),
+            )
         return best_result
     
     def _test_distribution_fit(self, data: np.ndarray,
                               distribution: ProbabilisticDensityFunction,
                               basic_stats: Dict) -> Dict[str, Any]:
-        """Test how well a distribution fits the data"""
+        """Fit one continuous candidate and expose a truthful v2 diagnostic."""
+        names = {
+            1: 'normal',
+            2: 'exponential',
+            3: 'lognormal',
+            4: 'gamma',
+            5: 'uniform',
+        }
         try:
-            # Fit parameters based on distribution type
-            if distribution.distribution_type == 1:  # Normal
-                loc, scale = norm.fit(data)
-                fitted_dist = norm(loc=loc, scale=scale)
-                params = {'mean': loc, 'std': scale}
-                
-            elif distribution.distribution_type == 2:  # Exponential
-                loc, scale = expon.fit(data)
-                fitted_dist = expon(loc=loc, scale=scale)
-                params = {'lambda': 1/scale if scale > 0 else 0}
-                
-            elif distribution.distribution_type == 3:  # Log-Normal
-                shape, loc, scale = lognorm.fit(data, floc=0)
-                fitted_dist = lognorm(s=shape, loc=loc, scale=scale)
-                params = {'shape': shape, 'scale': scale}
-                
-            elif distribution.distribution_type == 4:  # Gamma
-                shape, loc, scale = gamma.fit(data, floc=0)
-                fitted_dist = gamma(a=shape, loc=loc, scale=scale)
-                params = {'shape': shape, 'scale': scale}
-                
-            elif distribution.distribution_type == 5:  # Uniform
-                loc = data.min()
-                scale = data.max() - data.min()
-                fitted_dist = uniform(loc=loc, scale=scale)
-                params = {'min': loc, 'max': loc + scale}
-                
+            name = names.get(distribution.distribution_type)
+            if name is None:
+                raise DistributionFitError("Tipo de distribución no soportado.")
+            result = fit_distributions(data.tolist(), candidates=[name])
+            diagnostic = result['candidates'][0]
+            raw = diagnostic['parameters']
+            if name == 'normal':
+                params = {'mean': raw['loc'], 'std': raw['scale']}
+            elif name == 'exponential':
+                params = {'lambda': raw['rate'], 'scale': raw['scale']}
+            elif name in {'lognormal', 'gamma'}:
+                params = {'shape': raw['shape'], 'scale': raw['scale']}
             else:
-                return {
-                    'ks_statistic': float('inf'),
-                    'ks_p_value': 0.0,
-                    'aic': float('inf'),
-                    'parameters': {}
-                }
-            
-            # Kolmogorov-Smirnov test
-            ks_statistic, ks_p_value = kstest(data, fitted_dist.cdf)
-            
-            # Calculate log-likelihood and AIC
-            log_likelihood = np.sum(fitted_dist.logpdf(data))
-            n_params = len(params)
-            aic = 2 * n_params - 2 * log_likelihood
-            
+                params = {'min': raw['minimum'], 'max': raw['maximum']}
             return {
-                'ks_statistic': float(ks_statistic),
-                'ks_p_value': float(ks_p_value),
-                'aic': float(aic),
-                'log_likelihood': float(log_likelihood),
-                'parameters': params
+                'valid': True,
+                'ks_statistic': diagnostic['ks_statistic'],
+                'ks_p_value': diagnostic['p_value'],
+                'aic': diagnostic['aic'],
+                'bic': diagnostic['bic'],
+                'log_likelihood': diagnostic['log_likelihood'],
+                'parameters': params,
+                'diagnostic': diagnostic,
             }
-            
-        except Exception as e:
+        except (DistributionFitError, ValueError, FloatingPointError) as e:
             logger.error(f"Error testing distribution {distribution.name}: {str(e)}")
             return {
-                'ks_statistic': float('inf'),
-                'ks_p_value': 0.0,
-                'aic': float('inf'),
-                'parameters': {}
+                'valid': False,
+                'ks_statistic': None,
+                'ks_p_value': None,
+                'aic': None,
+                'bic': None,
+                'parameters': {},
+                'diagnostic': {
+                    'method_version': METHOD_VERSION,
+                    'valid': False,
+                    'statistic': None,
+                    'p_value': None,
+                    'unavailable_reason': 'INVALID_FIT',
+                    'warnings': [str(e)],
+                },
             }
     
     def _generate_analysis_visualizations(self, data: np.ndarray,
@@ -807,8 +813,8 @@ class StatisticalService:
         if best_distribution['distribution']:
             fit_text = (
                 f'Distribución: {best_distribution["distribution"].get_distribution_type_display()}\n'
-                f'KS Statistic: {best_distribution["ks_statistic"]:.4f}\n'
-                f'KS p-value: {best_distribution["ks_p_value"]:.4f}\n'
+                f'Distancia KS: {best_distribution["ks_statistic"]:.4f}\n'
+                'p-value: no calculado (parámetros ajustados)\n'
                 f'AIC: {best_distribution["aic"]:.1f}'
             )
             ax1.text(0.98, 0.98, fit_text, transform=ax1.transAxes,
@@ -928,7 +934,7 @@ class StatisticalService:
             'has_trend': time_series_stats['has_trend'],
             'trend_slope': time_series_stats['trend_slope'],
             'volatility': time_series_stats['volatility'],
-            'distribution_type': best_distribution['distribution'].distribution_type if best_distribution['distribution'] else 1,
+            'distribution_type': best_distribution['distribution'].distribution_type if best_distribution['distribution'] else None,
             'distribution_params': best_distribution['parameters'],
             'seasonality_factor': 1.0  # Default, can be enhanced
         }
@@ -949,28 +955,41 @@ class StatisticalService:
         image_data = base64.b64encode(buffer.getvalue()).decode('utf-8')
         return image_data
     
-    def calculate_distribution_parameters(self, distribution_type: int, 
+    def calculate_distribution_parameters(self, distribution_type: int,
                                         data_tuple: tuple) -> Dict[str, float]:
         """Calculate optimal parameters for a specific distribution type"""
         data = np.array(data_tuple)
-        
+        if data.size == 0 or not np.all(np.isfinite(data)):
+            raise ValueError("Los datos deben ser finitos y no estar vacíos.")
         if distribution_type == 1:  # Normal
             mean, std = norm.fit(data)
+            if std <= 0:
+                raise ValueError("La distribución normal requiere variación en los datos.")
             return {'mean': float(mean), 'std': float(std)}
-            
         elif distribution_type == 2:  # Exponential
+            if np.any(data < 0):
+                raise ValueError("La distribución exponencial requiere datos no negativos.")
             loc, scale = expon.fit(data)
-            return {'lambda': float(1/scale) if scale > 0 else 0}
-            
+            if scale <= 0:
+                raise ValueError("La distribución exponencial requiere variación en los datos.")
+            return {'lambda': float(1/scale)}
         elif distribution_type == 3:  # Log-Normal
+            if np.any(data <= 0):
+                raise ValueError("La distribución log-normal requiere datos positivos.")
             shape, loc, scale = lognorm.fit(data, floc=0)
+            if shape <= 0 or scale <= 0:
+                raise ValueError("Parámetros log-normales inválidos.")
             return {'shape': float(shape), 'scale': float(scale)}
-            
         elif distribution_type == 4:  # Gamma
+            if np.any(data <= 0):
+                raise ValueError("La distribución gamma requiere datos positivos.")
             shape, loc, scale = gamma.fit(data, floc=0)
+            if shape <= 0 or scale <= 0:
+                raise ValueError("Parámetros gamma inválidos.")
             return {'shape': float(shape), 'scale': float(scale)}
-            
         elif distribution_type == 5:  # Uniform
+            if data.max() <= data.min():
+                raise ValueError("La distribución uniforme requiere un rango positivo.")
             return {'min': float(data.min()), 'max': float(data.max())}
         
         return {}
@@ -982,13 +1001,25 @@ class StatisticalService:
             raise ValueError("Arrays must have the same length")
         
         errors = actual - predicted
-        percentage_errors = np.where(actual != 0, errors / actual * 100, 0)
-        
+
+        # El error porcentual no existe cuando la observación es cero. Antes se
+        # sustituía por 0 —un acierto perfecto— y se promediaba junto al resto:
+        # el MAPE bajaba justamente en los puntos donde no se podía medir.
+        measurable = actual != 0
+        if np.any(measurable):
+            mape = float(np.mean(np.abs(errors[measurable] / actual[measurable] * 100)))
+        else:
+            mape = None
+
+        mean_absolute_error = float(np.mean(np.abs(errors)))
         return {
-            'mae': float(np.mean(np.abs(errors))),
+            'mae': mean_absolute_error,
             'mse': float(np.mean(errors ** 2)),
             'rmse': float(np.sqrt(np.mean(errors ** 2))),
-            'mape': float(np.mean(np.abs(percentage_errors))),
+            'mape': mape,
+            'mape_excluded_observations': int(np.count_nonzero(~measurable)),
             'bias': float(np.mean(errors)),
-            'tracking_signal': float(np.sum(errors) / np.mean(np.abs(errors))) if np.mean(np.abs(errors)) > 0 else 0,
+            'tracking_signal': (
+                float(np.sum(errors) / mean_absolute_error) if mean_absolute_error > 0 else None
+            ),
         }

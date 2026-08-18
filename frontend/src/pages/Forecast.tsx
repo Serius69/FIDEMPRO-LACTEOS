@@ -18,6 +18,7 @@ export default function ForecastPage() {
     defaultValues: { historical_data: SAMPLE_DATA, periods: 12, method: 'auto', confidence_level: 0.95, include_analysis: true },
   })
   const [result, setResult] = useState<ForecastResult | null>(null)
+  const [submittedHistory, setSubmittedHistory] = useState<number[]>(SAMPLE_DATA)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [rawData, setRawData] = useState(SAMPLE_DATA.join(', '))
@@ -27,13 +28,17 @@ export default function ForecastPage() {
     const parsed = rawData.split(',').map((v) => parseFloat(v.trim())).filter((v) => !isNaN(v))
     if (parsed.length < 5) { setError('Ingresa al menos 5 puntos históricos.'); return }
     setLoading(true); setError(''); setResult(null)
-    try { setResult(await runForecast({ ...data, historical_data: parsed })) }
+    try {
+      const nextResult = await runForecast({ ...data, historical_data: parsed })
+      setSubmittedHistory(parsed)
+      setResult(nextResult)
+    }
     catch (e) { setError(e instanceof Error ? e.message : 'Error') }
     finally { setLoading(false) }
   }
 
   const chartData = result ? [
-    ...SAMPLE_DATA.map((v, i) => ({ label: `H${i + 1}`, historical: v, forecast: null, lower: null, upper: null })),
+    ...submittedHistory.map((v, i) => ({ label: `H${i + 1}`, historical: v, forecast: null, lower: null, upper: null })),
     ...result.forecast.map((v, i) => ({
       label: `F${i + 1}`, historical: null, forecast: v,
       lower: result.confidence_intervals.lower[i],
@@ -63,6 +68,7 @@ export default function ForecastPage() {
                 placeholder="100, 120, 115, 130, ..."
               />
               <p className="text-[10px] text-muted-foreground">{rawData.split(',').filter((v) => !isNaN(parseFloat(v.trim()))).length} puntos detectados</p>
+              <p className="text-[10px] text-amber-500">Los valores iniciales son un EJEMPLO SINTÉTICO; reemplázalos con observaciones de tu negocio.</p>
             </div>
 
             <div className="space-y-1.5">

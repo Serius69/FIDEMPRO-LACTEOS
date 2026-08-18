@@ -61,7 +61,10 @@ BASE_NODES = [
     _no_dist_node("costo_fijo"),
 ]
 BASE_EDGES = []
-BASE_RUN_SPECS = {"n_runs_montecarlo": 500, "random_seed": 42}
+BASE_RUN_SPECS = {
+    "n_runs_montecarlo": 500, "random_seed": 42,
+    "unit_price": 12.5, "unit_cost": 4.0, "fixed_costs": 2500.0,
+}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -158,7 +161,7 @@ class TestSensitivityServiceOAT:
             _node("w", "weibull",    {"shape": 2.0, "scale": 500}),
         ]
         svc = self._svc()
-        results = svc.run_oat(nodes, [], {}, seed=0)
+        results = svc.run_oat(nodes, [], BASE_RUN_SPECS, seed=0)
         assert len(results) == 6
 
     def test_to_apexcharts_structure(self):
@@ -217,6 +220,11 @@ class TestSensitivityServiceOAT:
         cfg = {"dist_type": "unknown_dist", "params": {"mean": 300}}
         loc = svc._get_location_param(cfg)
         assert loc == ("mean", 300.0)
+
+    def test_unknown_distribution_is_not_replaced_by_normal(self):
+        svc = self._svc()
+        with pytest.raises(ValueError, match="Distribución no soportada"):
+            svc.run_oat([_node("demand", "unknown_dist", {"mean": 300})], [], BASE_RUN_SPECS)
 
     def test_location_param_no_params_returns_none(self):
         svc = self._svc()
@@ -500,7 +508,7 @@ class TestSensitivityIntegration:
                   {"low": 0.85, "high": 1.20}),
         ]
         svc = SensitivityService()
-        results = svc.run_oat(dairy_stochastic_nodes, [], {}, seed=7, n_runs=200)
+        results = svc.run_oat(dairy_stochastic_nodes, [], BASE_RUN_SPECS, seed=7, n_runs=200)
         assert len(results) == 3
         labels = {r.variable for r in results}
         assert labels == {"tasa_recepcion", "tasa_ventas", "factor_estacionalidad"}
@@ -512,7 +520,7 @@ class TestSensitivityIntegration:
             _node("big_demand",   "normal", {"mean": 1000, "std": 100}),
         ]
         svc = SensitivityService()
-        results = svc.run_oat(nodes, [], {}, seed=42)
+        results = svc.run_oat(nodes, [], BASE_RUN_SPECS, seed=42)
         assert len(results) == 2
         # big_demand should rank first (larger absolute swing)
         assert results[0].variable == "big_demand"

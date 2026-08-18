@@ -13,6 +13,7 @@ import numpy as np
 from typing import Dict, List, Tuple, Optional, Any
 from datetime import datetime, timedelta
 import scipy.stats
+from modeling.statistics import DistributionFitError, METHOD_VERSION, fit_distributions
 from django.db.models import Avg, StdDev, Min, Max, Count
 from simulate.models import ResultSimulation, Simulation
 from questionary.models import Answer, QuestionaryResult
@@ -108,8 +109,9 @@ class SimulationValidationService:
             # IMPROVED: Calculate more derived values with better logic
             real_values = self._calculate_derived_real_values_improved(real_values)
             
-            # IMPROVED: Add some reasonable defaults for critical variables if missing
-            real_values = self._add_reasonable_defaults(real_values, simulation)
+            # Missing prices/costs remain missing.  Validation must not turn an
+            # estimate into an observation by applying a sector-less markup or
+            # cost ratio.
             
             logger.info(f"Final extracted real values: {dict(real_values)}")
             
@@ -121,45 +123,13 @@ class SimulationValidationService:
     
     def _add_reasonable_defaults(self, real_values, simulation):
         """
-        IMPROVED: Add reasonable defaults for missing critical variables
+        Compatibility hook retained for callers of the legacy service.
+
+        It intentionally does not fabricate prices, costs, or margins.  The
+        canonical model/template layer is responsible for user-confirmed
+        assumptions and their provenance.
         """
-        try:
-            # Get some context from simulation
-            business = simulation.fk_questionary_result.fk_questionary.fk_product.fk_business
-            
-            # Add defaults only if we have some base values to work with
-            if len(real_values) < 3:
-                return real_values
-            
-            defaults = {}
-            
-            # If we have production but no price
-            if 'QPL' in real_values and 'PVP' not in real_values:
-                # Estimate a reasonable price based on typical margins
-                if 'CVU' in real_values:
-                    defaults['PVP'] = real_values['CVU'] * 1.3  # 30% markup
-                else:
-                    defaults['PVP'] = 15.0  # Default price for liquid products
-            
-            # If we have sales volume but no price
-            if 'TPV' in real_values and 'PVP' not in real_values:
-                defaults['PVP'] = 15.0
-            
-            # If we have some financial data but missing costs
-            if 'IT' in real_values and 'TG' not in real_values:
-                defaults['TG'] = real_values['IT'] * 0.7  # Assume 70% cost ratio
-            
-            # Add defaults only if they seem reasonable
-            for key, value in defaults.items():
-                if key not in real_values and value > 0:
-                    real_values[key] = value
-                    logger.info(f"Added reasonable default {key} = {value}")
-            
-            return real_values
-            
-        except Exception as e:
-            logger.error(f"Error adding reasonable defaults: {str(e)}")
-            return real_values
+        return dict(real_values)
     
     def _calculate_derived_real_values_improved(self, real_values):
         """
@@ -174,10 +144,8 @@ class SimulationValidationService:
                 derived_values['IT'] = derived_values['TPV'] * derived_values['PVP']
                 logger.debug(f"Calculated IT = {derived_values['IT']} (TPV * PVP)")
             
-            if 'TG' not in derived_values and 'GO' in derived_values:
-                # More conservative estimate for total expenses
-                derived_values['TG'] = derived_values['GO'] * 1.1  # Only 10% additional costs
-                logger.debug(f"Calculated TG = {derived_values['TG']} (GO * 1.1)")
+            # Total costs cannot be inferred from operating costs with an
+            # arbitrary overhead factor; preserve the missing value instead.
             
             if 'GT' not in derived_values and all(k in derived_values for k in ['IT', 'TG']):
                 derived_values['GT'] = derived_values['IT'] - derived_values['TG']
@@ -521,17 +489,28 @@ class SimulationValidationService:
             for method_name, method_data in comparison_methods.items():
                 # Calculate composite score
                 status_score = status_scores.get(method_data['status'], 0)
-                error_score = max(0, 100 - method_data['error_pct'])  # Lower error = higher score
-                confidence_score = method_data.get('confidence', 0.5) * 100
+                error_pct = method_data.get('error_pct')
+                if error_pct is None:
+                    continue  # Sin error medido no hay nada que puntuar.
+                error_score = max(0, 100 - error_pct)  # Lower error = higher score
                 reliability_score = method_reliability.get(method_name, 0.5) * 100
-                
-                # Weighted composite score
+
+                # La confianza no disponible se excluye del promedio en vez de
+                # sustituirse por 0.5: un default es una medición inventada, y
+                # además premiaba a los métodos que no supieron medirla.
+                confidence = method_data.get('confidence')
+                weights = {'status': 0.4, 'error': 0.3, 'confidence': 0.2, 'reliability': 0.1}
                 composite_score = (
-                    status_score * 0.4 +        # 40% weight on status
-                    error_score * 0.3 +         # 30% weight on error
-                    confidence_score * 0.2 +    # 20% weight on confidence
-                    reliability_score * 0.1     # 10% weight on method reliability
+                    status_score * weights['status'] +
+                    error_score * weights['error'] +
+                    reliability_score * weights['reliability']
                 )
+                if confidence is None:
+                    # Renormaliza sobre los términos realmente medidos.
+                    measured = 1.0 - weights['confidence']
+                    composite_score /= measured
+                else:
+                    composite_score += confidence * 100 * weights['confidence']
                 
                 logger.debug(f"Method {method_name} for {var_key}: score={composite_score:.2f}, "
                            f"status={method_data['status']}, error={method_data['error_pct']:.2f}%")
@@ -596,6 +575,23 @@ class SimulationValidationService:
             logger.error(f"Error determining validation status for {var_key}: {str(e)}")
             return 'ERROR'
     
+    @staticmethod
+    def _estimator_confidence(simulated_values, estimator):
+        """Dispersión relativa de la muestra alrededor del estimador, en [0, 1].
+
+        No es una confianza estadística: es un indicador de estabilidad, el mismo
+        para los cinco métodos. Antes tres de ellos declaraban literales (0.9, 0.8,
+        0.85/0.6) que no salían de los datos y sin embargo pesaban un 20% en la
+        elección del método "mejor": dos muestras con dispersión opuesta recibían
+        idéntica confianza. `None` cuando no está definida — nunca un default.
+        """
+        values = np.asarray(simulated_values, dtype=float)
+        values = values[np.isfinite(values)]
+        if values.size < 2 or estimator is None or not np.isfinite(estimator) or estimator == 0:
+            return None
+        relative_dispersion = float(np.std(values)) / abs(float(estimator))
+        return float(min(1.0, max(0.0, 1.0 - relative_dispersion)))
+
     def _calculate_multiple_comparisons(self, simulated_values, real_value, var_key):
         """
         IMPROVED: Calculate multiple comparison methods to find the best fit
@@ -613,7 +609,7 @@ class SimulationValidationService:
                 'simulated_value': avg_simulated,
                 'error_pct': avg_error,
                 'status': avg_status,
-                'confidence': 1.0 - (np.std(simulated_values) / abs(avg_simulated)) if avg_simulated != 0 else 0
+                'confidence': self._estimator_confidence(simulated_values, avg_simulated)
             }
             
             # Method 2: Median (more robust to outliers)
@@ -626,7 +622,7 @@ class SimulationValidationService:
                 'simulated_value': median_simulated,
                 'error_pct': median_error,
                 'status': median_status,
-                'confidence': 1.0 - (np.std(simulated_values) / abs(median_simulated)) if median_simulated != 0 else 0
+                'confidence': self._estimator_confidence(simulated_values, median_simulated)
             }
             
             # Method 3: Trimmed mean (remove outliers)
@@ -641,7 +637,7 @@ class SimulationValidationService:
                     'simulated_value': trimmed_simulated,
                     'error_pct': trimmed_error,
                     'status': trimmed_status,
-                    'confidence': 0.9  # High confidence due to outlier removal
+                    'confidence': self._estimator_confidence(simulated_values, trimmed_simulated)
                 }
             
             # Method 4: Weighted average (recent values more important)
@@ -655,7 +651,7 @@ class SimulationValidationService:
                 'simulated_value': weighted_simulated,
                 'error_pct': weighted_error,
                 'status': weighted_status,
-                'confidence': 0.8
+                'confidence': self._estimator_confidence(simulated_values, weighted_simulated)
             }
             
             # Method 5: Final period average (last 30% of simulation)
@@ -670,19 +666,22 @@ class SimulationValidationService:
                 'simulated_value': final_simulated,
                 'error_pct': final_error,
                 'status': final_status,
-                'confidence': 0.85 if len(final_values) >= 3 else 0.6
+                'confidence': self._estimator_confidence(final_values, final_simulated)
             }
             
             return comparisons
             
         except Exception as e:
             logger.error(f"Error calculating multiple comparisons for {var_key}: {str(e)}")
+            # Nada medible: ni un valor simulado inventado, ni un 100% de error
+            # que después se promedia como si se hubiera observado.
             return {'average': {
                 'method': 'Fallback Average',
-                'simulated_value': np.mean(simulated_values) if simulated_values else 0,
-                'error_pct': 100.0,
-                'status': 'ERROR',
-                'confidence': 0.0
+                'simulated_value': None,
+                'error_pct': None,
+                'status': 'UNAVAILABLE',
+                'confidence': None,
+                'unavailable_reason': 'COMPARISON_FAILED',
             }}
     
     
@@ -1678,8 +1677,11 @@ class SimulationValidationService:
     
     def _validate_model_predictions(self, simulation_instance, predicted_values, real_values):
         """
-        CORRECCIÓN: Validates model predictions against real values.
-        Fixes: unsupported operand type(s) for -: 'ResultSimulation' and 'float'
+        Validate aligned finite prediction/observation pairs.
+
+        Invalid values are dropped pairwise rather than coerced to zero; this
+        prevents malformed records from becoming fabricated perfect forecasts
+        and preserves temporal alignment.
         """
         try:
             validation_results = {
@@ -1695,78 +1697,94 @@ class SimulationValidationService:
                 validation_results['errors'].append("Insufficient data for validation")
                 return validation_results
             
-            # CORRECCIÓN PRINCIPAL: Convertir predicted_values de forma segura
-            processed_predicted = []
-            for pred_val in predicted_values:
+            def finite_value(raw, *, prediction=False):
+                candidate = raw
+                if prediction and hasattr(raw, 'demand_mean'):
+                    candidate = raw.demand_mean
+                elif prediction and hasattr(raw, 'value'):
+                    candidate = raw.value
+                if isinstance(candidate, bool):
+                    return None
                 try:
-                    if hasattr(pred_val, 'demand_mean'):
-                        # Es un objeto ResultSimulation
-                        processed_predicted.append(float(pred_val.demand_mean))
-                    elif hasattr(pred_val, 'value'):
-                        processed_predicted.append(float(pred_val.value))
-                    elif isinstance(pred_val, (int, float)):
-                        processed_predicted.append(float(pred_val))
-                    else:
-                        # Intentar conversión directa
-                        processed_predicted.append(float(pred_val))
+                    value = float(candidate)
                 except (ValueError, TypeError, AttributeError):
-                    processed_predicted.append(0.0)
-            
-            # Convertir real_values de forma segura
-            processed_real = []
-            for real_val in real_values:
-                try:
-                    processed_real.append(float(real_val))
-                except (ValueError, TypeError):
-                    processed_real.append(0.0)
-            
-            # Calculate validation metrics
-            total_predictions = min(len(processed_predicted), len(processed_real))
+                    return None
+                return value if np.isfinite(value) else None
+
+            paired_values = []
+            invalid_pairs = 0
+            for predicted_raw, real_raw in zip(predicted_values, real_values):
+                predicted = finite_value(predicted_raw, prediction=True)
+                real = finite_value(real_raw)
+                if predicted is None or real is None:
+                    invalid_pairs += 1
+                    continue
+                paired_values.append((predicted, real))
+
+            unpaired_values = abs(len(predicted_values) - len(real_values))
+            if invalid_pairs:
+                validation_results['warnings'].append(
+                    f"Se descartaron {invalid_pairs} pares con valores no numéricos o no finitos."
+                )
+            if unpaired_values:
+                validation_results['warnings'].append(
+                    f"Se descartaron {unpaired_values} valores sin contraparte temporal."
+                )
+
+            total_predictions = len(paired_values)
+            if total_predictions == 0:
+                validation_results['validation_status'] = 'FAILED'
+                validation_results['errors'].append("No hay pares finitos alineados para validar.")
+                validation_results['invalid_pairs_dropped'] = invalid_pairs
+                validation_results['unpaired_values_dropped'] = unpaired_values
+                return validation_results
+
             accurate_predictions = 0
-            error_rates = []
-            
-            for i in range(total_predictions):
-                predicted = processed_predicted[i]
-                real = processed_real[i]
-                
+            percentage_errors = []
+            absolute_errors = []
+
+            for predicted, real in paired_values:
+                absolute_error = abs(predicted - real)
+                absolute_errors.append(absolute_error)
                 if real != 0:
-                    error_rate = abs(predicted - real) / abs(real)
-                    error_rates.append(error_rate)
-                    
+                    error_rate = absolute_error / abs(real)
+                    percentage_errors.append(error_rate)
                     # Consider accurate if within 15% tolerance
                     if error_rate <= 0.15:
                         accurate_predictions += 1
                 else:
-                    # Handle zero real values
-                    if abs(predicted) <= 1:  # Small threshold for zero
+                    # Percentage error is undefined at zero; retain an explicit
+                    # absolute tolerance for the accuracy-rate classification.
+                    if absolute_error <= 1:
                         accurate_predictions += 1
-                    error_rates.append(0 if predicted == 0 else 1)
-            
-            # Calculate metrics
-            if error_rates and total_predictions > 0:
-                validation_results['accuracy_metrics'] = {
-                    'mean_absolute_percentage_error': sum(error_rates) / len(error_rates),
-                    'accuracy_rate': accurate_predictions / total_predictions,
-                    'total_predictions': total_predictions,
-                    'accurate_predictions': accurate_predictions
-                }
-                
-                # Determine validation status
-                accuracy_rate = validation_results['accuracy_metrics']['accuracy_rate']
-                if accuracy_rate >= 0.8:
-                    validation_results['validation_status'] = 'PASSED'
-                elif accuracy_rate >= 0.6:
-                    validation_results['validation_status'] = 'WARNING'
-                    validation_results['warnings'].append(
-                        f"Model accuracy is moderate: {accuracy_rate:.1%}"
-                    )
-                else:
-                    validation_results['validation_status'] = 'FAILED'
-                    validation_results['errors'].append(
-                        f"Model accuracy too low: {accuracy_rate:.1%}"
-                    )
-            
+
+            accuracy_rate = accurate_predictions / total_predictions
+            validation_results['accuracy_metrics'] = {
+                'mean_absolute_percentage_error': (
+                    sum(percentage_errors) / len(percentage_errors)
+                    if percentage_errors else None
+                ),
+                'mean_absolute_error': sum(absolute_errors) / len(absolute_errors),
+                'accuracy_rate': accuracy_rate,
+                'total_predictions': total_predictions,
+                'accurate_predictions': accurate_predictions,
+            }
+            if accuracy_rate >= 0.8:
+                validation_results['validation_status'] = 'PASSED'
+            elif accuracy_rate >= 0.6:
+                validation_results['validation_status'] = 'WARNING'
+                validation_results['warnings'].append(
+                    f"Model accuracy is moderate: {accuracy_rate:.1%}"
+                )
+            else:
+                validation_results['validation_status'] = 'FAILED'
+                validation_results['errors'].append(
+                    f"Model accuracy too low: {accuracy_rate:.1%}"
+                )
+
             validation_results['predictions_validated'] = total_predictions
+            validation_results['invalid_pairs_dropped'] = invalid_pairs
+            validation_results['unpaired_values_dropped'] = unpaired_values
             return validation_results
             
         except Exception as e:
@@ -3837,167 +3855,88 @@ class SimulationValidationService:
             return self._create_empty_ks_validation_result()
 
     def _perform_ks_test_demand(self, simulated_demands, simulation_instance, validation_results):
-        """Realizar prueba KS específica para demanda"""
+        """Construir diagnósticos de ajuste sin p-values KS post-ajuste."""
         try:
-            from scipy import stats
-            import numpy as np
-            
-            # Obtener distribución teórica esperada
-            expected_distribution = self._get_expected_distribution(simulation_instance)
-            
-            # Normalizar datos
-            data_normalized = np.array(simulated_demands)
-            
-            # Realizar prueba KS contra diferentes distribuciones
-            distributions_to_test = [
-                ('normal', stats.norm),
-                ('lognormal', stats.lognorm),
-                ('exponential', stats.expon),
-                ('gamma', stats.gamma)
-            ]
-            
-            best_fit = None
-            best_p_value = 0
-            
-            ks_results = {}
-            
-            for dist_name, dist_func in distributions_to_test:
-                try:
-                    # Ajustar parámetros de la distribución
-                    if dist_name == 'normal':
-                        params = (np.mean(data_normalized), np.std(data_normalized))
-                        ks_stat, p_value = stats.kstest(
-                            data_normalized, 
-                            lambda x: dist_func.cdf(x, loc=params[0], scale=params[1])
-                        )
-                    elif dist_name == 'lognormal':
-                        # Evitar valores negativos o cero
-                        positive_data = data_normalized[data_normalized > 0]
-                        if len(positive_data) > 0:
-                            params = stats.lognorm.fit(positive_data)
-                            ks_stat, p_value = stats.kstest(
-                                positive_data,
-                                lambda x: dist_func.cdf(x, *params)
-                            )
-                        else:
-                            continue
-                    else:
-                        params = dist_func.fit(data_normalized)
-                        ks_stat, p_value = stats.kstest(
-                            data_normalized,
-                            lambda x: dist_func.cdf(x, *params)
-                        )
-                    
-                    ks_results[dist_name] = {
-                        'statistic': float(ks_stat),
-                        'p_value': float(p_value),
-                        'params': [float(p) for p in params],
-                        'passes_test': p_value > 0.05,
-                        'confidence_level': 0.95
-                    }
-                    
-                    # Trackear mejor ajuste
-                    if p_value > best_p_value:
-                        best_p_value = p_value
-                        best_fit = dist_name
-                        
-                    validation_results['summary']['total_tests'] += 1
-                    if p_value > 0.05:
-                        validation_results['summary']['passed_tests'] += 1
-                        
-                except Exception as e:
-                    logger.warning(f"Error testing {dist_name} distribution: {e}")
-                    continue
-            
-            # Generar alertas basadas en resultados
-            if best_p_value < 0.01:
-                validation_results['alerts'].append({
-                    'type': 'ERROR',
-                    'severity': 'high',
-                    'message': f'Los datos de demanda no siguen ninguna distribución conocida (mejor p-value: {best_p_value:.4f})',
-                    'recommendation': 'Revisar el modelo de generación de demanda y sus parámetros'
-                })
-                validation_results['summary']['critical_failures'] += 1
-            elif best_p_value < 0.05:
-                validation_results['alerts'].append({
-                    'type': 'WARNING',
-                    'severity': 'medium',
-                    'message': f'Los datos de demanda muestran desviaciones de distribuciones teóricas (mejor ajuste: {best_fit})',
-                    'recommendation': 'Considerar ajustar parámetros del modelo de demanda'
-                })
-            
+            fitted = fit_distributions(
+                [float(value) for value in simulated_demands],
+                candidates=['normal', 'lognormal', 'exponential', 'gamma'],
+            )
+            best_fit = fitted['ranking']['selected_distribution']
+            ks_results = {
+                item['distribution']: {
+                    'statistic': item['statistic'],
+                    'p_value': None,
+                    'params': item['parameters'],
+                    'passes_test': None,
+                    'test_name': item['test_name'],
+                    'p_value_unavailable_reason': item['p_value_unavailable_reason'],
+                    'method_version': METHOD_VERSION,
+                }
+                for item in fitted['candidates']
+            }
             return {
-                'test_type': 'kolmogorov_smirnov_demand',
+                'test_type': 'distribution_fit_diagnostic',
                 'sample_size': len(simulated_demands),
+                # La muestra real sobre la que se ajustó. El gráfico la necesita:
+                # sin ella dibujaba una serie inventada rotulada como observada.
+                # Es un diagnóstico de request, no se persiste.
+                'sample': [float(value) for value in simulated_demands],
                 'distributions_tested': ks_results,
                 'best_fit_distribution': best_fit,
-                'best_p_value': best_p_value,
-                'overall_passes': best_p_value > 0.05,
-                'interpretation': self._interpret_ks_result(best_p_value, best_fit)
+                'best_p_value': None,
+                'overall_passes': None,
+                'ranking_method': fitted['ranking']['criterion'],
+                'method_version': METHOD_VERSION,
+                'interpretation': 'Candidato por AIC; el diagnóstico no prueba que la distribución sea verdadera.',
             }
-            
-        except Exception as e:
+        except (DistributionFitError, ValueError, TypeError) as e:
             logger.error(f"Error in demand KS test: {str(e)}")
-            return {'error': str(e), 'overall_passes': False}
+            return {
+                'test_type': 'distribution_fit_diagnostic',
+                'sample_size': len(simulated_demands),
+                'best_fit_distribution': None,
+                'best_p_value': None,
+                'overall_passes': None,
+                'valid': False,
+                'unavailable_reason': 'INSUFFICIENT_OR_INVALID_SAMPLE',
+                'method_version': METHOD_VERSION,
+            }
 
     def _perform_ks_test_variable(self, var_values, var_name, validation_results):
-        """Realizar prueba KS para variables específicas"""
+        """Diagnosticar una familia esperada sin fabricar decisión por p-value."""
         try:
-            from scipy import stats
-            import numpy as np
-            
-            if len(var_values) < 10:
-                return {'error': 'Insufficient data for KS test', 'overall_passes': False}
-            
-            data = np.array([float(v) for v in var_values if v is not None])
-            
-            # Determinar distribución esperada por tipo de variable
+            data = [float(v) for v in var_values if v is not None]
             expected_dist = self._get_expected_distribution_for_variable(var_name)
-            
-            # Realizar test KS
-            if expected_dist == 'normal':
-                ks_stat, p_value = stats.kstest(
-                    data, 
-                    lambda x: stats.norm.cdf(x, loc=np.mean(data), scale=np.std(data))
-                )
-            elif expected_dist == 'lognormal' and all(data > 0):
-                params = stats.lognorm.fit(data)
-                ks_stat, p_value = stats.kstest(
-                    data,
-                    lambda x: stats.lognorm.cdf(x, *params)
-                )
-            else:
-                # Test genérico contra distribución empírica
-                ks_stat, p_value = stats.kstest(data, 'norm')
-            
-            passes_test = p_value > 0.05
-            
-            validation_results['summary']['total_tests'] += 1
-            if passes_test:
-                validation_results['summary']['passed_tests'] += 1
-            else:
-                # Generar alerta específica para la variable
-                validation_results['alerts'].append({
-                    'type': 'WARNING',
-                    'severity': 'medium',
-                    'message': f'Variable {var_name} no sigue la distribución esperada (p-value: {p_value:.4f})',
-                    'recommendation': f'Revisar cálculos y parámetros para {var_name}'
-                })
-            
+            candidate = expected_dist if expected_dist in {
+                'normal', 'lognormal', 'exponential', 'gamma', 'uniform'
+            } else 'normal'
+            fitted = fit_distributions(data, candidates=[candidate])
+            diagnostic = fitted['candidates'][0]
             return {
                 'variable': var_name,
-                'test_type': 'kolmogorov_smirnov',
-                'statistic': float(ks_stat),
-                'p_value': float(p_value),
+                'test_type': 'distribution_fit_diagnostic',
+                'statistic': diagnostic['statistic'],
+                'p_value': None,
                 'expected_distribution': expected_dist,
                 'sample_size': len(data),
-                'passes_test': passes_test,
-                'interpretation': f"{'Acepta' if passes_test else 'Rechaza'} hipótesis nula de distribución esperada"
+                'passes_test': None,
+                'p_value_unavailable_reason': diagnostic['p_value_unavailable_reason'],
+                'method_version': METHOD_VERSION,
+                'interpretation': 'Distancia descriptiva; no confirma ni rechaza por sí sola la distribución.',
             }
-            
-        except Exception as e:
+        except (DistributionFitError, ValueError, TypeError) as e:
             logger.error(f"Error in variable {var_name} KS test: {str(e)}")
-            return {'error': str(e), 'overall_passes': False}
+            return {
+                'variable': var_name,
+                'test_type': 'distribution_fit_diagnostic',
+                'statistic': None,
+                'p_value': None,
+                'sample_size': len(var_values),
+                'passes_test': None,
+                'valid': False,
+                'unavailable_reason': 'INSUFFICIENT_OR_INVALID_SAMPLE',
+                'method_version': METHOD_VERSION,
+            }
 
     def _calculate_enhanced_confidence_intervals(self, simulated_demands, all_variables):
         """Calcular intervalos de confianza mejorados para proyecciones"""
@@ -4182,19 +4121,24 @@ class SimulationValidationService:
             # Análisis de demanda
             if 'demand' in ks_tests:
                 demand_test = ks_tests['demand']
-                best_p_value = demand_test.get('best_p_value', 0)
-                
                 component_analysis['demand'] = {
                     'component': 'Modelo de Demanda',
-                    'reliability': 'high' if best_p_value > 0.05 else 'medium' if best_p_value > 0.01 else 'low',
-                    'confidence': f"{min(best_p_value * 100, 99):.1f}%",
-                    'status': 'validated' if best_p_value > 0.05 else 'needs_review'
+                    'reliability': None,
+                    'confidence': None,
+                    'status': 'diagnostic_only',
+                    'selected_candidate': demand_test.get('best_fit_distribution'),
+                    'ranking_method': demand_test.get('ranking_method'),
+                    'method_version': demand_test.get('method_version'),
+                    'unavailable_reason': 'P_VALUE_NOT_CALIBRATED_AFTER_PARAMETER_ESTIMATION',
                 }
             
             # Análisis de variables financieras
             financial_reliability = []
             for var_name, var_test in ks_tests.items():
-                if var_name in ['IT', 'GT', 'TG', 'NR'] and 'p_value' in var_test:
+                if (
+                    var_name in ['IT', 'GT', 'TG', 'NR']
+                    and isinstance(var_test.get('passes_test'), bool)
+                ):
                     financial_reliability.append(var_test['passes_test'])
             
             if financial_reliability:

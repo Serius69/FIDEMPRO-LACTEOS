@@ -34,7 +34,15 @@ STATICFILES_DIRS = [
 
 # WhiteNoise para servir archivos estáticos
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Ver nota en production.py: STATICFILES_STORAGE ya no existe en Django 5.1+.
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 # Seguridad
 SECURE_SSL_REDIRECT = True

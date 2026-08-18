@@ -265,6 +265,20 @@ class SimulationValidator:
         else:
             validated_data['demand_distribution'] = demand_distribution
 
+        # Validar semilla aleatoria (opcional): entero para reproducibilidad del
+        # motor escalar. Antes se capturaba en el form pero se perdía aquí --
+        # nunca llegaba a validated_data ni, por lo tanto, al modelo Simulation,
+        # así que random_seed quedaba siempre en NULL y el motor usaba el
+        # estado global (no reproducible) de np.random.
+        random_seed = simulation_data.get('random_seed')
+        if random_seed in (None, ''):
+            validated_data['random_seed'] = None
+        else:
+            try:
+                validated_data['random_seed'] = int(random_seed)
+            except (ValueError, TypeError):
+                errors.append("random_seed debe ser un número entero válido")
+
         # Raise error if any validation failed
         if errors:
             raise ValidationError("; ".join(errors))

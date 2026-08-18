@@ -52,9 +52,16 @@ class ReportForm(forms.ModelForm):
 
 class SimulationReportForm(forms.Form):
     """Formulario para crear reportes basados en simulaciones"""
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        products = Product.objects.filter(is_active=True)
+        if user is not None and not getattr(user, 'is_staff', False):
+            products = products.filter(fk_business__fk_user=user)
+        self.fields['product'].queryset = products.order_by('name')
     
     product = forms.ModelChoiceField(
-        queryset=Product.objects.filter(is_active=True),
+        queryset=Product.objects.none(),
         widget=forms.Select(attrs={
             'class': 'form-select',
             'required': True
@@ -85,8 +92,8 @@ class SimulationReportForm(forms.Form):
             'placeholder': '5.0',
             'step': '0.01'
         }),
-        label='Tasa de Crecimiento (%)',
-        help_text='Tasa de crecimiento anual esperada'
+        label='Tasa de Crecimiento Mensual (%)',
+        help_text='Supuesto de crecimiento compuesto aplicado una vez por mes'
     )
     
     horizonte = forms.IntegerField(
@@ -152,6 +159,20 @@ class SimulationReportForm(forms.Form):
         label='Inversión Inicial',
         help_text='Inversión inicial requerida'
     )
+
+    tasa_descuento_anual = forms.DecimalField(
+        min_value=0,
+        max_value=100,
+        decimal_places=2,
+        initial=12.00,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '12.00',
+            'step': '0.01',
+        }),
+        label='Tasa de Descuento Anual (%)',
+        help_text='Supuesto nominal anual usado exclusivamente para calcular el VAN',
+    )
     
     tipo_simulacion = forms.ChoiceField(
         choices=[
@@ -211,6 +232,7 @@ class SimulationReportForm(forms.Form):
                 'costo_unitario': float(self.cleaned_data['costo_unitario']),
                 'gastos_fijos': float(self.cleaned_data['gastos_fijos']),
                 'inversion_inicial': float(self.cleaned_data['inversion_inicial']),
+                'tasa_descuento_anual': float(self.cleaned_data['tasa_descuento_anual']) / 100,
                 'tipo_simulacion': self.cleaned_data['tipo_simulacion'],
                 'incluir_graficas': self.cleaned_data['incluir_graficas'],
                 'incluir_analisis_sensibilidad': self.cleaned_data['incluir_analisis_sensibilidad'],

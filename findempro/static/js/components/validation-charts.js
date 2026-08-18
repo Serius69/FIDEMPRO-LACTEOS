@@ -278,10 +278,24 @@ function createVariableDetailChart(variableName) {
     const ctx = document.getElementById('variableDetailChart');
     if (!ctx) return;
     
-    // Sample data - in real implementation, this would come from server
-    const days = Array.from({length: 30}, (_, i) => `Día ${i + 1}`);
-    const realValues = Array.from({length: 30}, () => Math.random() * 100 + 50);
-    const simulatedValues = Array.from({length: 30}, () => Math.random() * 100 + 50);
+    // Antes ambas series salían de `Math.random()` y se rotulaban "Valor Real" y
+    // "Valor Simulado": el gráfico mostraba una comparación que nunca se midió.
+    // Sin los datos del servidor no se dibuja nada.
+    const payload = (window.FINDEMPRO_VARIABLE_SERIES || {})[variableName];
+    const realValues = payload && Array.isArray(payload.real) ? payload.real : null;
+    const simulatedValues = payload && Array.isArray(payload.simulated) ? payload.simulated : null;
+    if (!realValues || !simulatedValues || !realValues.length
+        || realValues.length !== simulatedValues.length) {
+        const host = ctx.parentElement || ctx;
+        const notice = document.createElement('p');
+        notice.className = 'text-muted text-center my-4';
+        notice.setAttribute('role', 'status');
+        notice.textContent = `Sin datos comparables para ${variableName}.`;
+        ctx.style.display = 'none';
+        host.appendChild(notice);
+        return;
+    }
+    const days = realValues.map((_, i) => `Día ${i + 1}`);
     
     new Chart(ctx, {
         type: 'line',

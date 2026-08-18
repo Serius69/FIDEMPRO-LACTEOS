@@ -152,9 +152,42 @@ class Report(models.Model):
                     'title': f'Ya existe un reporte con este título para el producto {self.fk_product.name}'
                 })
     
+    def _ensure_unique_title(self):
+        """Desambigua el título si ya existe otro reporte del mismo producto
+        con el mismo título, añadiendo un sufijo incremental ' (n)'.
+
+        Evita que ``clean()`` levante ValidationError por la restricción de
+        unicidad (title, fk_product) al crear reportes de simulación el mismo
+        día/minuto o al duplicar un reporte más de una vez.
+        """
+        if not self.fk_product or not self.title:
+            return
+        base = self.title
+        collides = Report.objects.filter(
+            title=self.title, fk_product=self.fk_product
+        ).exclude(pk=self.pk).exists()
+        if not collides:
+            return
+        counter = 2
+        while Report.objects.filter(
+            title=f"{base} ({counter})", fk_product=self.fk_product
+        ).exclude(pk=self.pk).exists():
+            counter += 1
+        self.title = f"{base} ({counter})"
+
     def save(self, *args, **kwargs):
-        """Override del método save para validaciones adicionales"""
-        self.full_clean()
+        """Override del método save para validaciones adicionales.
+
+        - En guardados parciales (``update_fields``, p.ej. toggle de estado o
+          contador de vistas) NO se corre ``full_clean()``: solo cambian
+          campos acotados y no debe re-validarse la unicidad del título.
+        - En un guardado completo se desambigua el título (evita colisión
+          (title, fk_product)) antes de validar, de modo que ``full_clean()``
+          nunca falle por títulos duplicados.
+        """
+        if kwargs.get('update_fields') is None:
+            self._ensure_unique_title()
+            self.full_clean()
         super().save(*args, **kwargs)
     
     @property
@@ -259,9 +292,10 @@ class Report(models.Model):
         if not results:
             return {}
         
+        roi = results.get('roi')
         return {
             'Utilidad Neta': results.get('utilidad_neta', 'N/A'),
             'Flujo de Caja': results.get('flujo_caja', 'N/A'),
-            'ROI': f"{results.get('roi', 0):.2f}%" if results.get('roi') else 'N/A',
+            'ROI': f"{roi:.2f}%" if roi is not None else 'N/A',
             'Punto de Equilibrio': results.get('punto_equilibrio', 'N/A')
         }

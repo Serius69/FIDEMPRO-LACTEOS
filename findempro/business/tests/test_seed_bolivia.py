@@ -140,6 +140,16 @@ def test_seed_force_recreates_without_unique_clash():
     assert old.name != b2.name  # nombre liberado para el nuevo
 
 
+def test_seed_command_defaults_to_one_demo_with_simulation():
+    from business.management.commands.seed_bolivia import Command
+
+    options = Command().create_parser("manage.py", "seed_bolivia").parse_args([])
+
+    assert options.types == "7"
+    assert options.run_sim is True
+    assert options.mc_scenarios == 200
+
+
 @pytest.mark.django_db
 def test_onboarding_get_shows_type_selector(client):
     """La pantalla de onboarding ofrece el selector de los 19 rubros."""

@@ -108,7 +108,14 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
-CSRF_COOKIE_HTTPONLY = True
+# Django documenta que HttpOnly en la cookie CSRF no aporta protección práctica:
+# el token sólo defiende de ataques cross-domain, y quien puede leer la cookie por
+# JavaScript ya está en el mismo origen. A cambio rompe algo real — el JS del
+# producto (simulate-list, report-list, user-list, finance-list, profile-settings)
+# arma `X-CSRFToken` con `getCookie('csrftoken')` sobre `document.cookie`, que con
+# HttpOnly llega vacío y devuelve 403 en cada POST. Verificado con el E2E de
+# navegador: crear un modelo desde plantilla daba 403 hasta quitarlo.
+CSRF_COOKIE_HTTPONLY = False
 
 # ─────────────────────────────────────────────
 # CSRF confiable (necesario para frontend separado)
@@ -128,7 +135,17 @@ CORS_ALLOW_CREDENTIALS = True
 # Static files — WhiteNoise con compresión
 # ─────────────────────────────────────────────
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# Django 5.1 eliminó STATICFILES_STORAGE: si se deja, se ignora EN SILENCIO y los
+# estáticos vuelven al backend por defecto, perdiendo la compresión de WhiteNoise
+# sin que nada falle. La configuración viva es STORAGES.
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+    },
+}
 
 # ─────────────────────────────────────────────
 # REST Framework — producción (solo JSON, auth requerida)

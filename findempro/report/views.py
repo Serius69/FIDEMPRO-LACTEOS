@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.conf import settings
-from django.http import JsonResponse, HttpResponse, FileResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponse, FileResponse, HttpResponseForbidden, Http404
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.db.models import Q, Count, Avg
@@ -28,13 +28,43 @@ from celery.result import AsyncResult
 # Configure logger
 logger = logging.getLogger(__name__)
 
+
+def _reports_for_user(user):
+    """Queryset base de reportes restringido al DUEÑO real.
+
+    El modelo Report no tiene ``created_by``; la propiedad se establece por la
+    cadena fk_product -> fk_business -> fk_user. Los usuarios staff ven todos
+    los reportes. Esto cierra el IDOR de la app report (los guardas previos
+    ``hasattr(report, 'created_by')`` siempre eran falsos y no protegían nada).
+    """
+    qs = Report.objects.all()
+    if not getattr(user, 'is_staff', False):
+        qs = qs.filter(fk_product__fk_business__fk_user=user)
+    return qs
+
+
+def _sanitize_json_numbers(obj):
+    """Reemplaza recursivamente inf/-inf/nan por None en dicts/listas.
+
+    JSONField sobre jsonb (Postgres) rechaza Infinity/NaN; el motor sqlite los
+    serializa como 'Infinity'/'NaN' inválidos para otros consumidores. Se
+    aplica al contenido de los reportes antes de persistirlo.
+    """
+    import math
+    if isinstance(obj, dict):
+        return {k: _sanitize_json_numbers(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_sanitize_json_numbers(v) for v in obj]
+    if isinstance(obj, float) and (math.isinf(obj) or math.isnan(obj)):
+        return None
+    return obj
+
 class AppsView(LoginRequiredMixin, TemplateView):
     """Main apps view for reports module."""
     template_name = 'report/apps.html'
 
 # List View with improved error handling and caching
 @login_required
-@cache_page(60 * 5)  # Cache for 5 minutes
 def report_list(request):
     """Display paginated list of reports with search functionality."""
     try:
@@ -42,9 +72,10 @@ def report_list(request):
         filter_type = request.GET.get('type', '')
         filter_status = request.GET.get('status', '')
         sort_by = request.GET.get('sort', '-date_created')
-        
-        # Base queryset with optimizations
-        reports = Report.objects.select_related('fk_product').prefetch_related()
+
+        # Base queryset restringido al dueño (cierra IDOR). Sin @cache_page
+        # porque el resultado ahora es específico por usuario.
+        reports = _reports_for_user(request.user).select_related('fk_product')
         
         # Apply filters
         if search_query:
@@ -78,8 +109,8 @@ def report_list(request):
             logger.warning(f"Invalid page number: {page_number}")
             page_obj = paginator.get_page(1)
         
-        # Get statistics
-        stats = get_report_statistics()
+        # Get statistics (restringidas al usuario)
+        stats = get_report_statistics(request.user)
         
         context = {
             'reports': page_obj,
@@ -108,21 +139,26 @@ def report_list(request):
         }
         return render(request, 'report/report-list.html', context)
 
-def get_report_statistics() -> Dict[str, Any]:
-    """Get report statistics for dashboard."""
+def get_report_statistics(user=None) -> Dict[str, Any]:
+    """Get report statistics for dashboard (restringidas al dueño)."""
     try:
-        cache_key = 'report_statistics'
+        base = Report.objects.all()
+        if user is not None and not getattr(user, 'is_staff', False):
+            base = base.filter(fk_product__fk_business__fk_user=user)
+            cache_key = f'report_statistics_{user.id}'
+        else:
+            cache_key = 'report_statistics'
         stats = cache.get(cache_key)
-        
+
         if stats is None:
-            total_reports = Report.objects.count()
-            active_reports = Report.objects.filter(is_active=True).count()
-            recent_reports = Report.objects.filter(
+            total_reports = base.count()
+            active_reports = base.filter(is_active=True).count()
+            recent_reports = base.filter(
                 date_created__gte=timezone.now() - timedelta(days=7)
             ).count()
-            
+
             # Products with most reports
-            top_products = Report.objects.filter(
+            top_products = base.filter(
                 fk_product__isnull=False
             ).values(
                 'fk_product__name'
@@ -151,8 +187,10 @@ def get_report_statistics() -> Dict[str, Any]:
 def report_detail(request, pk):
     """Display detailed view of a specific report."""
     try:
-        report = get_object_or_404(Report.objects.select_related('fk_product'), pk=pk)
-        
+        report = get_object_or_404(
+            _reports_for_user(request.user).select_related('fk_product'), pk=pk
+        )
+
         # Track view count (optional)
         if hasattr(report, 'view_count'):
             report.view_count += 1
@@ -169,7 +207,8 @@ def report_detail(request, pk):
             'report': report,
             'current_datetime': timezone.now(),
             'related_reports': related_reports,
-            'can_edit': request.user.is_staff or (hasattr(report, 'created_by') and report.created_by == request.user),
+            # El queryset ya restringe al dueño (o staff): quien puede verlo, puede editarlo.
+            'can_edit': True,
         }
         
         return render(request, 'report/report-detail.html', context)
@@ -236,13 +275,9 @@ def report_create(request):
 def report_update(request, pk):
     """Update an existing report."""
     try:
-        report = get_object_or_404(Report, pk=pk)
-        
-        # Check permissions
-        if hasattr(report, 'created_by') and report.created_by != request.user and not request.user.is_staff:
-            messages.error(request, 'No tienes permisos para editar este reporte.')
-            return redirect('report:report.detail', pk=pk)
-        
+        # Restringido al dueño real (cierra IDOR); staff incluido en el helper.
+        report = get_object_or_404(_reports_for_user(request.user), pk=pk)
+
         if request.method == 'POST':
             form = ReportForm(request.POST, request.FILES, instance=report)
             
@@ -279,13 +314,9 @@ def report_update(request, pk):
 def report_delete(request, pk):
     """Delete a report with confirmation."""
     try:
-        report = get_object_or_404(Report, pk=pk)
-        
-        # Check permissions
-        if hasattr(report, 'created_by') and report.created_by != request.user and not request.user.is_staff:
-            messages.error(request, 'No tienes permisos para eliminar este reporte.')
-            return redirect('report:report.detail', pk=pk)
-        
+        # Restringido al dueño real (cierra IDOR); staff incluido en el helper.
+        report = get_object_or_404(_reports_for_user(request.user), pk=pk)
+
         if request.method == 'POST':
             report_title = report.title
             
@@ -318,12 +349,12 @@ def create_simulation_report(request):
     """Create a simulation report with enhanced validation."""
     try:
         if request.method == 'POST':
-            form = SimulationReportForm(request.POST)
+            form = SimulationReportForm(request.POST, user=request.user)
             
             if form.is_valid():
                 # Get form data
                 product = form.cleaned_data['product']
-                simulation_params = form.cleaned_data.get('simulation_params', {})
+                simulation_params = form.get_simulation_params()
                 
                 # Validate simulation parameters
                 validation_errors = validate_simulation_params(simulation_params)
@@ -333,19 +364,22 @@ def create_simulation_report(request):
                     return render(request, 'report/create-simulation-report.html', {'form': form})
                 
                 # Process simulation data
-                report_content = process_simulation_data(product, simulation_params)
+                report_content = process_simulation_data(
+                    product, simulation_params, username=str(request.user))
                 
                 if 'error' in report_content:
                     messages.error(request, f"Error en la simulación: {report_content['error']}")
                     return render(request, 'report/create-simulation-report.html', {'form': form})
                 
                 # Create the report
+                # Nota: Report NO tiene campo created_by; el dueño se deriva de
+                # fk_product -> fk_business -> fk_user. Pasar created_by=None
+                # rompía el create() con TypeError (tragado por el except).
                 report = Report.objects.create(
-                    title=f"Reporte de Simulación - {product.name} - {timezone.now().strftime('%Y%m%d_%H%M')}",
+                    title=f"Reporte de Simulación - {product.name} - {timezone.now().strftime('%Y%m%d_%H%M%S')}",
                     content=report_content,
                     fk_product=product,
-                    report_type='simulation' if hasattr(Report, 'report_type') else None,
-                    created_by=request.user if hasattr(Report, 'created_by') else None,
+                    report_type='simulation',
                 )
                 
                 # Clear cache
@@ -356,11 +390,11 @@ def create_simulation_report(request):
             else:
                 messages.error(request, 'Por favor corrige los errores en el formulario.')
         else:
-            form = SimulationReportForm()
+            form = SimulationReportForm(user=request.user)
         
         context = {
             'form': form,
-            'products': Product.objects.filter(is_active=True).order_by('name'),
+            'products': form.fields['product'].queryset,
             'default_params': get_default_simulation_params(),
         }
         
@@ -422,16 +456,20 @@ def get_default_simulation_params() -> Dict[str, Any]:
         'horizonte': 12,
         'gastos_fijos': 5000,
         'inversion_inicial': 50000,
+        'tasa_descuento_anual': 0.12,
     }
 
-def process_simulation_data(product: Product, simulation_params: Dict[str, Any]) -> Dict[str, Any]:
+def process_simulation_data(product: Product, simulation_params: Dict[str, Any],
+                            username: str = 'sistema') -> Dict[str, Any]:
     """Process simulation data with enhanced calculations and error handling."""
     try:
         # Get variables related to product
         variables = Variable.objects.filter(fk_product=product)
         
         # Enhance simulation parameters with defaults
-        params = {**get_default_simulation_params(), **simulation_params}
+        defaults = get_default_simulation_params()
+        supplied_keys = set(simulation_params)
+        params = {**defaults, **simulation_params}
         
         # Perform calculations with error handling
         try:
@@ -440,7 +478,7 @@ def process_simulation_data(product: Product, simulation_params: Dict[str, Any])
             roi = calculate_roi(params)
             punto_equilibrio = calculate_punto_equilibrio(params)
             payback = calculate_payback_period(params)
-            van = calculate_van(params)
+            van = calculate_van(params, tasa_descuento=params['tasa_descuento_anual'])
             tir = calculate_tir(params)
             
         except Exception as calc_error:
@@ -466,11 +504,11 @@ def process_simulation_data(product: Product, simulation_params: Dict[str, Any])
             'resultados_simulacion': {
                 'utilidad_neta': round(utilidad_neta, 2),
                 'flujo_caja': round(flujo_caja, 2),
-                'roi': round(roi, 2),
+                'roi': _round_optional(roi),
                 'punto_equilibrio': round(punto_equilibrio, 0),
-                'payback_period': round(payback, 2),
+                'payback_period': _round_optional(payback),
                 'van': round(van, 2),
-                'tir': round(tir, 2),
+                'tir': _round_optional(tir),
                 'margen_unitario': round(params['precio_unitario'] - params['costo_unitario'], 2),
                 'ingresos_totales': round(params['demanda_inicial'] * params['precio_unitario'], 2),
             },
@@ -479,97 +517,170 @@ def process_simulation_data(product: Product, simulation_params: Dict[str, Any])
             'fecha_simulacion': timezone.now().isoformat(),
             'metadatos': {
                 'version': '2.0',
-                'usuario': str(request.user) if 'request' in locals() else 'sistema',
+                'usuario': username,
                 'tipo': 'simulacion_producto',
                 'parametros_version': '2.0',
+                'parameter_provenance': {
+                    key: 'USER_ENTERED' if key in supplied_keys else 'TEMPLATE_DEFAULT'
+                    for key in params
+                },
+                'financial_contract': {
+                    'currency': 'Bs',
+                    'period': 'month',
+                    'roi': 'net_horizon_cash_return / initial_investment',
+                    'npv': 'monthly_annuity discounted by explicit annual nominal rate',
+                    'irr': 'annual_effective_rate from monthly NPV root',
+                    'payback': 'initial_investment / positive_monthly_cash_flow',
+                    'tasa_descuento_anual': params['tasa_descuento_anual'],
+                },
             }
         }
-        
-        return simulation_results
-        
+
+        # Sanea inf/-inf/nan (p.ej. punto_equilibrio / payback cuando el flujo
+        # de caja es <= 0) para que el JSONField/jsonb no reciba Infinity/NaN.
+        return _sanitize_json_numbers(simulation_results)
+
     except Exception as e:
         logger.exception("Error processing simulation data")
         return {'error': str(e)}
 
 # Enhanced calculation functions
+_REPORT_MONEY = Decimal("0.01")
+
+
+def _report_non_negative(params: Dict[str, Any], key: str, default: str | None = None) -> Decimal:
+    if key not in params and default is None:
+        raise ValueError(f"{key} es obligatorio para este cálculo.")
+    try:
+        value = Decimal(str(params.get(key, default)))
+    except Exception as exc:
+        raise ValueError(f"{key} debe ser numérico.") from exc
+    if not value.is_finite() or value < 0:
+        raise ValueError(f"{key} debe ser finito y no negativo.")
+    return value
+
+
+def _report_horizon(params: Dict[str, Any]) -> int:
+    raw = params.get('horizonte')
+    if isinstance(raw, bool):
+        raise ValueError("horizonte debe ser un entero entre 1 y 120 meses.")
+    try:
+        horizon = int(raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("horizonte es obligatorio y debe ser entero.") from exc
+    if horizon < 1 or horizon > 120 or str(raw).strip() not in {str(horizon), f"{horizon}.0"}:
+        raise ValueError("horizonte debe ser un entero entre 1 y 120 meses.")
+    return horizon
+
+
+def _annuity_npv(investment: Decimal, monthly_cash_flow: Decimal, horizon: int, monthly_rate: Decimal) -> Decimal:
+    if monthly_rate <= Decimal("-1"):
+        raise ValueError("La tasa mensual debe ser mayor a -100%.")
+    value = -investment
+    factor = Decimal("1") + monthly_rate
+    for month in range(1, horizon + 1):
+        value += monthly_cash_flow / (factor ** month)
+    return value
+
+
+def _round_optional(value: Optional[float], digits: int = 2) -> Optional[float]:
+    return round(value, digits) if value is not None else None
+
+
 def calculate_utilidad_neta(params: Dict[str, Any]) -> float:
-    """Calculate net profit with enhanced validation."""
-    demanda = float(params.get('demanda_inicial', 0))
-    precio = float(params.get('precio_unitario', 0))
-    costo = float(params.get('costo_unitario', 0))
-    
-    return (precio - costo) * demanda
-
+    """Calculate net operating result with Decimal monetary arithmetic."""
+    demanda = _report_non_negative(params, 'demanda_inicial')
+    precio = _report_non_negative(params, 'precio_unitario')
+    costo = _report_non_negative(params, 'costo_unitario')
+    return float(((precio - costo) * demanda).quantize(_REPORT_MONEY))
 def calculate_flujo_caja(params: Dict[str, Any]) -> float:
-    """Calculate cash flow."""
-    utilidad = calculate_utilidad_neta(params)
-    gastos_fijos = float(params.get('gastos_fijos', 0))
-    
-    return utilidad - gastos_fijos
+    """Calculate the legacy operating cash proxy with explicit naming."""
+    utilidad = Decimal(str(calculate_utilidad_neta(params)))
+    gastos_fijos = _report_non_negative(params, 'gastos_fijos')
+    return float((utilidad - gastos_fijos).quantize(_REPORT_MONEY))
 
-def calculate_roi(params: Dict[str, Any]) -> float:
-    """Calculate ROI (Return on Investment)."""
-    inversion = float(params.get('inversion_inicial', 1))
-    flujo_caja = calculate_flujo_caja(params)
-    
-    if inversion <= 0:
-        return 0
-    
-    return (flujo_caja / inversion) * 100
+
+def calculate_roi(params: Dict[str, Any]) -> Optional[float]:
+    """Return net horizon cash return as a percentage of invested capital."""
+    inversion = _report_non_negative(params, 'inversion_inicial')
+    horizon = _report_horizon(params)
+    monthly_cash_flow = Decimal(str(calculate_flujo_caja(params)))
+    if inversion == 0:
+        return None
+    net_horizon_return = monthly_cash_flow * horizon - inversion
+    return float(((net_horizon_return / inversion) * 100).quantize(Decimal("0.0001")))
+
 
 def calculate_punto_equilibrio(params: Dict[str, Any]) -> float:
     """Calculate break-even point."""
-    precio = float(params.get('precio_unitario', 0))
-    costo_variable = float(params.get('costo_unitario', 0))
-    gastos_fijos = float(params.get('gastos_fijos', 0))
-    
+    precio = _report_non_negative(params, 'precio_unitario')
+    costo_variable = _report_non_negative(params, 'costo_unitario')
+    gastos_fijos = _report_non_negative(params, 'gastos_fijos')
     margen_contribucion = precio - costo_variable
-    
     if margen_contribucion <= 0:
         return float('inf')
-    
-    return gastos_fijos / margen_contribucion
+    return float((gastos_fijos / margen_contribucion).quantize(Decimal("0.0001")))
 
-def calculate_payback_period(params: Dict[str, Any]) -> float:
+
+def calculate_payback_period(params: Dict[str, Any]) -> Optional[float]:
     """Calculate payback period in months."""
-    inversion = float(params.get('inversion_inicial', 1))
-    flujo_caja_mensual = calculate_flujo_caja(params)
-    
+    inversion = _report_non_negative(params, 'inversion_inicial')
+    flujo_caja_mensual = Decimal(str(calculate_flujo_caja(params)))
+    if inversion == 0:
+        return 0.0
     if flujo_caja_mensual <= 0:
-        return float('inf')
-    
-    return inversion / flujo_caja_mensual
+        return None
+    return float((inversion / flujo_caja_mensual).quantize(Decimal("0.0001")))
+def calculate_van(params: Dict[str, Any], tasa_descuento: Optional[float] = None) -> float:
+    """Calculate NPV using equal monthly cash flow and an annual nominal rate."""
+    inversion = _report_non_negative(params, 'inversion_inicial')
+    flujo_caja_mensual = Decimal(str(calculate_flujo_caja(params)))
+    horizonte = _report_horizon(params)
+    if tasa_descuento is None:
+        if 'tasa_descuento_anual' not in params:
+            raise ValueError("tasa_descuento_anual es obligatoria para calcular VAN.")
+        tasa_descuento = params['tasa_descuento_anual']
+    try:
+        annual_discount_rate = Decimal(str(tasa_descuento))
+    except Exception as exc:
+        raise ValueError("tasa_descuento debe ser numérica y finita.") from exc
+    if not annual_discount_rate.is_finite() or annual_discount_rate < 0:
+        raise ValueError("tasa_descuento debe ser finita y no negativa.")
+    tasa_mensual = annual_discount_rate / 12
+    van = _annuity_npv(inversion, flujo_caja_mensual, horizonte, tasa_mensual)
+    return float(van.quantize(_REPORT_MONEY))
 
-def calculate_van(params: Dict[str, Any], tasa_descuento: float = 0.12) -> float:
-    """Calculate Net Present Value (VAN)."""
-    inversion = float(params.get('inversion_inicial', 0))
-    flujo_caja_mensual = calculate_flujo_caja(params)
-    horizonte = int(params.get('horizonte', 12))
-    
-    van = -inversion
-    tasa_mensual = tasa_descuento / 12
-    
-    for mes in range(1, horizonte + 1):
-        flujo_descontado = flujo_caja_mensual / ((1 + tasa_mensual) ** mes)
-        van += flujo_descontado
-    
-    return van
 
-def calculate_tir(params: Dict[str, Any]) -> float:
-    """Calculate Internal Rate of Return (TIR) using approximation."""
-    # Simplified TIR calculation using binary search
-    inversion = float(params.get('inversion_inicial', 1))
-    flujo_caja_mensual = calculate_flujo_caja(params)
-    horizonte = int(params.get('horizonte', 12))
-    
-    if flujo_caja_mensual <= 0:
-        return 0
-    
-    # Simple approximation
-    total_flujos = flujo_caja_mensual * horizonte
-    tir_anual = ((total_flujos / inversion) ** (1/horizonte)) - 1
-    
-    return tir_anual * 100
+def calculate_tir(params: Dict[str, Any]) -> Optional[float]:
+    """Solve monthly IRR by bisection and return its annual effective rate."""
+    inversion = _report_non_negative(params, 'inversion_inicial')
+    flujo_caja_mensual = Decimal(str(calculate_flujo_caja(params)))
+    horizonte = _report_horizon(params)
+    if inversion <= 0 or flujo_caja_mensual <= 0:
+        return None
+
+    lower = Decimal("-0.999999")
+    upper = Decimal("1")
+    while _annuity_npv(inversion, flujo_caja_mensual, horizonte, upper) > 0 and upper < Decimal("1048575"):
+        upper = upper * 2 + 1
+    if _annuity_npv(inversion, flujo_caja_mensual, horizonte, upper) > 0:
+        return None
+
+    tolerance = Decimal("0.0000000001")
+    for _ in range(200):
+        midpoint = (lower + upper) / 2
+        npv = _annuity_npv(inversion, flujo_caja_mensual, horizonte, midpoint)
+        if abs(npv) <= tolerance:
+            lower = upper = midpoint
+            break
+        if npv > 0:
+            lower = midpoint
+        else:
+            upper = midpoint
+
+    monthly_rate = (lower + upper) / 2
+    annual_effective_rate = ((Decimal("1") + monthly_rate) ** 12 - Decimal("1")) * 100
+    return float(annual_effective_rate.quantize(Decimal("0.0001")))
 
 def generate_sensitivity_analysis(params: Dict[str, Any]) -> Dict[str, Any]:
     """Generate sensitivity analysis for key parameters."""
@@ -594,8 +705,8 @@ def generate_sensitivity_analysis(params: Dict[str, Any]) -> Dict[str, Any]:
                 param_analysis.append({
                     'variation': variation,
                     'new_value': round(new_value, 2),
-                    'roi': round(new_roi, 2),
-                    'roi_change': round(new_roi - base_roi, 2),
+                    'roi': _round_optional(new_roi),
+                    'roi_change': round(new_roi - base_roi, 2) if new_roi is not None and base_roi is not None else None,
                 })
             
             sensitivity[param] = param_analysis
@@ -687,10 +798,8 @@ def generar_reporte_pdf(request, report_id):
     """Enqueue async PDF generation and return task info (202)."""
     from .tasks import generate_report_pdf_async
 
-    reporte = get_object_or_404(Report, pk=report_id)
-
-    if hasattr(reporte, 'created_by') and reporte.created_by != request.user and not request.user.is_staff:
-        return HttpResponseForbidden("No tienes permisos para descargar este reporte.")
+    # Restringido al dueño real (cierra IDOR); 404 si no le pertenece.
+    reporte = get_object_or_404(_reports_for_user(request.user), pk=report_id)
 
     user_id = request.user.id
     task = generate_report_pdf_async.delay(report_id, user_id)
@@ -766,15 +875,9 @@ def report_overview(request, pk):
 def toggle_report_status(request, pk):
     """Toggle report active status with enhanced validation."""
     try:
-        report = get_object_or_404(Report, pk=pk)
-        
-        # Check permissions
-        if hasattr(report, 'created_by') and report.created_by != request.user and not request.user.is_staff:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'error': 'No tienes permisos para modificar este reporte.'})
-            messages.error(request, 'No tienes permisos para modificar este reporte.')
-            return redirect('report:report.detail', pk=pk)
-        
+        # Restringido al dueño real (cierra IDOR); staff incluido en el helper.
+        report = get_object_or_404(_reports_for_user(request.user), pk=pk)
+
         # Toggle status
         old_status = report.is_active
         report.is_active = not report.is_active
@@ -812,7 +915,6 @@ def toggle_report_status(request, pk):
 
 # Enhanced API Endpoints
 @login_required
-@cache_page(60 * 2)  # Cache for 2 minutes
 def report_api_list(request):
     """Enhanced API endpoint for reports list with filtering."""
     try:
@@ -823,8 +925,8 @@ def report_api_list(request):
         status = request.GET.get('status', '')
         product_id = request.GET.get('product_id', '')
         
-        # Build queryset
-        reports = Report.objects.select_related('fk_product').order_by('-date_created')
+        # Build queryset restringido al dueño (cierra IDOR)
+        reports = _reports_for_user(request.user).select_related('fk_product').order_by('-date_created')
         
         # Apply filters
         if search:
@@ -865,7 +967,7 @@ def report_api_list(request):
                 if 'resultados_simulacion' in report.content:
                     results = report.content['resultados_simulacion']
                     report_data['metrics'] = {
-                        'roi': results.get('roi', 0),
+                        'roi': results.get('roi'),
                         'utilidad_neta': results.get('utilidad_neta', 0),
                         'punto_equilibrio': results.get('punto_equilibrio', 0),
                     }
@@ -893,16 +995,12 @@ def report_api_list(request):
 def report_api_detail(request, pk):
     """Enhanced API endpoint for report details."""
     try:
+        # Restringido al dueño real (cierra IDOR)
         report = get_object_or_404(
-            Report.objects.select_related('fk_product'), 
+            _reports_for_user(request.user).select_related('fk_product'),
             pk=pk
         )
-        
-        # Check permissions for private reports
-        if hasattr(report, 'is_private') and report.is_private:
-            if hasattr(report, 'created_by') and report.created_by != request.user and not request.user.is_staff:
-                return JsonResponse({'error': 'No tienes permisos para ver este reporte.'}, status=403)
-        
+
         # Serialize data
         data = {
             'id': report.id,
@@ -934,7 +1032,9 @@ def report_api_detail(request, pk):
             data['view_count'] = report.view_count
         
         return JsonResponse(data)
-        
+
+    except Http404:
+        return JsonResponse({'error': 'Reporte no encontrado.'}, status=404)
     except Exception as e:
         logger.exception(f"Error in report_api_detail for pk={pk}")
         return JsonResponse({'error': str(e)}, status=500)
@@ -952,14 +1052,9 @@ def bulk_report_operations(request):
         if not report_ids:
             return JsonResponse({'success': False, 'error': 'No se seleccionaron reportes.'})
         
-        # Validate report IDs
-        reports = Report.objects.filter(id__in=report_ids)
-        
-        if not request.user.is_staff:
-            # Filter by user permissions
-            if hasattr(Report, 'created_by'):
-                reports = reports.filter(created_by=request.user)
-        
+        # Validate report IDs — restringido al dueño real (cierra IDOR)
+        reports = _reports_for_user(request.user).filter(id__in=report_ids)
+
         success_count = 0
         
         if operation == 'activate':
@@ -998,16 +1093,12 @@ def export_reports(request):
         export_format = request.GET.get('format', 'csv')
         report_ids = request.GET.getlist('ids')
         
-        # Get reports
-        reports = Report.objects.select_related('fk_product').order_by('-date_created')
-        
+        # Get reports — restringido al dueño real (cierra IDOR)
+        reports = _reports_for_user(request.user).select_related('fk_product').order_by('-date_created')
+
         if report_ids:
             reports = reports.filter(id__in=report_ids)
-        
-        if not request.user.is_staff:
-            if hasattr(Report, 'created_by'):
-                reports = reports.filter(created_by=request.user)
-        
+
         if export_format == 'csv':
             return export_reports_csv(reports)
         elif export_format == 'excel':

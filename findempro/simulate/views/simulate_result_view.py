@@ -15,6 +15,7 @@ except ImportError:
     raise ImportError("scipy es requerido para el análisis estadístico. Instalar con: pip install scipy")
 from simulate.services.statistical_service import StatisticalService
 from simulate.utils.chart_demand_utils import ChartDemand
+from modeling.statistics import DistributionFitError, METHOD_VERSION, fit_distributions
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
@@ -32,6 +33,7 @@ from ..services.validation_service import SimulationValidationService
 from ..utils.simulation_financial_utils import SimulationFinancialAnalyzer
 from ..utils.chart_utils import ChartGenerator
 from ..utils.data_parsers_utils import DataParser
+from ..utils.statistical_contracts import stable_distribution_shape
 from questionary.models import Answer
 from variable.models import Variable, Equation
 from finance.models import FinanceRecommendation, FinanceRecommendationSimulation
@@ -376,9 +378,6 @@ class SimulateResultView(LoginRequiredMixin, View):
                     var_95  = pct(5)
                     cvar_95 = float(np.mean(profit_samples[profit_samples <= var_95])) if any(profit_samples <= var_95) else var_95
                     prob_loss = float(np.mean(profit_samples < 0))
-                    sharpe = (mean_p / std_p) if std_p > 0 else 0.0
-                    downside = profit_samples[profit_samples < 0]
-                    sortino = (mean_p / float(np.std(downside))) if len(downside) > 1 else 0.0
                     context['risk_metrics'] = {
                         'mean':             round(mean_p, 2),
                         'std':              round(std_p, 2),
@@ -390,8 +389,11 @@ class SimulateResultView(LoginRequiredMixin, View):
                         'var_95':           round(var_95, 2),
                         'cvar_95':          round(cvar_95, 2),
                         'probability_loss': round(prob_loss * 100, 1),
-                        'sharpe_ratio':     round(sharpe, 3),
-                        'sortino_ratio':    round(sortino, 3),
+                        'sharpe_ratio':     None,
+                        'sortino_ratio':    None,
+                        'ratio_basis':      'not_applicable_monetary_profit',
+                        'var_semantics':    'lower_profit_quantile',
+                        'cvar_semantics':   'lower_tail_mean_profit',
                         'profit_samples_json': json.dumps(profit_samples.tolist()),
                     }
                 else:
@@ -1011,8 +1013,9 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             # Generate smooth projected demand that naturally extends simulation
             projected_demand = self._generate_smooth_projection(
-                historical_demand, 
-                simulated_demand
+                historical_demand,
+                simulated_demand,
+                seed=getattr(simulation_instance, 'random_seed', None),
             )
             
             # Log final data summary
@@ -1073,7 +1076,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             logger.error(f"Error calculating three-line metrics: {str(e)}")
             return {}
 
-    def _generate_smooth_projection(self, historical_demand, simulated_demand):
+    def _generate_smooth_projection(self, historical_demand, simulated_demand, seed=None):
         """
         Generate a projection that follows the cyclical patterns of the simulation
         """
@@ -1123,6 +1126,7 @@ class SimulateResultView(LoginRequiredMixin, View):
             projected_demand = []
             sim_mean = np.mean(simulated_demand)
             sim_std = np.std(simulated_demand)
+            rng = np.random.default_rng(seed)
             
             for i in range(min(max_projection_length, 30)):
                 # Continue the trend from the connection point
@@ -1139,7 +1143,7 @@ class SimulateResultView(LoginRequiredMixin, View):
                 
                 # Add controlled noise
                 noise_factor = min(sim_std * 0.1, 10)
-                noise = np.random.normal(0, noise_factor)
+                noise = rng.normal(0, noise_factor)
                 projected_value += noise
                 
                 # Ensure values stay within reasonable bounds
@@ -1529,76 +1533,6 @@ class SimulateResultView(LoginRequiredMixin, View):
         
         return real_values
     
-    def _generate_daily_comparisons(self, results: List[ResultSimulation],
-                                  real_values: Dict[str, float],
-                                  historical_demand: List[float]) -> List[Dict[str, Any]]:
-        """Generate daily comparison data for analysis"""
-        comparisons = []
-        
-        for idx, result in enumerate(results):
-            day_comparison = {
-                'day': idx + 1,
-                'date': result.date,
-                'simulated_demand': float(result.demand_mean),
-                'variables': {}
-            }
-            
-            # Add historical demand if available
-            if historical_demand and idx < len(historical_demand):
-                day_comparison['historical_demand'] = historical_demand[idx]
-                day_comparison['demand_deviation'] = (
-                    (day_comparison['simulated_demand'] - historical_demand[idx]) / 
-                    historical_demand[idx] * 100 if historical_demand[idx] > 0 else 0
-                )
-            
-            # Compare key variables
-            if hasattr(result, 'variables') and result.variables:
-                for var_name, sim_value in result.variables.items():
-                    if var_name in real_values and not var_name.startswith('_'):
-                        real_value = real_values[var_name]
-                        day_comparison['variables'][var_name] = {
-                            'simulated': float(sim_value) if isinstance(sim_value, (int, float)) else 0,
-                            'real': real_value,
-                            'deviation': self._calculate_deviation(sim_value, real_value),
-                            'status': self._determine_status(sim_value, real_value, var_name)
-                        }
-            
-            comparisons.append(day_comparison)
-        
-        return comparisons
-    
-    def _calculate_deviation(self, simulated: Any, real: float) -> float:
-        """Calculate percentage deviation"""
-        try:
-            sim_value = float(simulated) if isinstance(simulated, (int, float)) else 0
-            if real == 0:
-                return 100.0 if sim_value != 0 else 0.0
-            return ((sim_value - real) / abs(real)) * 100
-        except:
-            return 0.0
-    
-    def _determine_status(self, simulated: Any, real: float, var_name: str) -> str:
-        """Determine comparison status"""
-        deviation = abs(self._calculate_deviation(simulated, real))
-        
-        # Variable-specific thresholds
-        strict_vars = ['PVP', 'CPROD', 'NEPP', 'CFD']
-        flexible_vars = ['DPH', 'TPV', 'GT', 'IPF']
-        
-        if var_name in strict_vars:
-            threshold = 5  # 5% tolerance
-        elif var_name in flexible_vars:
-            threshold = 20  # 20% tolerance
-        else:
-            threshold = 10  # 10% default
-        
-        if deviation <= threshold:
-            return 'success'
-        elif deviation <= threshold * 2:
-            return 'warning'
-        else:
-            return 'danger'
-    
     def _calculate_summary_statistics(self, results: List[ResultSimulation],
                                     historical_demand: List[float],
                                     validation_results: Dict) -> Dict[str, Any]:
@@ -1772,76 +1706,6 @@ class SimulateResultView(LoginRequiredMixin, View):
         
         return grouped
     
-    def _calculate_model_performance(self, results: List[ResultSimulation],
-                                   real_values: Dict[str, float],
-                                   historical_demand: List[float]) -> Dict[str, Any]:
-        """Calculate overall model performance metrics"""
-        performance = {
-            'demand_forecast_accuracy': 0,
-            'variable_accuracy': {},
-            'overall_score': 0,
-            'strengths': [],
-            'weaknesses': []
-        }
-        
-        # Demand forecast accuracy
-        if historical_demand and results:
-            simulated_demands = [float(r.demand_mean) for r in results[:len(historical_demand)]]
-            if simulated_demands:
-                mape = self._calculate_mape(historical_demand[:len(simulated_demands)], simulated_demands)
-                performance['demand_forecast_accuracy'] = max(0, 100 - mape)
-        
-        # Variable accuracy
-        variable_scores = []
-        for var_name, real_value in real_values.items():
-            if var_name.startswith('_'):
-                continue
-            
-            # Get average simulated value
-            sim_values = []
-            for result in results:
-                if hasattr(result, 'variables') and result.variables:
-                    if var_name in result.variables:
-                        try:
-                            sim_values.append(float(result.variables[var_name]))
-                        except:
-                            pass
-            
-            if sim_values:
-                avg_sim = np.mean(sim_values)
-                accuracy = max(0, 100 - abs(self._calculate_deviation(avg_sim, real_value)))
-                performance['variable_accuracy'][var_name] = accuracy
-                variable_scores.append(accuracy)
-                
-                # Identify strengths and weaknesses
-                if accuracy >= 90:
-                    performance['strengths'].append(f"{var_name}: {accuracy:.1f}% accuracy")
-                elif accuracy < 70:
-                    performance['weaknesses'].append(f"{var_name}: {accuracy:.1f}% accuracy")
-        
-        # Overall score
-        all_scores = []
-        if performance['demand_forecast_accuracy'] > 0:
-            all_scores.append(performance['demand_forecast_accuracy'])
-        all_scores.extend(variable_scores)
-        
-        if all_scores:
-            performance['overall_score'] = np.mean(all_scores)
-        
-        return performance
-    
-    def _calculate_mape(self, actual: List[float], predicted: List[float]) -> float:
-        """Calculate Mean Absolute Percentage Error"""
-        if len(actual) != len(predicted) or not actual:
-            return 100.0
-        
-        errors = []
-        for a, p in zip(actual, predicted):
-            if a != 0:
-                errors.append(abs((a - p) / a) * 100)
-        
-        return np.mean(errors) if errors else 100.0
-    
     def _get_comparable_simulations(self, current_simulation: Simulation) -> List[Simulation]:
         """Get other simulations for the same product for comparison"""
         try:
@@ -1952,6 +1816,7 @@ class SimulateResultView(LoginRequiredMixin, View):
                 return {}
             
             data_array = np.array(data)
+            shape = stable_distribution_shape(data_array)
             
             stats = {
                 'mean': float(np.mean(data_array)),
@@ -1972,12 +1837,9 @@ class SimulateResultView(LoginRequiredMixin, View):
             stats['iqr'] = stats['q75'] - stats['q25']
             
             # Skewness y Kurtosis
-            if len(data) >= 3:
-                stats['skewness'] = float(scipy.stats.skew(data_array))
-                stats['kurtosis'] = float(scipy.stats.kurtosis(data_array))
-            else:
-                stats['skewness'] = 0
-                stats['kurtosis'] = 0
+            stats['skewness'] = shape.skewness
+            stats['kurtosis'] = shape.kurtosis
+            stats['shape_statistics_status'] = shape.status
             
             # Percentiles adicionales
             stats['p10'] = float(np.percentile(data_array, 10))
@@ -2005,68 +1867,100 @@ class SimulateResultView(LoginRequiredMixin, View):
             
             # Diferencias básicas
             mean_diff = np.mean(sim_trimmed) - np.mean(hist_trimmed)
+            # Lo que no se puede medir queda en None. Antes cada caso imposible se
+            # convertía en un número con significado propio — correlación 0, R² 0,
+            # RMSE 0 — y ninguno de ellos se había medido.
+            hist_mean = float(np.mean(hist_trimmed))
             comparison['mean_diff'] = float(mean_diff)
-            comparison['mean_diff_pct'] = float((mean_diff / np.mean(hist_trimmed)) * 100) if np.mean(hist_trimmed) != 0 else 0
-            
-            # Diferencia en variabilidad
-            hist_cv = np.std(hist_trimmed) / np.mean(hist_trimmed) if np.mean(hist_trimmed) != 0 else 0
-            sim_cv = np.std(sim_trimmed) / np.mean(sim_trimmed) if np.mean(sim_trimmed) != 0 else 0
-            comparison['cv_diff'] = float(sim_cv - hist_cv)
-            
-            # Correlación
+            comparison['mean_diff_pct'] = (
+                float((mean_diff / hist_mean) * 100) if hist_mean != 0 else None
+            )
+
+            # Diferencia en variabilidad: sin media distinta de cero no hay CV.
+            sim_mean = float(np.mean(sim_trimmed))
+            if hist_mean != 0 and sim_mean != 0:
+                hist_cv = float(np.std(hist_trimmed)) / hist_mean
+                sim_cv = float(np.std(sim_trimmed)) / sim_mean
+                comparison['cv_diff'] = float(sim_cv - hist_cv)
+            else:
+                comparison['cv_diff'] = None
+
+            # Correlación: con menos de dos puntos no está definida, y un NaN
+            # significa varianza nula, no ausencia de relación.
+            comparison['correlation'] = None
             if len(hist_trimmed) > 1 and len(sim_trimmed) > 1:
                 correlation = np.corrcoef(hist_trimmed, sim_trimmed)[0, 1]
-                comparison['correlation'] = float(correlation) if not np.isnan(correlation) else 0
-            else:
-                comparison['correlation'] = 0
-            
+                if np.isfinite(correlation):
+                    comparison['correlation'] = float(correlation)
+
             # Métricas de error
             comparison['mape'] = self._calculate_mape(hist_trimmed, sim_trimmed)
             comparison['rmse'] = self._calculate_rmse(hist_trimmed, sim_trimmed)
             comparison['mae'] = self._calculate_mae(hist_trimmed, sim_trimmed)
-            
-            # R² (coeficiente de determinación)
+
+            # R²: con ss_tot = 0 la serie histórica es constante y R² no existe.
+            # Publicar 0 afirmaría "el modelo no explica nada", que es otra cosa.
+            comparison['r_squared'] = None
             if len(hist_trimmed) > 1:
-                ss_res = np.sum((hist_trimmed - sim_trimmed) ** 2)
-                ss_tot = np.sum((hist_trimmed - np.mean(hist_trimmed)) ** 2)
-                comparison['r_squared'] = float(1 - (ss_res / ss_tot)) if ss_tot != 0 else 0
-            else:
-                comparison['r_squared'] = 0
-            
+                ss_res = float(np.sum((hist_trimmed - sim_trimmed) ** 2))
+                ss_tot = float(np.sum((hist_trimmed - np.mean(hist_trimmed)) ** 2))
+                if ss_tot != 0:
+                    comparison['r_squared'] = float(1 - (ss_res / ss_tot))
+
             return comparison
-            
+
         except Exception as e:
             logger.error(f"Error calculating comparison metrics: {str(e)}")
             return {}
 
+    @staticmethod
+    def _paired_finite_series(actual, predicted):
+        """Pares finitos y alineados, o `None` si no hay nada comparable."""
+        actual = np.asarray(actual, dtype=float).ravel()
+        predicted = np.asarray(predicted, dtype=float).ravel()
+        size = min(actual.size, predicted.size)
+        if size == 0:
+            return None
+        actual, predicted = actual[:size], predicted[:size]
+        usable = np.isfinite(actual) & np.isfinite(predicted)
+        if not np.any(usable):
+            return None
+        return actual[usable], predicted[usable]
+
     def _calculate_mape(self, actual, predicted):
-        """Calcular Mean Absolute Percentage Error"""
-        try:
-            if len(actual) == 0:
-                return 100.0
-            
-            mask = actual != 0
-            if not np.any(mask):
-                return 100.0
-            
-            mape = np.mean(np.abs((actual[mask] - predicted[mask]) / actual[mask])) * 100
-            return float(mape)
-        except:
-            return 100.0
+        """MAPE, o `None` si no es calculable.
+
+        Devolvía 100.0 ante cualquier problema. Un 100% de error es una medición,
+        no una forma de decir "no se pudo medir": contamina promedios y tableros.
+        """
+        pair = self._paired_finite_series(actual, predicted)
+        if pair is None:
+            return None
+        actual, predicted = pair
+        mask = actual != 0
+        if not np.any(mask):
+            return None
+        return float(np.mean(np.abs((actual[mask] - predicted[mask]) / actual[mask])) * 100)
 
     def _calculate_rmse(self, actual, predicted):
-        """Calcular Root Mean Square Error"""
-        try:
-            return float(np.sqrt(np.mean((actual - predicted) ** 2)))
-        except:
-            return 0.0
+        """RMSE, o `None` si no es calculable.
+
+        Devolvía 0.0 en el `except`, es decir **predicción perfecta** cada vez que
+        el cálculo fallaba: el peor fallo silencioso posible en una métrica de error.
+        """
+        pair = self._paired_finite_series(actual, predicted)
+        if pair is None:
+            return None
+        actual, predicted = pair
+        return float(np.sqrt(np.mean((actual - predicted) ** 2)))
 
     def _calculate_mae(self, actual, predicted):
-        """Calcular Mean Absolute Error"""
-        try:
-            return float(np.mean(np.abs(actual - predicted)))
-        except:
-            return 0.0
+        """MAE, o `None` si no es calculable. Mismo defecto que RMSE."""
+        pair = self._paired_finite_series(actual, predicted)
+        if pair is None:
+            return None
+        actual, predicted = pair
+        return float(np.mean(np.abs(actual - predicted)))
     
     
     def _calculate_enhanced_totales_acumulativos(self, all_variables_extracted):
@@ -2578,14 +2472,16 @@ class SimulateResultView(LoginRequiredMixin, View):
                 return {}
             
             data_array = np.array(data)
+            shape = stable_distribution_shape(data_array)
             
             analysis = {
                 'basic_stats': {
                     'mean': float(np.mean(data_array)),
                     'std': float(np.std(data_array)),
                     'variance': float(np.var(data_array)),
-                    'skewness': float(scipy.stats.skew(data_array)),  # CORREGIDO: scipy.stats
-                    'kurtosis': float(scipy.stats.kurtosis(data_array)),  # CORREGIDO: scipy.stats
+                    'skewness': shape.skewness,
+                    'kurtosis': shape.kurtosis,
+                    'shape_statistics_status': shape.status,
                     'min': float(np.min(data_array)),
                     'max': float(np.max(data_array)),
                     'median': float(np.median(data_array)),
@@ -2599,9 +2495,13 @@ class SimulateResultView(LoginRequiredMixin, View):
                     'is_normal': False
                 },
                 'distribution_fit': {
-                    'best_fit': 'normal',
+                    'best_fit': None,
                     'fit_params': {},
-                    'goodness_of_fit': 0.0
+                    'statistic': None,
+                    'p_value': None,
+                    'valid': False,
+                    'unavailable_reason': 'NOT_COMPUTED',
+                    'method_version': METHOD_VERSION,
                 }
             }
             
@@ -2617,42 +2517,33 @@ class SimulateResultView(LoginRequiredMixin, View):
                 except Exception as e:
                     logger.warning(f"Error in normality test: {e}")
             
-            # Ajuste de distribuciones
+            # Ajuste v2: ranking por AIC y diagnóstico sin p-value KS ingenuo.
             try:
-                distributions = [
-                    scipy.stats.norm,      # CORREGIDO: scipy.stats
-                    scipy.stats.lognorm,   # CORREGIDO: scipy.stats
-                    scipy.stats.expon,     # CORREGIDO: scipy.stats
-                    scipy.stats.gamma      # CORREGIDO: scipy.stats
-                ]
-                best_dist = None
-                best_fit = -np.inf
-                best_params = {}
-                
-                for dist in distributions:
-                    try:
-                        params = dist.fit(data_array)
-                        # Prueba de Kolmogorov-Smirnov
-                        ks_stat, ks_p = scipy.stats.kstest(  # CORREGIDO: scipy.stats
-                            data_array, lambda x: dist.cdf(x, *params)
-                        )
-                        
-                        if ks_p > best_fit:
-                            best_fit = ks_p
-                            best_dist = dist.name
-                            best_params = params
-                            
-                    except Exception:
-                        continue
-                
-                if best_dist:
-                    analysis['distribution_fit'] = {
-                        'best_fit': best_dist,
-                        'fit_params': [float(p) for p in best_params],
-                        'goodness_of_fit': float(best_fit)
-                    }
-            except Exception as e:
+                fitted = fit_distributions(data_array.astype(float).tolist())
+                selected_name = fitted['ranking']['selected_distribution']
+                selected = next(
+                    item for item in fitted['candidates']
+                    if item['distribution'] == selected_name
+                )
+                analysis['distribution_fit'] = {
+                    'best_fit': selected_name,
+                    'fit_params': selected['parameters'],
+                    'statistic': selected['statistic'],
+                    'goodness_of_fit': selected['statistic'],
+                    'p_value': None,
+                    'test_name': selected['test_name'],
+                    'valid': True,
+                    'unavailable_reason': None,
+                    'p_value_unavailable_reason': selected['p_value_unavailable_reason'],
+                    'ranking_method': fitted['ranking']['criterion'],
+                    'method_version': METHOD_VERSION,
+                }
+            except (DistributionFitError, StopIteration) as e:
                 logger.warning(f"Error in distribution fitting: {e}")
+                analysis['distribution_fit']['unavailable_reason'] = (
+                    'INSUFFICIENT_SAMPLE' if len(data_array) < 5
+                    else 'NO_COMPATIBLE_DISTRIBUTION'
+                )
             
             return analysis
             
@@ -2891,129 +2782,194 @@ class SimulateResultView(LoginRequiredMixin, View):
             logger.error(f"Error generating KS validation charts: {str(e)}")
             return {}
 
+    @staticmethod
+    def _fit_verdict_label(passes_test):
+        """Etiqueta del veredicto de ajuste.
+
+        `passes_test` es `None` desde el cierre de `distribution_fit_v2`: sin
+        p-value válido no hay decisión de test, y "no disponible" no es "falla".
+        Presentarlo como fallo sería fabricar un resultado estadístico.
+        """
+        if passes_test is None:
+            return 'No disponible'
+        return 'Compatible' if passes_test else 'Incompatible'
+
     def _create_distribution_comparison_chart(self, demand_ks_test):
-        """Crear gráfico de comparación de distribuciones - CORREGIDO"""
+        """Diagnóstico de ajuste de la demanda simulada.
+
+        Este gráfico quedó desincronizado del cierre de `distribution_fit_v2`:
+        fabricaba la muestra con una onda seno rotulada "Datos Observados",
+        ordenaba candidatos por un `p_value` que ya siempre es `None` y pintaba
+        "✗ Falla" para lo que en realidad es "no disponible". Ahora dibuja la
+        muestra real o no dibuja nada, y reporta el estadístico de distancia
+        —que sí existe— en lugar de un p-value que no puede calcularse.
+        """
         try:
-            
-            
             distributions_tested = demand_ks_test.get('distributions_tested', {})
             if not distributions_tested:
                 return None
-            
-            # Crear figura con subplots
+
+            # Sin muestra real no hay gráfico. Nunca se inventa una serie.
+            sample_data = np.asarray(
+                [float(value) for value in (demand_ks_test.get('sample') or [])],
+                dtype=float,
+            )
+            sample_data = sample_data[np.isfinite(sample_data)]
+            if sample_data.size < 2:
+                logger.info(
+                    "Distribution comparison chart omitted: no real sample available"
+                )
+                return None
+
             fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
-            fig.suptitle('Validación de Distribuciones - Prueba Kolmogorov-Smirnov', fontsize=16, fontweight='bold')
-            
-            # Datos de muestra (simulados)
-            sample_data = np.random.normal(100, 20, 1000)  # Placeholder - usar datos reales
-            
-            # Subplot 1: Histograma con distribuciones ajustadas
-            ax1.hist(sample_data, bins=30, density=True, alpha=0.7, color='lightblue', edgecolor='black')
-            
-            x = np.linspace(sample_data.min(), sample_data.max(), 100)
+            fig.suptitle(
+                'Diagnóstico de ajuste de distribuciones — demanda simulada',
+                fontsize=16, fontweight='bold',
+            )
+
+            # Subplot 1: la muestra real del modelo con las densidades candidatas.
+            ax1.hist(sample_data, bins=min(30, max(5, sample_data.size // 5)),
+                     density=True, alpha=0.7, color='lightblue', edgecolor='black',
+                     label='Demanda simulada (muestra del modelo)')
+
+            x = np.linspace(sample_data.min(), sample_data.max(), 200)
             colors = ['red', 'green', 'orange', 'purple']
-            
-            for i, (dist_name, dist_info) in enumerate(distributions_tested.items()):
-                if 'params' in dist_info and dist_info['passes_test']:
-                    if dist_name == 'normal':
-                        y = stats.norm.pdf(x, loc=dist_info['params'][0], scale=dist_info['params'][1])  # CORREGIDO
-                        ax1.plot(x, y, color=colors[i % len(colors)], linewidth=2, 
-                                label=f"{dist_name.title()} (p={dist_info['p_value']:.3f})")
-            
-            ax1.set_title('Distribuciones Ajustadas vs Datos Observados')
+            for index, (dist_name, dist_info) in enumerate(distributions_tested.items()):
+                params = dist_info.get('params')
+                density = self._candidate_density(dist_name, params, x)
+                if density is None:
+                    continue
+                statistic = dist_info.get('statistic')
+                suffix = '' if statistic is None else f" (D={statistic:.4f})"
+                ax1.plot(x, density, color=colors[index % len(colors)], linewidth=2,
+                         label=f"{dist_name.title()}{suffix}")
+
+            ax1.set_title('Densidades candidatas vs muestra simulada')
             ax1.set_xlabel('Valor')
             ax1.set_ylabel('Densidad')
-            ax1.legend()
+            ax1.legend(fontsize=8)
             ax1.grid(True, alpha=0.3)
-            
-            # Subplot 2: P-values de pruebas KS
+
+            # Subplot 2: el estadístico de distancia, que sí se puede calcular.
+            # Antes graficaba p-values; hoy son `None` y publicarlos sería inventarlos.
             dist_names = list(distributions_tested.keys())
-            p_values = [distributions_tested[name]['p_value'] for name in dist_names]
-            colors_bar = ['green' if p > 0.05 else 'orange' if p > 0.01 else 'red' for p in p_values]
-            
-            bars = ax2.bar(dist_names, p_values, color=colors_bar, alpha=0.7, edgecolor='black')
-            ax2.axhline(y=0.05, color='red', linestyle='--', label='Umbral α=0.05')
-            ax2.set_title('P-values de Pruebas Kolmogorov-Smirnov')
-            ax2.set_ylabel('P-value')
+            statistics = [distributions_tested[name].get('statistic') for name in dist_names]
+            plottable = [(name, value) for name, value in zip(dist_names, statistics)
+                         if value is not None and np.isfinite(value)]
+            if plottable:
+                names, values = zip(*plottable)
+                bars = ax2.bar(names, values, color='steelblue', alpha=0.8, edgecolor='black')
+                for bar, value in zip(bars, values):
+                    ax2.text(bar.get_x() + bar.get_width() / 2.0, bar.get_height(),
+                             f'{value:.4f}', ha='center', va='bottom', fontweight='bold')
+                ax2.set_ylabel('Distancia KS (menor es mejor)')
+            else:
+                ax2.text(0.5, 0.5, 'Estadístico no disponible', ha='center', va='center',
+                         transform=ax2.transAxes, fontsize=12)
+            ax2.set_title('Distancia de ajuste por candidato')
             ax2.set_xlabel('Distribución')
-            ax2.legend()
             ax2.grid(True, alpha=0.3)
-            
-            # Agregar valores en las barras
-            for bar, p_val in zip(bars, p_values):
-                height = bar.get_height()
-                ax2.text(bar.get_x() + bar.get_width()/2., height + 0.005,
-                        f'{p_val:.3f}', ha='center', va='bottom', fontweight='bold')
-            
-            # Subplot 3: Q-Q plot para mejor distribución
-            best_dist = max(distributions_tested.items(), key=lambda x: x[1]['p_value'])[0]
-            best_info = distributions_tested[best_dist]
-            
-            if best_dist == 'normal' and 'params' in best_info:
-                theoretical_quantiles = stats.norm.ppf(  # CORREGIDO
-                    np.linspace(0.01, 0.99, len(sample_data)), 
-                    loc=best_info['params'][0], 
-                    scale=best_info['params'][1]
-                )
+
+            # Subplot 3: Q-Q contra el candidato seleccionado por AIC, no por p-value.
+            best_dist = demand_ks_test.get('best_fit_distribution')
+            best_info = distributions_tested.get(best_dist, {})
+            theoretical = self._candidate_quantiles(
+                best_dist, best_info.get('params'), sample_data.size
+            )
+            if theoretical is not None:
                 sample_quantiles = np.sort(sample_data)
-                
-                ax3.scatter(theoretical_quantiles, sample_quantiles, alpha=0.6, color='blue', s=20)
-                min_val = min(theoretical_quantiles.min(), sample_quantiles.min())
-                max_val = max(theoretical_quantiles.max(), sample_quantiles.max())
-                ax3.plot([min_val, max_val], [min_val, max_val], 'r-', linewidth=2, label='Línea ideal')
-                
-                ax3.set_title(f'Q-Q Plot: {best_dist.title()} (Mejor Ajuste)')
-                ax3.set_xlabel('Cuantiles Teóricos')
-                ax3.set_ylabel('Cuantiles Observados')
+                ax3.scatter(theoretical, sample_quantiles, alpha=0.6, color='blue', s=20)
+                low = float(min(theoretical.min(), sample_quantiles.min()))
+                high = float(max(theoretical.max(), sample_quantiles.max()))
+                ax3.plot([low, high], [low, high], 'r-', linewidth=2, label='Línea ideal')
+                criterion = demand_ks_test.get('ranking_method', 'aic')
+                ax3.set_title(f'Q-Q: {str(best_dist).title()} (seleccionado por {criterion.upper()})')
+                ax3.set_xlabel('Cuantiles teóricos')
+                ax3.set_ylabel('Cuantiles de la muestra simulada')
                 ax3.legend()
                 ax3.grid(True, alpha=0.3)
-            
-            # Subplot 4: Resumen de validación
+            else:
+                ax3.axis('off')
+                ax3.text(0.5, 0.5, 'Q-Q no disponible para el candidato seleccionado',
+                         ha='center', va='center', transform=ax3.transAxes, fontsize=12)
+
+            # Subplot 4: tabla honesta — el p-value se declara no disponible con su motivo.
             ax4.axis('off')
-            
-            # Crear tabla de resumen
             summary_data = []
             for dist_name, dist_info in distributions_tested.items():
-                status = "✓ Pasa" if dist_info['passes_test'] else "✗ Falla"
+                statistic = dist_info.get('statistic')
+                reason = dist_info.get('p_value_unavailable_reason') or '—'
                 summary_data.append([
                     dist_name.title(),
-                    f"{dist_info['p_value']:.4f}",
-                    status
+                    '—' if statistic is None else f'{statistic:.4f}',
+                    'No disponible' if dist_info.get('p_value') is None
+                    else f"{dist_info['p_value']:.4f}",
+                    self._fit_verdict_label(dist_info.get('passes_test')),
+                    reason,
                 ])
-            
-            table = ax4.table(cellText=summary_data,
-                             colLabels=['Distribución', 'P-value', 'Estado'],
-                             cellLoc='center',
-                             loc='center',
-                             bbox=[0.1, 0.3, 0.8, 0.6])
-            
+
+            table = ax4.table(
+                cellText=summary_data,
+                colLabels=['Distribución', 'Distancia', 'P-value', 'Veredicto', 'Motivo'],
+                cellLoc='center', loc='center', bbox=[0.02, 0.25, 0.96, 0.6],
+            )
             table.auto_set_font_size(False)
-            table.set_fontsize(12)
+            table.set_fontsize(9)
             table.scale(1, 2)
-            
-            # Colorear filas según resultado
-            for i, (_, dist_info) in enumerate(distributions_tested.items()):
-                if dist_info['passes_test']:
-                    table[(i+1, 2)].set_facecolor('#90EE90')  # Verde claro
-                else:
-                    table[(i+1, 2)].set_facecolor('#FFB6C1')  # Rosa claro
-            
-            ax4.set_title('Resumen de Validación KS', fontsize=14, fontweight='bold', pad=20)
-            
+
+            ax4.set_title('Resumen del diagnóstico de ajuste', fontsize=14,
+                          fontweight='bold', pad=20)
+            ax4.text(
+                0.5, 0.12,
+                f"n = {sample_data.size}. El diagnóstico ordena candidatos por "
+                f"{str(demand_ks_test.get('ranking_method', 'aic')).upper()}; no prueba que "
+                "la distribución sea la verdadera. El p-value no es válido con parámetros "
+                "estimados de la propia muestra.",
+                ha='center', va='top', transform=ax4.transAxes, fontsize=9, wrap=True,
+            )
+
             plt.tight_layout()
-            
-            # Convertir a base64
+
             buffer = BytesIO()
-            fig.savefig(buffer, format='png', dpi=300, bbox_inches='tight')
+            fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
             buffer.seek(0)
             chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
             plt.close(fig)
-            
+
             return chart_base64
-            
+
         except Exception as e:
             logger.error(f"Error creating distribution comparison chart: {str(e)}")
             return None
+
+    @staticmethod
+    def _candidate_density(dist_name, params, x):
+        """Densidad de un candidato, o `None` si no se puede evaluar."""
+        if not params:
+            return None
+        try:
+            distribution = getattr(stats, str(dist_name).lower(), None)
+            if distribution is None:
+                return None
+            density = distribution.pdf(x, *params)
+            return density if np.all(np.isfinite(density)) else None
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _candidate_quantiles(dist_name, params, size):
+        """Cuantiles teóricos del candidato, o `None` si no se pueden evaluar."""
+        if not params or size < 2:
+            return None
+        try:
+            distribution = getattr(stats, str(dist_name).lower(), None)
+            if distribution is None:
+                return None
+            quantiles = distribution.ppf(np.linspace(0.01, 0.99, size), *params)
+            return quantiles if np.all(np.isfinite(quantiles)) else None
+        except (TypeError, ValueError):
+            return None
+
 
     def _create_confidence_intervals_chart(self, confidence_intervals):
         """Crear gráfico de intervalos de confianza"""

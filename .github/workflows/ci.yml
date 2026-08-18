@@ -14,12 +14,97 @@ env:
   PYTHON_VERSION: "3.12"
 
 # ─────────────────────────────────────────────────────────
-# JOB 1 — Tests Django + pip-audit
-# CORREGIDO: usa PostgreSQL (igual que producción), no MySQL
+# Cada evidencia corre en su propio job. La auditoría de seguridad
+# bloquea el release a través de `release-gate`, pero ya no puede
+# impedir que se ejecuten los checks, las migraciones y los tests.
 # ─────────────────────────────────────────────────────────
 jobs:
-  test:
-    name: Tests & Security Audit
+  # ───────────────────────────────────────────────────────────
+  # A — Errores reales de sintaxis/nombres (no estilo).
+  # ───────────────────────────────────────────────────────────
+  static:
+    name: Static gate (flake8)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: findempro
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: findempro/requirements/production.txt
+      - name: Install flake8
+        run: pip install "flake8==7.0.0"
+      - name: flake8 (E9,F63,F7,F82)
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+  # ───────────────────────────────────────────────────────────
+  # B — Django check + migraciones. Corre aunque la auditoría de
+  #     dependencias falle: son evidencias independientes.
+  # ───────────────────────────────────────────────────────────
+  checks:
+    name: Django checks & migrations
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: findempro_test
+          POSTGRES_USER: findempro
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    defaults:
+      run:
+        working-directory: findempro
+
+    env:
+      DJANGO_ENV: test
+      DJANGO_SETTINGS_MODULE: findempro.settings.testing
+      SECRET_KEY: ci-insecure-key-1234567890-only-for-tests
+      USE_POSTGRES_TESTS: "1"
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: findempro_test
+      DB_USER: findempro
+      DB_PASSWORD: test
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      REDIS_URL: redis://localhost:6379/1
+      CELERY_BROKER_URL: redis://localhost:6379/0
+      CELERY_RESULT_BACKEND: redis://localhost:6379/0
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: findempro/requirements/production.txt
+      - name: Install dependencies
+        run: pip install -r requirements/production.txt -r requirements/development.txt
+      - name: Django system check
+        run: python manage.py check
+      - name: No hay migraciones sin generar
+        run: python manage.py makemigrations --check --dry-run
+      - name: Run migrations (test DB)
+        run: python manage.py migrate --noinput
+
+  # ───────────────────────────────────────────────────────────
+  # C — Suite completa. Independiente de la auditoría de seguridad.
+  # ───────────────────────────────────────────────────────────
+  tests:
+    name: Tests (Django, PostgreSQL)
     runs-on: ubuntu-latest
 
     services:
@@ -51,76 +136,34 @@ jobs:
       run:
         working-directory: findempro
 
+    env:
+      DJANGO_ENV: test
+      DJANGO_SETTINGS_MODULE: findempro.settings.testing
+      SECRET_KEY: ci-insecure-key-1234567890-only-for-tests
+      USE_POSTGRES_TESTS: "1"
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: findempro_test
+      DB_USER: findempro
+      DB_PASSWORD: test
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      REDIS_URL: redis://localhost:6379/1
+      CELERY_BROKER_URL: redis://localhost:6379/0
+      CELERY_RESULT_BACKEND: redis://localhost:6379/0
+      CELERY_ALWAYS_EAGER: "true"
+
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: findempro/requirements/production.txt
-
       - name: Install dependencies
         run: pip install -r requirements/production.txt -r requirements/development.txt
-
-      - name: Security audit (pip-audit)
-        run: pip-audit -r requirements/production.txt
-
-      - name: Django system check
-        env:
-          DJANGO_ENV: test
-          DJANGO_SETTINGS_MODULE: findempro.settings.testing
-          SECRET_KEY: ci-insecure-key-1234567890-only-for-tests
-          DB_ENGINE: django.db.backends.postgresql
-          DB_NAME: findempro_test
-          DB_USER: findempro
-          DB_PASSWORD: test
-          DB_HOST: localhost
-          DB_PORT: "5432"
-          REDIS_URL: redis://localhost:6379/1
-          CELERY_BROKER_URL: redis://localhost:6379/0
-          CELERY_RESULT_BACKEND: redis://localhost:6379/0
-        run: python manage.py check
-
-      - name: Run migrations (test DB)
-        env:
-          DJANGO_ENV: test
-          DJANGO_SETTINGS_MODULE: findempro.settings.testing
-          SECRET_KEY: ci-insecure-key-1234567890-only-for-tests
-          DB_ENGINE: django.db.backends.postgresql
-          DB_NAME: findempro_test
-          DB_USER: findempro
-          DB_PASSWORD: test
-          DB_HOST: localhost
-          DB_PORT: "5432"
-          REDIS_URL: redis://localhost:6379/1
-          CELERY_BROKER_URL: redis://localhost:6379/0
-          CELERY_RESULT_BACKEND: redis://localhost:6379/0
-        run: python manage.py migrate --noinput
-
-      - name: Run tests
-        env:
-          DJANGO_ENV: test
-          DJANGO_SETTINGS_MODULE: findempro.settings.testing
-          SECRET_KEY: ci-insecure-key-1234567890-only-for-tests
-          DB_ENGINE: django.db.backends.postgresql
-          DB_NAME: findempro_test
-          DB_USER: findempro
-          DB_PASSWORD: test
-          DB_HOST: localhost
-          DB_PORT: "5432"
-          REDIS_URL: redis://localhost:6379/1
-          CELERY_BROKER_URL: redis://localhost:6379/0
-          CELERY_RESULT_BACKEND: redis://localhost:6379/0
-          CELERY_ALWAYS_EAGER: "true"
-        run: |
-          pytest simulate/tests/test_core_engine.py \
-                 simulate/tests/test_model_compiler.py \
-                 simulate/tests/test_p3_features.py \
-                 simulate/tests/test_canvas_views_p3.py \
-                 -v --tb=short
-
+      - name: Suite completa
+        run: pytest -p no:warnings --tb=short
       - name: Upload coverage
         if: always()
         uses: actions/upload-artifact@v4
@@ -128,6 +171,33 @@ jobs:
           name: test-results
           path: findempro/.pytest_cache/
           retention-days: 7
+
+  # ───────────────────────────────────────────────────────────
+  # E — Auditoría de dependencias. Bloquea el release (via
+  #     release-gate) pero ya NO impide recoger la evidencia de
+  #     A/B/C: antes corría como primer paso del mismo job y una
+  #     CVE saltaba check, migraciones y tests sin ejecutarlos.
+  # ───────────────────────────────────────────────────────────
+  security-audit:
+    name: Dependency security audit (pip-audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: findempro
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: findempro/requirements/production.txt
+      - name: Install pip-audit
+        run: pip install "pip-audit==2.7.3"
+      - name: Audit production dependencies
+        run: pip-audit -r requirements/production.txt
+      - name: Audit development dependencies
+        run: pip-audit -r requirements/development.txt
 
   # ── Frontend React/Vite build (typecheck via tsc -b + vite build) ──
   frontend:
@@ -148,12 +218,39 @@ jobs:
           npm run build
 
 # ─────────────────────────────────────────────────────────
-# JOB 2 — Docker build smoke test
+# Compuerta de release — agrega TODAS las evidencias.
+# Basta con que una falle (o se cancele) para no liberar.
+# ─────────────────────────────────────────────────────────
+  release-gate:
+    name: Release gate
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [static, checks, tests, security-audit, frontend]
+    steps:
+      - name: Verificar que toda evidencia esté en verde
+        run: |
+          echo "static:         ${{ needs.static.result }}"
+          echo "checks:         ${{ needs.checks.result }}"
+          echo "tests:          ${{ needs.tests.result }}"
+          echo "security-audit: ${{ needs.security-audit.result }}"
+          echo "frontend:       ${{ needs.frontend.result }}"
+          if [ "${{ needs.static.result }}" != "success" ] \
+          || [ "${{ needs.checks.result }}" != "success" ] \
+          || [ "${{ needs.tests.result }}" != "success" ] \
+          || [ "${{ needs.security-audit.result }}" != "success" ] \
+          || [ "${{ needs.frontend.result }}" != "success" ]; then
+            echo "::error::Alguna evidencia no está en verde — no se libera."
+            exit 1
+          fi
+          echo "Todas las evidencias en verde."
+
+# ─────────────────────────────────────────────────────────
+# Docker build smoke test
 # ─────────────────────────────────────────────────────────
   docker-build:
     name: Docker Build Smoke Test
     runs-on: ubuntu-latest
-    needs: test
+    needs: release-gate
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
 
     steps:
@@ -179,7 +276,7 @@ jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [test, docker-build, frontend]
+    needs: [release-gate, docker-build]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     environment: production
 
@@ -208,23 +305,41 @@ jobs:
             # Guardar imagen actual para rollback
             PREV_IMAGE=$(docker inspect --format='{{.Image}}' findempro_backend 2>/dev/null || true)
 
-            # Build nueva imagen
-            echo "🏗️ Building Docker image..."
-            docker compose -f docker-compose.prod.yml build findempro_backend
+            # Build nuevas imágenes (backend + frontend; antes el frontend nunca
+            # se reconstruía → cambios de UI no llegaban a prod aunque el CI los
+            # typecheckeara).
+            echo "🏗️ Building Docker images (backend + frontend)..."
+            docker compose -f docker-compose.prod.yml build findempro_backend findempro_frontend
 
-            # Deploy backend sin downtime
-            echo "🚀 Iniciando nuevo backend..."
-            docker compose -f docker-compose.prod.yml up -d --no-deps findempro_backend
+            # Deploy backend + frontend sin downtime
+            echo "🚀 Iniciando nuevo backend + frontend..."
+            docker compose -f docker-compose.prod.yml up -d --no-deps findempro_backend findempro_frontend
 
             # Migraciones Django
             echo "⚙️ Ejecutando migraciones..."
             docker compose -f docker-compose.prod.yml exec -T findempro_backend \
               python manage.py migrate --noinput
 
+            # Asegurar el superusuario maestro (idempotente; NO pisa password).
+            echo "👤 Asegurando superuser sergio..."
+            # ensure_superuser ya no trae contraseña por defecto (era un literal
+            # público). En una base ya provista es idempotente y no la necesita;
+            # sobre una base nueva exige FINDEMPRO_SUPERUSER_PASSWORD.
+            docker compose -f docker-compose.prod.yml exec -T \
+              -e FINDEMPRO_SUPERUSER_PASSWORD='${{ secrets.FINDEMPRO_SUPERUSER_PASSWORD }}' \
+              findempro_backend python manage.py ensure_superuser || true
+
             # Static files
             echo "📁 Recolectando archivos estáticos..."
             docker compose -f docker-compose.prod.yml exec -T findempro_backend \
               python manage.py collectstatic --noinput
+
+            # Recargar nginx (recoge cambios de conf.d y re-resuelve upstreams tras
+            # recrear backend/frontend → evita 502 por IP vieja en caché).
+            echo "🔁 Recargando nginx..."
+            docker compose -f docker-compose.prod.yml up -d --no-deps findempro_nginx
+            docker compose -f docker-compose.prod.yml exec -T findempro_nginx nginx -s reload || \
+              docker compose -f docker-compose.prod.yml restart findempro_nginx
 
             # Reiniciar workers Celery (recogen nuevo código)
             echo "🔄 Reiniciando workers Celery..."

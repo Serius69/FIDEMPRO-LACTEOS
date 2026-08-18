@@ -41,7 +41,7 @@ class BusinessMetrics:
     costs: float = 0.0
     profit: float = 0.0
     profit_margin: float = 0.0
-    roi: float = 0.0
+    roi: Optional[float] = None
     inventory: float = 0.0
     demand: float = 0.0
     production: float = 0.0
@@ -182,7 +182,7 @@ class DashboardService:
     def _get_business_products(cls, business_id: int) -> List[Product]:
         """Obtiene productos del negocio optimizado"""
         return list(Product.objects.filter(
-            fk_business=business_id
+            fk_business=business_id, is_active=True
         ).select_related('fk_business').prefetch_related('fk_product_area'))
 
     @classmethod
@@ -207,67 +207,88 @@ class DashboardService:
             logger.error(f"Error getting business charts: {e}")
             return []
 
+    # Mapeo variable-de-simulación -> atributo acumulable de BusinessMetrics
+    _METRIC_VAR_ATTRS = {
+        'TPV': 'revenue',
+        'IT': 'costs',
+        'GT': 'profit',
+        'TG': 'inventory',
+        'DT': 'demand',
+        'Production': 'production',
+    }
+
     @classmethod
     def _calculate_enhanced_metrics(cls, simulations: List[Simulation]) -> BusinessMetrics:
-        """Calcula métricas financieras mejoradas y robustas"""
+        """Calcula métricas financieras mejoradas y robustas.
+
+        CONTEXTO / ESCALA (fix de agregación):
+        Cada ``ResultSimulation`` es UN período (día/semana/mes) de una simulación
+        y guarda en ``variables`` los totales de ese período (TPV, IT, GT, ...).
+        La versión anterior SUMABA esas variables sobre TODOS los períodos de TODAS
+        las simulaciones recibidas (hasta 100), produciendo cifras infladas por un
+        factor ~ (nº de simulaciones) x (nº de períodos) que no representan al negocio.
+
+        Aquí calculamos una cifra representativa a escala de UNA simulación:
+        se toma únicamente la simulación MÁS RECIENTE de la lista recibida (la más
+        relevante para el estado actual del negocio) y se PROMEDIA cada variable a
+        través de sus períodos, obteniendo el valor esperado por período. Así
+        revenue/costs/profit quedan en la escala de un período de una simulación,
+        independiente del nº de simulaciones y del horizonte, y los derivados
+            (profit_margin y KPIs operativos) resultan interpretables. ROI solo
+            puede existir cuando hay una base explícita de inversión.
+        """
         metrics = BusinessMetrics()
-        
+
         if not simulations:
             return metrics
-        
-        processed_simulations = set()
-        
+
         try:
-            for simulation in simulations:
-                if simulation.id in processed_simulations:
+            # Simulación más reciente del subconjunto recibido (representa el
+            # estado actual; los callers ya suelen pasar listas por período/producto).
+            simulation = max(
+                simulations,
+                key=lambda s: getattr(s, 'date_created', None) or timezone.now()
+            )
+
+            # Obtener resultados (períodos) de esa simulación
+            if hasattr(simulation, 'results') and hasattr(simulation.results, 'all'):
+                results = list(simulation.results.all())
+            else:
+                results = list(ResultSimulation.objects.filter(fk_simulation=simulation))
+
+            # Acumular por variable y contar períodos para promediar
+            totals = {attr: 0.0 for attr in cls._METRIC_VAR_ATTRS.values()}
+            periods = 0
+
+            for result in results:
+                variables_data = cls._extract_variables_safely(result)
+                if not variables_data:
                     continue
-                processed_simulations.add(simulation.id)
-                
-                try:
-                    # Obtener resultados de la simulación
-                    if hasattr(simulation, 'results') and hasattr(simulation.results, 'all'):
-                        results = simulation.results.all()
-                    else:
-                        results = ResultSimulation.objects.filter(fk_simulation=simulation)
-                    
-                    for result in results:
-                        variables_data = cls._extract_variables_safely(result)
-                        
-                        if variables_data:
-                            # Procesar cada variable de manera robusta
-                            for var_key, value in variables_data.items():
-                                numeric_value = cls._safe_float_conversion(value)
-                                
-                                if var_key == 'TPV':
-                                    metrics.revenue += numeric_value
-                                elif var_key == 'IT':
-                                    metrics.costs += numeric_value
-                                elif var_key == 'GT':
-                                    metrics.profit += numeric_value
-                                elif var_key == 'TG':
-                                    metrics.inventory += numeric_value
-                                elif var_key == 'DT':
-                                    metrics.demand += numeric_value
-                                elif var_key == 'Production':
-                                    metrics.production += numeric_value
-                        
-                except Exception as e:
-                    logger.debug(f"Error processing simulation {simulation.id}: {e}")
-                    continue
-        
+                periods += 1
+                for var_key, value in variables_data.items():
+                    attr = cls._METRIC_VAR_ATTRS.get(var_key)
+                    if attr:
+                        totals[attr] += cls._safe_float_conversion(value)
+
+            if periods > 0:
+                # Promedio por período => cifra representativa a escala de 1 simulación
+                for attr, total in totals.items():
+                    setattr(metrics, attr, total / periods)
+
         except Exception as e:
             logger.error(f"Error calculating enhanced metrics: {e}")
-        
+
         # Calcular métricas derivadas
         metrics.profit_margin = cls._calculate_profit_margin(metrics.revenue, metrics.costs)
-        metrics.roi = cls._calculate_roi(metrics.revenue, metrics.costs)
+        metrics.roi = cls._calculate_roi(metrics.profit, investment=None)
         metrics.efficiency_score = cls._calculate_efficiency_score(metrics)
-        
+
         # Redondear valores
         for field in metrics.__dataclass_fields__:
             value = getattr(metrics, field)
-            setattr(metrics, field, round(value, 2))
-        
+            if isinstance(value, (int, float)):
+                setattr(metrics, field, round(value, 2))
+
         return metrics
 
     @classmethod
@@ -343,11 +364,11 @@ class DashboardService:
         return 0.0
 
     @classmethod
-    def _calculate_roi(cls, revenue: float, costs: float) -> float:
-        """Calcula ROI"""
-        if costs > 0:
-            return ((revenue - costs) / costs) * 100
-        return 0.0 if revenue == 0 else 100.0
+    def _calculate_roi(cls, profit: float, investment: Optional[float]) -> Optional[float]:
+        """Calculate ROI only from an explicit invested-capital basis."""
+        if investment is None or investment <= 0:
+            return None
+        return (profit / investment) * 100
 
     @classmethod
     def _calculate_efficiency_score(cls, metrics: BusinessMetrics) -> float:
@@ -381,7 +402,9 @@ class DashboardService:
         try:
             # Contar áreas de manera eficiente
             areas_count = Area.objects.filter(
-                fk_product__fk_business=business_id
+                fk_product__fk_business=business_id,
+                is_active=True,
+                fk_product__is_active=True,
             ).count()
             
             # Contar gráficos activos
@@ -559,14 +582,18 @@ class DashboardService:
                 'fk_simulation__fk_questionary_result__fk_questionary__fk_product__name'
             ).annotate(
                 latest_id=Max('id'),
-                avg_data=Avg('data')
+                # El campo 'data' fue eliminado en la migración
+                # finance/0009_remove_financerecommendationsimulation_data.
+                # 'metric_value' es su reemplazo canónico (el propio help_text
+                # del campo 'data' decía "deprecado, usar metric_value").
+                avg_metric=Avg('metric_value')
             ).order_by('-fk_simulation__date_created')[:20]
-            
+
             recommendations = []
-            
+
             for rec_data in recommendations_query:
                 try:
-                    data_value = rec_data.get('avg_data') or 0.5
+                    data_value = rec_data.get('avg_metric') or 0.5
                     data_percentage = float(data_value) * 100
                     
                     recommendations.append({
@@ -635,7 +662,8 @@ class DashboardService:
             
             # Redondear valores
             for key, value in kpis.items():
-                kpis[key] = round(value, 1)
+                if isinstance(value, (int, float)):
+                    kpis[key] = round(value, 1)
             
             return kpis
             
@@ -643,7 +671,7 @@ class DashboardService:
             logger.error(f"Error calculating enhanced KPIs: {e}")
             return {
                 'profit_margin_percentage': 0,
-                'roi_percentage': 0,
+                'roi_percentage': None,
                 'efficiency_score': 0,
                 'net_profit': 0,
                 'cost_ratio': 0,
@@ -669,15 +697,16 @@ class DashboardService:
             else:
                 scores.append(30)
             
-            # Score de ROI
-            if metrics.roi > 25:
-                scores.append(100)
-            elif metrics.roi > 15:
-                scores.append(80)
-            elif metrics.roi > 5:
-                scores.append(60)
-            else:
-                scores.append(30)
+            # ROI is only scored when an explicit investment basis exists.
+            if metrics.roi is not None:
+                if metrics.roi > 25:
+                    scores.append(100)
+                elif metrics.roi > 15:
+                    scores.append(80)
+                elif metrics.roi > 5:
+                    scores.append(60)
+                else:
+                    scores.append(30)
             
             # Score de eficiencia
             scores.append(min(100, metrics.efficiency_score))
@@ -704,7 +733,7 @@ class DashboardService:
                 })
             
             # Alertas de ROI
-            if metrics.roi < 0:
+            if metrics.roi is not None and metrics.roi < 0:
                 alerts.append({
                     'type': 'danger',
                     'title': 'ROI Negativo',
@@ -747,11 +776,19 @@ class DashboardService:
         try:
             from collections import defaultdict
 
+            # NOTA: el lookup original ('fk_product_questionary__results__fk_simulation')
+            # no correspondía a ninguna relación real (Questionary -> QuestionaryResult
+            # es 'fk_questionary_questionary_result'; QuestionaryResult -> Simulation es
+            # 'simulations') y Django lanzaba FieldError en cada llamada, atrapado por
+            # el except de abajo -- por eso "top productos" devolvía [] siempre.
             products = list(Product.objects.filter(
-                fk_business=business_id
+                fk_business=business_id, is_active=True
             ).annotate(
-                simulations_count=Count('fk_product_questionary__results__fk_simulation', distinct=True),
-                latest_simulation=Max('fk_product_questionary__results__fk_simulation__date_created')
+                simulations_count=Count(
+                    'fk_product_questionary__fk_questionary_questionary_result__simulations',
+                    distinct=True),
+                latest_simulation=Max(
+                    'fk_product_questionary__fk_questionary_questionary_result__simulations__date_created')
             ).order_by('-simulations_count', '-latest_simulation')[:5])
 
             if not products:
@@ -887,7 +924,7 @@ class DashboardService:
             'recent_activity': [],
             'business_kpis': {
                 'profit_margin_percentage': 0,
-                'roi_percentage': 0,
+                'roi_percentage': None,
                 'efficiency_score': 0,
                 'net_profit': 0,
                 'cost_ratio': 0,

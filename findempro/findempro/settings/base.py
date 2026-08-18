@@ -17,10 +17,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # Cargar .env según el entorno activo — NUNCA forzar .env.development en producción
 _ENV = os.getenv('DJANGO_ENV', 'development')
 _env_file = os.path.join(BASE_DIR, f'.env.{_ENV}')
-if os.path.exists(_env_file):
-    load_dotenv(_env_file, override=False)
-elif os.path.exists(os.path.join(BASE_DIR, '.env')):
-    load_dotenv(os.path.join(BASE_DIR, '.env'), override=False)
+if _ENV not in ('test', 'testing'):
+    if os.path.exists(_env_file):
+        load_dotenv(_env_file, override=False)
+    elif os.path.exists(os.path.join(BASE_DIR, '.env')):
+        load_dotenv(os.path.join(BASE_DIR, '.env'), override=False)
 
 # ─────────────────────────────────────────────
 # Seguridad — NUNCA hardcodear en código
@@ -56,6 +57,7 @@ LOCAL_APPS = [
     "user",
     "report",
     "questionary",
+    "modeling",
 ]
 
 THIRDPARTY_APPS = [
@@ -93,6 +95,7 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
     'user.middleware.ActivityLogMiddleware',
     'hub_auth.middleware.HubAuthMiddleware',
+    'findempro.security_headers.SecurityHeadersMiddleware',
     # AxesMiddleware debe ir al final, tras AuthenticationMiddleware.
     'axes.middleware.AxesMiddleware',
     'django_prometheus.middleware.PrometheusAfterMiddleware',
@@ -101,6 +104,16 @@ MIDDLEWARE = [
 # Kapitalya Hub SSO
 HUB_JWT_SECRET = os.getenv('HUB_JWT_SECRET', '')
 HUB_URL = os.getenv('HUB_URL', 'https://kapitalya.com.bo')
+HUB_UPGRADE_URL = os.getenv('HUB_UPGRADE_URL', '')
+
+# Límites de uso por plan. Desactivados por defecto para preservar el flujo
+# existente durante el rollout.
+PLAN_GATES_ENABLED = os.getenv('PLAN_GATES_ENABLED', 'False').lower() in ('true', '1', 'yes')
+PLAN_SIM_LIMITS = {
+    'basico': 10,
+    'pro': 100,
+    'empresa': None,
+}
 
 # ─────────────────────────────────────────────
 # URLs / Templates / WSGI
@@ -158,7 +171,9 @@ AUTH_PASSWORD_VALIDATORS = [
 LOGIN_REDIRECT_URL = "/"
 LOGIN_URL = "account_login"
 ACCOUNT_LOGOUT_ON_GET = os.getenv('ACCOUNT_LOGOUT_ON_GET', 'True').lower() in ('true', '1')
-ACCOUNT_EMAIL_REQUIRED = True
+# Reemplaza a ACCOUNT_EMAIL_REQUIRED, deprecado en django-allauth 65. Declara los
+# mismos campos que regían antes: email y usuario obligatorios en el registro.
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = True
 ACCOUNT_EMAIL_VERIFICATION = os.getenv('ACCOUNT_EMAIL_VERIFICATION', 'optional')
 ACCOUNT_RATE_LIMITS = {
@@ -248,7 +263,7 @@ CELERY_ALWAYS_EAGER = os.getenv('CELERY_ALWAYS_EAGER', 'False').lower() in ('tru
 LANGUAGE_CODE = 'es'
 TIME_ZONE = 'America/La_Paz'
 USE_I18N = True
-USE_L10N = True
+# USE_L10N se eliminó en Django 5.0: la localización de formatos es incondicional.
 USE_TZ = True
 
 # ─────────────────────────────────────────────
@@ -326,7 +341,31 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
-CSRF_COOKIE_HTTPONLY = True
+# Django documenta que HttpOnly en la cookie CSRF no aporta protección práctica:
+# el token sólo defiende de ataques cross-domain, y quien puede leer la cookie por
+# JavaScript ya está en el mismo origen. A cambio rompe algo real — el JS del
+# producto (simulate-list, report-list, user-list, finance-list, profile-settings)
+# arma `X-CSRFToken` con `getCookie('csrftoken')` sobre `document.cookie`, que con
+# HttpOnly llega vacío y devuelve 403 en cada POST. Verificado con el E2E de
+# navegador: crear un modelo desde plantilla daba 403 hasta quitarlo.
+CSRF_COOKIE_HTTPONLY = False
+
+# Content-Security-Policy emitida por SecurityHeadersMiddleware en TODA respuesta
+# Django (nginx no la emitía por la herencia rota de add_header). El allowlist
+# La SPA React/Vite sólo carga assets propios. Los templates Django legacy aún
+# contienen referencias a CDNs; quedan deliberadamente bloqueadas hasta que esos
+# assets se vendorizen bajo /static. No se amplía la política global por rutas
+# heredadas que no forman parte de la SPA.
+CONTENT_SECURITY_POLICY = os.environ.get('CONTENT_SECURITY_POLICY', (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline'; "
+    "style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data: blob:; "
+    "font-src 'self' data:; "
+    "connect-src 'self'; "
+    "frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+))
+PERMISSIONS_POLICY = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
 
 # ─────────────────────────────────────────────
 # Messages UI
@@ -342,9 +381,18 @@ MESSAGE_TAGS = {
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 # ─────────────────────────────────────────────
-# OpenAI / Terceros
+# Claude / Terceros
 # ─────────────────────────────────────────────
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+ANTHROPIC_MODEL = os.getenv('ANTHROPIC_MODEL', 'claude-sonnet-5')
+
+# Bounded execution and model compilation for the configurable business-model
+# runner. Deployments may tune these guards without changing the model DSL.
+MODELING_MAX_ACTIVE_RUNS = int(os.getenv('MODELING_MAX_ACTIVE_RUNS', '4'))
+MODELING_MAX_MODEL_NODES = int(os.getenv('MODELING_MAX_MODEL_NODES', '1000'))
+MODELING_MAX_MODEL_EDGES = int(os.getenv('MODELING_MAX_MODEL_EDGES', '5000'))
+MODELING_MAX_EXPRESSION_LENGTH = int(os.getenv('MODELING_MAX_EXPRESSION_LENGTH', '500'))
+MODELING_MAX_EXPRESSION_NODES = int(os.getenv('MODELING_MAX_EXPRESSION_NODES', '200'))
+MODELING_MAX_EXPRESSION_DEPTH = int(os.getenv('MODELING_MAX_EXPRESSION_DEPTH', '40'))
 
 # ─────────────────────────────────────────────
 # Matplotlib (no-GUI)

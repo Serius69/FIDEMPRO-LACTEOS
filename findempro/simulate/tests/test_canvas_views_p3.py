@@ -18,8 +18,23 @@ from rest_framework.test import APIClient
 
 from simulate.canvas_models import SimulationProject, ModelNode, ModelEdge
 from simulate.models import RiskAlert
+from simulate.views.canvas_views import _minimal_montecarlo, _run_montecarlo, _run_scenario
 
 User = get_user_model()
+
+
+def test_canvas_adapters_never_fabricate_financial_results_without_inputs():
+    result, stats = _run_montecarlo({"variables": {"demand": {"distribution": "normal", "params": {"mean": 10, "std": 1}}}})
+    assert result["type"] == "incomplete"
+    assert "unit_price" in stats["missing"]
+
+    result, stats = _minimal_montecarlo({})
+    assert result["type"] == "incomplete"
+    assert stats["status"] == "incomplete"
+
+    result, stats = _run_scenario({"n_runs": 10}, "expected")
+    assert result["type"] == "incomplete"
+    assert "base_demand" in stats["missing"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -61,6 +76,8 @@ def project(user, db):
         run_specs={
             'start_time': 0, 'stop_time': 30, 'dt': 1,
             'n_runs_montecarlo': 100, 'random_seed': 42,
+            'base_demand': 1000, 'unit_price': 12.5, 'unit_cost': 4.0,
+            'fixed_costs': 2500,
         },
     )
 

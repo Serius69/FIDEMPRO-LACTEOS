@@ -194,6 +194,32 @@ def load_dataframe(path: str, *, sep: str = ',', decimal: str = '.',
     return pd.read_csv(path, sep=sep, decimal=decimal)
 
 
+def _sort_by_date(sub, date_col: str):
+    """
+    Ordena ``sub`` cronológicamente por ``date_col``, parseando fechas con
+    ``dayfirst=True`` (formato boliviano DD/MM/YYYY). Ordenar por el string
+    crudo revuelve la cronología (p.ej. "01/02/2025" < "15/01/2025" léxicamente,
+    pero enero es antes que febrero) — eso desordena la serie que calibra
+    Monte Carlo y produce predicciones basura sin ningún error visible.
+
+    Falla ruidoso (``ValueError``) si alguna fecha no es parseable, en vez de
+    dejar pasar ``NaT`` silenciosamente (que ``sort_values`` colocaría al final
+    o al principio de forma no determinista).
+    """
+    import pandas as pd
+
+    try:
+        parsed = pd.to_datetime(
+            sub[date_col], dayfirst=True, errors='raise', format='mixed')
+    except Exception as exc:
+        raise ValueError(
+            f"la columna de fecha '{date_col}' tiene valores no parseables: {exc}"
+        ) from exc
+    return (sub.assign(__parsed_date__=parsed)
+               .sort_values('__parsed_date__', kind='stable')
+               .drop(columns='__parsed_date__'))
+
+
 def group_series(df, *, product_col: str = 'product', demand_col: str = 'demand',
                  date_col: Optional[str] = 'date',
                  business_col: Optional[str] = 'business',
@@ -204,8 +230,9 @@ def group_series(df, *, product_col: str = 'product', demand_col: str = 'demand'
 
     * Si ``single_product`` se indica, toda la columna de demanda se asigna a ese
       producto (archivos de una sola serie, sin columna de producto).
-    * Si existe columna de fecha, cada serie se ordena por fecha antes de extraer
-      los valores.
+    * Si existe columna de fecha, cada serie se ordena cronológicamente (parseo
+      ``dayfirst=True``, formato boliviano) antes de extraer los valores —
+      nunca por el string crudo.
     * ``business_col`` (si existe) permite desambiguar productos homónimos.
     """
     if demand_col not in df.columns:
@@ -219,7 +246,7 @@ def group_series(df, *, product_col: str = 'product', demand_col: str = 'demand'
     if single_product:
         work = df.copy()
         if has_date:
-            work = work.sort_values(date_col, kind='stable')
+            work = _sort_by_date(work, date_col)
         return {(single_product, None): work[demand_col].tolist()}
 
     if product_col not in df.columns:
@@ -236,7 +263,7 @@ def group_series(df, *, product_col: str = 'product', demand_col: str = 'demand'
             prod_name = key[0] if isinstance(key, tuple) else key
             biz_name = None
         if has_date:
-            sub = sub.sort_values(date_col, kind='stable')
+            sub = _sort_by_date(sub, date_col)
         prod_name = str(prod_name).strip()
         biz_name = str(biz_name).strip() if biz_name is not None else None
         grouped[(prod_name, biz_name)] = sub[demand_col].tolist()

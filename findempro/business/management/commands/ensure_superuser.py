@@ -12,8 +12,12 @@ Pensado para correr tras cada ``migrate`` en dev/test/prod sin efectos
 colaterales. El usuario, email y (solo para la creación inicial) la contraseña
 son configurables por flag o variable de entorno.
 
-La contraseña por defecto es la del ecosistema (misma que xgol/forex-erp); se
-puede sobreescribir por flag o env sin tocar la de un usuario ya existente.
+La contraseña **no tiene valor por defecto**: crear el superusuario exige darla
+por ``--password`` o por ``FINDEMPRO_SUPERUSER_PASSWORD`` /
+``DJANGO_SUPERUSER_PASSWORD``. Antes había un literal en este archivo, que es
+público: cualquier despliegue sobre una base nueva creaba al administrador con
+una contraseña conocida por todo el mundo. Sin contraseña el comando falla en
+vez de inventar una; la ruta idempotente (el usuario ya existe) no la necesita.
 
 Ejemplos:
     python manage.py ensure_superuser
@@ -23,12 +27,11 @@ Ejemplos:
 import os
 
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 # Defaults del ecosistema Kapitalya (idénticos a xgol/forex-erp).
 DEFAULT_USERNAME = "sergio"
 DEFAULT_EMAIL = "kapitalyabolivia@gmail.com"
-DEFAULT_PASSWORD = "Kapitalya2026!"   # solo se usa al CREAR; nunca al actualizar
 
 
 class Command(BaseCommand):
@@ -48,9 +51,9 @@ class Command(BaseCommand):
         parser.add_argument(
             "--password",
             default=(os.environ.get("FINDEMPRO_SUPERUSER_PASSWORD")
-                     or os.environ.get("DJANGO_SUPERUSER_PASSWORD")
-                     or DEFAULT_PASSWORD),
-            help="Password inicial (solo se usa al CREAR; no pisa el existente).",
+                     or os.environ.get("DJANGO_SUPERUSER_PASSWORD")),
+            help="Password inicial (solo se usa al CREAR; no pisa el existente). "
+                 "Sin valor por defecto: es obligatoria para crear.",
         )
 
     def handle(self, *args, **opts):
@@ -64,6 +67,16 @@ class Command(BaseCommand):
             defaults={"email": email, "is_superuser": True, "is_staff": True,
                       "is_active": True},
         )
+
+        if created and not password:
+            # El usuario acaba de crearse sin contraseña utilizable; se descarta para
+            # no dejar una cuenta de superusuario a medias en la base.
+            user.delete()
+            raise CommandError(
+                "Falta la contraseña para crear el superusuario. "
+                "Pásala con --password o FINDEMPRO_SUPERUSER_PASSWORD. "
+                "No hay valor por defecto a propósito: este archivo es público."
+            )
 
         if created:
             user.set_password(password)

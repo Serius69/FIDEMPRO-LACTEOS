@@ -63,6 +63,11 @@ def test_save_image_src_signal():
     UserSocialAuth.objects.create(
         user=user,
         provider="google-oauth2",
+        # `uid` es obligatorio desde social-auth-app-django 5.6.0: una fila con
+        # uid vacío permitía colisionar cuentas sociales (PYSEC-2026-1932) y hoy
+        # la rechaza un CHECK en base. Un registro real de Google siempre trae el
+        # identificador del proveedor, así que la fixture lo declara.
+        uid="112233445566778899000",
         extra_data={"picture": "http://example.com/image.jpg"}
     )
     user_profile = UserProfile.objects.get(user=user)

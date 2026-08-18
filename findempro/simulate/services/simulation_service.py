@@ -185,6 +185,7 @@ class SimulationService:
         generator = ScenarioGenerator(mc_config)
 
         # ── 4. Configurar motor de eventos discretos ──────────────────────────
+        from types import SimpleNamespace
         from variable.models import Equation
         equations = list(
             Equation.objects.filter(
@@ -192,6 +193,17 @@ class SimulationService:
                 fk_area__fk_product=product,
             ).select_related('fk_area')
         )
+
+        from simulate.utils.variable_mapper import VariableMapper
+        variable_mapper = VariableMapper()
+        template_equations = variable_mapper.get_template_equation_expressions(
+            sim.fk_questionary_result
+        )
+        if template_equations:
+            equations = [
+                SimpleNamespace(expression=expression, fk_area=None)
+                for expression in template_equations
+            ]
 
         if profile is not None:
             try:
@@ -219,9 +231,8 @@ class SimulationService:
         # El motor de ecuaciones espera exógenas ESCALARES; se descartan las series
         # (p. ej. DH = demanda histórica), que se manejan vía mc_config/escenarios,
         # no como entrada por período de las ecuaciones.
-        from simulate.utils.variable_mapper import VariableMapper
         exogenous = {
-            k: v for k, v in VariableMapper().extract_all_variables(sim.fk_questionary_result).items()
+            k: v for k, v in variable_mapper.extract_all_variables(sim.fk_questionary_result).items()
             if isinstance(v, (int, float)) and not isinstance(v, bool)
         }
 
@@ -251,7 +262,11 @@ class SimulationService:
             try:
                 from simulate.core.vectorized_engine import VectorizedMonteCarlo, can_vectorize
                 from simulate.core.gpu_backend import backend_name
-                if can_vectorize(company_config, exogenous):
+                if can_vectorize(
+                    company_config,
+                    exogenous,
+                    demand_std=mc_config.demand_std,
+                ):
                     _t_vec = time.perf_counter()
                     with ACTIVE_SIMULATIONS.labels(sector=_sector).track_inprogress():
                         d_grid, r_grid, _c_grid, p_grid = VectorizedMonteCarlo(
@@ -262,6 +277,7 @@ class SimulationService:
                         period_results.append({
                             'period':       t + 1,
                             'demand_mean':  float(pd_.mean()),
+                            'demand_std':   float(pd_.std()),
                             'demand_p5':    float(np.percentile(pd_, 5)),
                             'demand_p95':   float(np.percentile(pd_, 95)),
                             'revenue_mean': float(pr_.mean()),
@@ -317,6 +333,7 @@ class SimulationService:
                     period_results.append({
                         'period': period_idx + 1,
                         'demand_mean':  float(np.mean(period_demands)),
+                        'demand_std':   float(np.std(period_demands)),
                         'demand_p5':    float(np.percentile(period_demands, 5)),
                         'demand_p95':   float(np.percentile(period_demands, 95)),
                         'revenue_mean': float(np.mean(period_revenues)),
@@ -429,8 +446,15 @@ class SimulationService:
             demand_p5   = pr.get('demand_p5', 0.0)
             demand_p95  = pr.get('demand_p95', demand_mean)
 
-            # Approx std desde rango inter-percentil (distribución normal)
-            demand_std = max((demand_p95 - demand_p5) / 3.29, 0.0)
+            # σ real por período (calculada sobre la grilla T×N de la simulación).
+            # Se prefiere al reconstruido del rango p5–p95, que asume Normal (3.29 =
+            # span 5–95 de la Normal) y sesga la σ cuando la demanda es asimétrica
+            # (lognormal/gamma/GBM). Fallback al supuesto Normal solo si no está.
+            demand_std = pr.get('demand_std')
+            if demand_std is None:
+                demand_std = max((demand_p95 - demand_p5) / 3.29, 0.0)
+            else:
+                demand_std = max(float(demand_std), 0.0)
 
             objects.append(ResultSimulation(
                 fk_simulation=simulation,

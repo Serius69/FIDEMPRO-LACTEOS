@@ -773,26 +773,26 @@
                 
                 <div class="collapse" id="ksExplanation">
                     <div class="explanation-box p-3 bg-white bg-opacity-75 rounded mb-3">
-                        <h6><i class="bx bx-book me-2"></i>¿Qué es la Validación Kolmogorov-Smirnov?</h6>
+                        <h6><i class="bx bx-book me-2"></i>¿Qué es el diagnóstico de ajuste?</h6>
                         <p class="mb-2">
-                            La prueba Kolmogorov-Smirnov (KS) es un método estadístico que verifica si los datos generados por nuestra simulación 
-                            siguen las distribuciones de probabilidad esperadas según nuestro modelo matemático.
+                            La distancia Kolmogorov-Smirnov describe la separación entre la muestra y una distribución ajustada.
+                            Cuando los parámetros se estiman con esa misma muestra, no se publica el p-value KS ingenuo.
                         </p>
                         <div class="row">
                             <div class="col-md-6">
                                 <h6 class="text-primary">¿Por qué es importante?</h6>
                                 <ul class="small">
-                                    <li>Garantiza que nuestras proyecciones son estadísticamente válidas</li>
-                                    <li>Confirma que el modelo matemático funciona correctamente</li>
-                                    <li>Proporciona confianza en las predicciones futuras</li>
+                                    <li>Permite comparar candidatos continuos bajo supuestos explícitos</li>
+                                    <li>Hace visibles desviaciones que requieren revisión</li>
+                                    <li>No demuestra que una distribución sea verdadera</li>
                                 </ul>
                             </div>
                             <div class="col-md-6">
                                 <h6 class="text-success">¿Cómo interpretarlo?</h6>
                                 <ul class="small">
-                                    <li><strong>P-value > 0.05:</strong> Los datos siguen la distribución esperada ✓</li>
-                                    <li><strong>P-value ≤ 0.05:</strong> Posible desviación del modelo ⚠️</li>
-                                    <li><strong>Score > 75:</strong> Alta confiabilidad en las proyecciones</li>
+                                    <li><strong>Distancia menor:</strong> mayor cercanía descriptiva dentro del conjunto evaluado</li>
+                                    <li><strong>AIC menor:</strong> ranking entre familias de verosimilitud comparables</li>
+                                    <li><strong>p-value:</strong> no calculado después de ajustar con la misma muestra</li>
                                 </ul>
                             </div>
                         </div>
@@ -879,7 +879,7 @@
                                     </p>
                                     <ul class="small mb-0">
                                         <li><strong>Scores de Confiabilidad:</strong> Medidas generales de qué tan bien funciona el modelo</li>
-                                        <li><strong>Distribución de P-values:</strong> Muestra si los tests estadísticos están pasando</li>
+                                        <li><strong>Disponibilidad diagnóstica:</strong> Distingue estadísticos calculados de inferencia no disponible</li>
                                         <li><strong>Tendencias Temporales:</strong> Verifica que el modelo sea consistente en el tiempo</li>
                                         <li><strong>Intervalos de Confianza:</strong> Rangos donde esperamos que estén los valores reales</li>
                                     </ul>
@@ -1131,8 +1131,8 @@
                                     <div class="interpretation-tip mt-3 p-2 bg-info bg-opacity-25 rounded">
                                         <h6 class="small text-info mb-1">💡 Tip de Interpretación:</h6>
                                         <small>
-                                            Si el p-value > 0.05, significa que NO podemos rechazar que los datos siguen la distribución esperada 
-                                            (esto es bueno). Si p-value ≤ 0.05, hay evidencia de que algo no coincide con nuestro modelo.
+                                            Este gráfico es descriptivo. Revise soporte, tamaño de muestra, AIC y distancia;
+                                            no lo interprete como probabilidad de que la distribución sea correcta.
                                         </small>
                                     </div>
                                 </div>
@@ -1153,13 +1153,13 @@
                             <small class="text-muted">
                                 <i class="bx bx-info-circle me-1"></i>
                                 Este gráfico compara nuestros datos simulados contra la distribución teórica esperada. 
-                                Una buena coincidencia valida que nuestro modelo está funcionando correctamente.
+                                Una coincidencia visual apoya la revisión, pero no valida por sí sola el modelo empresarial.
                             </small>
                         </div>
                         <div class="col-md-4 text-end">
                             <small class="text-success">
                                 <i class="bx bx-check me-1"></i>
-                                P-values > 0.05 = Buen ajuste
+                                p-value post-ajuste: no calculado
                             </small>
                         </div>
                     </div>
@@ -1337,18 +1337,18 @@
                                     </ul>
                                 </div>
                                 <div class="col-md-4">
-                                    <h6><i class="bx bx-info-circle me-2"></i>Interpretación del P-value:</h6>
+                                    <h6><i class="bx bx-info-circle me-2"></i>Interpretación del diagnóstico:</h6>
                                     <ul class="small">
-                                        <li><strong>> 0.05:</strong> ✅ Los datos siguen la distribución esperada</li>
-                                        <li><strong>0.01-0.05:</strong> ⚠️ Diferencia marginal, revisar</li>
-                                        <li><strong>< 0.01:</strong> ❌ Los datos NO siguen la distribución</li>
+                                        <li><strong>Estadístico:</strong> distancia descriptiva observada</li>
+                                        <li><strong>AIC:</strong> criterio de ranking entre candidatos comparables</li>
+                                        <li><strong>p-value:</strong> no disponible bajo ajuste en la misma muestra</li>
                                     </ul>
                                 </div>
                                 <div class="col-md-4">
                                     <h6><i class="bx bx-check-circle me-2"></i>Estados:</h6>
                                     <ul class="small">
-                                        <li><strong>Pasa:</strong> Test aprobado, todo bien</li>
-                                        <li><strong>Falla:</strong> Test falló, necesita atención</li>
+                                        <li><strong>Calculado:</strong> existe diagnóstico válido</li>
+                                        <li><strong>No disponible:</strong> muestra o dominio insuficiente</li>
                                         <li><strong>Tamaño muestra:</strong> Cantidad de datos analizados</li>
                                     </ul>
                                 </div>
@@ -1374,8 +1374,8 @@
                                         <i class="bx bx-help-circle text-muted ms-1" title="Medida de diferencia: valores menores indican mejor ajuste"></i>
                                     </th>
                                     <th>
-                                        P-value
-                                        <i class="bx bx-help-circle text-muted ms-1" title="Probabilidad: >0.05 es bueno, <0.05 indica problema"></i>
+                                        p-value
+                                        <i class="bx bx-help-circle text-muted ms-1" title="No calculado si los parámetros fueron ajustados con la misma muestra"></i>
                                     </th>
                                     <th>
                                         Tamaño Muestra
@@ -1383,7 +1383,7 @@
                                     </th>
                                     <th>
                                         Estado
-                                        <i class="bx bx-help-circle text-muted ms-1" title="Resultado del test estadístico"></i>
+                                        <i class="bx bx-help-circle text-muted ms-1" title="Disponibilidad del diagnóstico"></i>
                                     </th>
                                     <th>
                                         Interpretación
@@ -1430,19 +1430,8 @@
                                     </td>
                                     <td>
                                         <div class="p-value-display">
-                                            <span class="fw-bold {% if test_result.best_p_value > 0.05 %}text-success{% elif test_result.best_p_value > 0.01 %}text-warning{% else %}text-danger{% endif %}">
-                                                {{ test_result.best_p_value|floatformat:4 }}
-                                            </span>
-                                            <br>
-                                            <small class="{% if test_result.best_p_value > 0.05 %}text-success{% elif test_result.best_p_value > 0.01 %}text-warning{% else %}text-danger{% endif %}">
-                                                {% if test_result.best_p_value > 0.05 %}
-                                                    ✅ Excelente
-                                                {% elif test_result.best_p_value > 0.01 %}
-                                                    ⚠️ Aceptable
-                                                {% else %}
-                                                    ❌ Problemático
-                                                {% endif %}
-                                            </small>
+                                            <span class="fw-bold text-muted">No calculado</span>
+                                            <br><small class="text-muted">Parámetros estimados en la misma muestra</small>
                                         </div>
                                     </td>
                                     <td>
@@ -1450,29 +1439,11 @@
                                         <br><small class="text-muted">datos analizados</small>
                                     </td>
                                     <td>
-                                        {% if test_result.overall_passes %}
-                                            <span class="badge bg-success">
-                                                <i class="bx bx-check"></i> Aprobado
-                                            </span>
-                                        {% else %}
-                                            <span class="badge bg-danger">
-                                                <i class="bx bx-x"></i> Falló
-                                            </span>
-                                        {% endif %}
+                                        <span class="badge bg-info"><i class="bx bx-info-circle"></i> Diagnóstico</span>
                                     </td>
                                     <td>
                                         <div class="interpretation-text">
-                                            {% if test_result.overall_passes %}
-                                                <small class="text-success">
-                                                    <i class="bx bx-check-circle me-1"></i>
-                                                    La demanda simulada sigue correctamente la distribución esperada. Las proyecciones son confiables.
-                                                </small>
-                                            {% else %}
-                                                <small class="text-warning">
-                                                    <i class="bx bx-error-circle me-1"></i>
-                                                    La demanda simulada no se ajusta perfectamente al modelo. Revisar parámetros o datos de entrada.
-                                                </small>
-                                            {% endif %}
+                                            <small class="text-info"><i class="bx bx-info-circle me-1"></i>{{ test_result.interpretation }}</small>
                                         </div>
                                     </td>
                                 </tr>
@@ -1498,19 +1469,8 @@
                                     </td>
                                     <td>
                                         <div class="p-value-display">
-                                            <span class="fw-bold {% if test_result.p_value > 0.05 %}text-success{% elif test_result.p_value > 0.01 %}text-warning{% else %}text-danger{% endif %}">
-                                                {{ test_result.p_value|default:0|floatformat:4 }}
-                                            </span>
-                                            <br>
-                                            <small class="{% if test_result.p_value > 0.05 %}text-success{% elif test_result.p_value > 0.01 %}text-warning{% else %}text-danger{% endif %}">
-                                                {% if test_result.p_value > 0.05 %}
-                                                    ✅ Bueno
-                                                {% elif test_result.p_value > 0.01 %}
-                                                    ⚠️ Revisar
-                                                {% else %}
-                                                    ❌ Problema
-                                                {% endif %}
-                                            </small>
+                                            <span class="fw-bold text-muted">No calculado</span>
+                                            <br><small class="text-muted">Ajuste en la misma muestra</small>
                                         </div>
                                     </td>
                                     <td>
@@ -1518,29 +1478,11 @@
                                         <br><small class="text-muted">datos</small>
                                     </td>
                                     <td>
-                                        {% if test_result.passes_test %}
-                                            <span class="badge bg-success">
-                                                <i class="bx bx-check"></i> Aprobado
-                                            </span>
-                                        {% else %}
-                                            <span class="badge bg-warning">
-                                                <i class="bx bx-error"></i> Atención
-                                            </span>
-                                        {% endif %}
+                                        <span class="badge bg-info"><i class="bx bx-info-circle"></i> Diagnóstico</span>
                                     </td>
                                     <td>
                                         <div class="interpretation-text">
-                                            {% if test_result.passes_test %}
-                                                <small class="text-success">
-                                                    <i class="bx bx-check-circle me-1"></i>
-                                                    Variable se comporta según lo esperado. Sin problemas detectados.
-                                                </small>
-                                            {% else %}
-                                                <small class="text-info">
-                                                    <i class="bx bx-info-circle me-1"></i>
-                                                    Diferencias menores detectadas. Monitorear pero no crítico para el modelo principal.
-                                                </small>
-                                            {% endif %}
+                                            <small class="text-info"><i class="bx bx-info-circle me-1"></i>{{ test_result.interpretation }}</small>
                                         </div>
                                     </td>
                                 </tr>
@@ -1829,8 +1771,8 @@ function initializeKSTooltipsEnhanced() {
             content: 'Mide la diferencia máxima entre los datos simulados y la distribución esperada. Valores menores (cercanos a 0) indican mejor ajuste.'
         },
         '[data-metric="p-value"]': {
-            title: 'P-value (Valor p)',
-            content: 'Probabilidad de obtener los datos observados si el modelo fuera correcto. >0.05 = bueno, <0.05 = posible problema.'
+            title: 'p-value no calculado',
+            content: 'El p-value KS ingenuo no es válido cuando los parámetros se estiman con la misma muestra; se muestra disponibilidad explícita.'
         },
         '[data-metric="confidence-interval"]': {
             title: 'Intervalo de Confianza',
@@ -2002,7 +1944,7 @@ function showRowDetails(row) {
                             <h6><i class="bx bx-info-circle me-2"></i>Resultados del Test</h6>
                             <div class="info-card p-3 bg-light rounded mb-3">
                                 <div class="info-item mb-2">
-                                    <strong>P-value:</strong> <span class="text-primary">${pValue}</span>
+                                    <strong>p-value:</strong> <span class="text-primary">${pValue || 'No calculado'}</span>
                                 </div>
                                 <div class="info-item mb-2">
                                     <strong>Estado:</strong> <span class="text-success">${status}</span>
@@ -2019,9 +1961,9 @@ function showRowDetails(row) {
                                 <div class="interpretation-guide">
                                     <h6 class="small">Guía rápida:</h6>
                                     <ul class="small">
-                                        <li><strong>P-value > 0.05:</strong> ✅ Los datos siguen el patrón esperado</li>
-                                        <li><strong>P-value 0.01-0.05:</strong> ⚠️ Diferencia marginal, monitorear</li>
-                                        <li><strong>P-value < 0.01:</strong> ❌ Posible problema en el modelo</li>
+                                        <li><strong>Estadístico:</strong> describe la discrepancia observada</li>
+                                        <li><strong>AIC/BIC:</strong> compara candidatos con likelihood comparable</li>
+                                        <li><strong>p-value no calculado:</strong> no debe sustituirse por un valor aproximado</li>
                                     </ul>
                                 </div>
                             </div>
@@ -2316,7 +2258,7 @@ function showContextualHelp() {
                                     </div>
                                     <div class="help-item mb-2">
                                         <strong>¿Por qué importa?</strong>
-                                        <p class="small">Garantiza que nuestras proyecciones son matemáticamente válidas.</p>
+                                        <p class="small">Ayuda a detectar discrepancias; no garantiza que una distribución sea verdadera.</p>
                                     </div>
                                 </div>
                             </div>
@@ -2324,11 +2266,11 @@ function showContextualHelp() {
                                 <div class="help-section mb-4">
                                     <h6 class="text-success"><i class="bx bx-chart-bar me-2"></i>Interpretación</h6>
                                     <div class="help-item mb-2">
-                                        <strong>P-values:</strong>
+                                        <strong>Diagnóstico de ajuste:</strong>
                                         <ul class="small">
-                                            <li>>0.05 = ✅ Excelente</li>
-                                            <li>0.01-0.05 = ⚠️ Aceptable</li>
-                                            <li><0.01 = ❌ Problema</li>
+                                            <li>Revise el método y el tamaño muestral</li>
+                                            <li>Compare AIC/BIC solo entre modelos comparables</li>
+                                            <li>No interprete p-value como probabilidad de que el modelo sea correcto</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -2386,7 +2328,7 @@ function showContextualHelp() {
                                 <div class="col-md-6">
                                     <ul class="small">
                                         <li>Revisa primero la demanda (variable más importante)</li>
-                                        <li>Un p-value de 0.03 no es automáticamente malo</li>
+                                        <li>Una distancia de ajuste no es una probabilidad</li>
                                         <li>Considera el contexto del negocio al interpretar</li>
                                     </ul>
                                 </div>
@@ -2472,14 +2414,14 @@ function extractKeyFindings() {
     // Analizar demanda principal
     const demandRow = document.querySelector('[data-importance="high"]');
     if (demandRow) {
-        const pValue = demandRow.querySelector('.p-value-display .fw-bold')?.textContent || '0';
-        const status = demandRow.querySelector('.badge')?.textContent || 'Unknown';
+        const pValue = demandRow.querySelector('.p-value-display .fw-bold')?.textContent || 'No calculado';
+        const status = demandRow.querySelector('.badge')?.textContent || 'Diagnóstico';
         
         findings.push({
             type: 'critical',
             component: 'Demanda Principal',
-            finding: `Test estadístico ${status.toLowerCase()} con p-value de ${pValue}`,
-            impact: parseFloat(pValue) > 0.05 ? 'Positivo' : 'Requiere atención'
+            finding: `Diagnóstico ${status.toLowerCase()}; p-value: ${pValue}`,
+            impact: 'Revisión metodológica'
         });
     }
     

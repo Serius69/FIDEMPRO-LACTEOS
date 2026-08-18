@@ -8,9 +8,9 @@
     <meta content="Findempro AI — Decisiones financieras para PYME" name="description" />
     <link rel="shortcut icon" href="{% static 'images/favicon.ico'%}">
     <!-- Google Fonts: Space Grotesk + Inter + JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    {# Las tipografías de Google se retiraron: la CSP propia (style-src 'self') las bloquea #}
+    {# por diseño, así que el <link> sólo producía una violación en cada carga. La pila #}
+    {# de respaldo del CSS es la que se ve hoy; vendorizarlas bajo /static queda pendiente. #}
 
     {% block css %}
     <link href="{% static 'css/bootstrap.min.css'%}" rel="stylesheet" type="text/css" />

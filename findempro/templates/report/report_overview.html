@@ -230,18 +230,30 @@
                                         <tr>
                                             <td class="fw-medium">{{ key|title|replace_:"_":" " }}</td>
                                             <td class="text-end">
-                                                {% if 'utilidad' in key or 'flujo' in key or 'inversion' in key %}
-                                                    ${{ value|floatformat:2 }}
-                                                {% elif 'roi' in key or 'tasa' in key or 'crecimiento' in key %}
+                                                {% if value == None %}
+                                                    N/A
+                                                {% elif 'utilidad' in key or 'flujo' in key or 'inversion' in key or 'van' in key or 'ingresos' in key or 'margen_unitario' in key %}
+                                                    Bs {{ value|floatformat:2 }}
+                                                {% elif 'roi' in key or 'tir' in key or 'tasa' in key or 'crecimiento' in key %}
                                                     {{ value|floatformat:2 }}%
                                                 {% else %}
                                                     {{ value }}
                                                 {% endif %}
                                             </td>
                                             <td class="text-center">
-                                                {% if 'utilidad' in key or 'flujo' in key or 'inversion' in key %}
-                                                    <span class="badge bg-success-subtle text-success">USD</span>
-                                                {% elif 'roi' in key or 'tasa' in key or 'crecimiento' in key %}
+                                                {% if 'payback' in key %}
+                                                    <span class="badge bg-warning-subtle text-warning">Meses</span>
+                                                {% elif 'utilidad' in key or 'van' in key or 'ingresos' in key %}
+                                                    <span class="badge bg-success-subtle text-success">Bs</span>
+                                                {% elif 'flujo' in key %}
+                                                    <span class="badge bg-success-subtle text-success">Bs/mes</span>
+                                                {% elif 'margen_unitario' in key %}
+                                                    <span class="badge bg-success-subtle text-success">Bs/unidad</span>
+                                                {% elif 'roi' in key %}
+                                                    <span class="badge bg-info-subtle text-info">% horizonte</span>
+                                                {% elif 'tir' in key %}
+                                                    <span class="badge bg-info-subtle text-info">% anual efectiva</span>
+                                                {% elif 'tasa' in key or 'crecimiento' in key %}
                                                     <span class="badge bg-info-subtle text-info">%</span>
                                                 {% elif 'punto' in key or 'equilibrio' in key %}
                                                     <span class="badge bg-warning-subtle text-warning">Unidades</span>

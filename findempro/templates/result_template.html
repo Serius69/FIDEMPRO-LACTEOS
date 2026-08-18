@@ -1,0 +1,14 @@
+{% extends "partials/base.html" %}
+
+{% block content %}
+<main class="container py-4" aria-labelledby="equation-result-title">
+  <h1 id="equation-result-title">Resultado de la ecuación</h1>
+  {% if solution %}
+    <ul>
+      {% for item in solution %}<li><code>{{ item }}</code></li>{% endfor %}
+    </ul>
+  {% else %}
+    <p>No se encontraron soluciones reales para la ecuación indicada.</p>
+  {% endif %}
+</main>
+{% endblock %}

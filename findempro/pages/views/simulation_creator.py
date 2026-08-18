@@ -52,7 +52,10 @@ def register_elements_simulation(request, user: User = None) -> int:
 
 def create_and_save_questionary_result(questionary: Questionary) -> bool:
     """
-    Crear resultado de cuestionario y simulación asociada usando datos realistas
+    Create an empty questionnaire result for user-entered observations.
+
+    Historical versions populated this record from test fixtures. A fixture is
+    not company truth, so onboarding now leaves answers explicitly incomplete.
     """
     try:
         questionary_result, created = QuestionaryResult.objects.get_or_create(
@@ -61,13 +64,6 @@ def create_and_save_questionary_result(questionary: Questionary) -> bool:
         )
         
         if created:
-            # Crear respuestas realistas
-            created_answers = create_realistic_answers_for_questionary(questionary_result)
-            logger.info(f"{len(created_answers)} answers created for questionary result")
-            
-            # Crear simulación mejorada
-            # create_enhanced_simulation(questionary_result)
-            
             logger.info(f'Questionary result created for questionary {questionary.id}')
             return True
         else:
@@ -81,78 +77,20 @@ def create_and_save_questionary_result(questionary: Questionary) -> bool:
 
 def create_realistic_answers_for_questionary(questionary_result: QuestionaryResult) -> List[Answer]:
     """
-    Crear respuestas realistas para un resultado de cuestionario
+    Deprecated compatibility hook; synthetic fixtures cannot become user data.
     """
-    created_answers = []
-    
-    try:
-        product_name = questionary_result.fk_questionary.fk_product.name.lower()
-        
-        # Importar datos de respuestas según el producto
-        answer_data = get_answer_data_for_product(product_name)
-        
-        if not answer_data:
-            logger.warning(f"No answer data found for product {product_name}")
-            return []
-        
-        # Obtener preguntas del cuestionario
-        questions = Question.objects.filter(
-            fk_questionary=questionary_result.fk_questionary,
-            is_active=True
-        )
-        
-        for answer_data_item in answer_data:
-            question = questions.filter(question=answer_data_item.get('question')).first()
-            
-            if question:
-                answer_value = answer_data_item.get('answer')
-                if isinstance(answer_value, list):
-                    answer_value = str(answer_value)
-                else:
-                    answer_value = str(answer_value)
-                
-                answer = Answer.objects.create(
-                    answer=answer_value,
-                    fk_question=question,
-                    fk_questionary_result=questionary_result,
-                    is_active=True
-                )
-                created_answers.append(answer)
-        
-        return created_answers
-        
-    except Exception as e:
-        logger.error(f"Error creating realistic answers: {str(e)}")
-        return []
+    logger.warning(
+        "Synthetic questionnaire fixtures are disabled for result %s; user data is required.",
+        questionary_result.pk,
+    )
+    return []
 
 
 def get_answer_data_for_product(product_name: str) -> List[Dict[str, Any]]:
     """
-    Obtener datos de respuesta para un producto específico
+    Deprecated: test fixtures are not valid runtime observations.
     """
-    # Mapeo de nombres de productos a sus datos
-    product_answer_mapping = {
-        'leche': 'answer_data_leche',
-        'leche entera': 'answer_data_leche',
-        'queso': 'answer_data_queso',
-        'queso fresco': 'answer_data_queso',
-        'yogur': 'answer_data_yogur',
-        'yogur natural': 'answer_data_yogur',
-        'mantequilla': 'answer_data_mantequilla',
-        'crema de leche': 'answer_data_crema',
-        'leche deslactosada': 'answer_data_leche_deslactosada',
-        'dulce de leche': 'answer_data_dulce_leche'
-    }
-    
-    data_name = product_answer_mapping.get(product_name)
-    
-    if data_name:
-        try:
-            module = __import__('questionary.data.questionary_result_test_data', fromlist=[data_name])
-            return getattr(module, data_name, [])
-        except (ImportError, AttributeError) as e:
-            logger.warning(f"Could not import {data_name}: {e}")
-    
+    logger.warning("Runtime answer fixture lookup is disabled for product %s.", product_name)
     return []
 
 
@@ -160,7 +98,10 @@ def create_enhanced_simulation(questionary_result: QuestionaryResult) -> None:
     """
     Crear simulación mejorada para un resultado de cuestionario
     """
-    try:
+    raise ValueError(
+        "LEGACY_SYNTHETIC_SIMULATION_DISABLED: configure user data and create a scenario explicitly."
+    )
+    try:  # pragma: no cover - historical implementation retained for audit context
         product_name = questionary_result.fk_questionary.fk_product.name.lower()
         business = questionary_result.fk_questionary.fk_product.fk_business
         
@@ -236,29 +177,7 @@ def get_simulation_data_for_product(product_name: str) -> List[Dict[str, Any]]:
     """
     Obtener datos de simulación para un producto específico
     """
-    # Mapeo de nombres de productos a sus datos de simulación
-    product_simulation_mapping = {
-        'leche': 'simulation_data_leche',
-        'leche entera': 'simulation_data_leche',
-        'queso': 'simulation_data_queso',
-        'queso fresco': 'simulation_data_queso',
-        'yogur': 'simulation_data_yogur',
-        'yogur natural': 'simulation_data_yogur',
-        'mantequilla': 'simulation_data_mantequilla',
-        'crema de leche': 'simulation_data_crema',
-        'leche deslactosada': 'simulation_data_leche_deslactosada',
-        'dulce de leche': 'simulation_data_dulce_leche'
-    }
-    
-    data_name = product_simulation_mapping.get(product_name)
-    
-    if data_name:
-        try:
-            module = __import__('simulate.data.simulate_test_data', fromlist=[data_name])
-            return getattr(module, data_name, [])
-        except (ImportError, AttributeError) as e:
-            logger.warning(f"Could not import {data_name}: {e}")
-    
+    logger.warning("Runtime simulation fixture lookup is disabled for product %s.", product_name)
     return []
 
 
@@ -277,9 +196,9 @@ def execute_complete_simulation(simulation: Simulation) -> None:
         ).count()
         
         if answers_count == 0:
-            logger.warning(f"No answers found for questionary result {questionary_result.id}")
-            # Crear respuestas realistas si no existen
-            create_realistic_answers_for_questionary(questionary_result)
+            raise ValueError(
+                "MISSING_REQUIRED_DATA: complete the questionnaire before simulation."
+            )
         
         # Ejecutar simulaciones en orden
         simulate_demand(simulation)

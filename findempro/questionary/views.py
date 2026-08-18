@@ -20,6 +20,7 @@ from django.shortcuts import render, redirect
 from .models import Answer
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
+from django.db import transaction
 import re
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -130,89 +131,80 @@ def questionnaire_main_view(request):
             return redirect('questionary:questionary.main')
         
         saved_count = 0
-        
+
         try:
-            # Save answers for type 3 questions (historical data)
-            for key, value in request.POST.items():
-                if key.startswith('historicalData_'):
-                    question_id = int(key.split('_')[1])
-                    historical_data = value
-                    
-                    if historical_data.strip():  # Only save if data exists
-                        question_instance = get_object_or_404(
-                            Question, 
-                            pk=question_id,
-                            fk_questionary__fk_product__fk_business__fk_user=request.user
-                        )
-                        
-                        # Validate historical data
-                        try:
-                            data_values = [float(x.strip()) for x in historical_data.split(',') if x.strip()]
-                            if len(data_values) < 30:
-                                messages.warning(request, f"Datos históricos insuficientes para la pregunta {question_id}. Se requieren al menos 30 valores.")
-                                continue
-                        except ValueError:
-                            messages.warning(request, f"Formato inválido en datos históricos para la pregunta {question_id}.")
-                            continue
-                        
-                        # Check if answer already exists
-                        existing_answer = Answer.objects.filter(
-                            fk_question=question_instance,
-                            fk_questionary_result_id=questionary_result_id
-                        ).first()
-                        
-                        if existing_answer:
-                            existing_answer.answer = historical_data
-                            existing_answer.last_updated = timezone.now()
-                            existing_answer.save()
-                        else:
-                            Answer.objects.create(
-                                fk_question=question_instance,
-                                answer=historical_data,
-                                fk_questionary_result_id=questionary_result_id
-                            )
-                        saved_count += 1
-            
-            # Save other types of answers
-            for key, value in request.POST.items():
-                if key.startswith('question_') and not key.startswith('question_type_'):
-                    question_id = int(value)
-                    answer_key = f'answer_{question_id}'
-                    answer = request.POST.get(answer_key)
-                    
-                    if answer and answer.strip():  # Only save if answer is provided
-                        try:
+            with transaction.atomic():
+                # Save answers for type 3 questions (historical data)
+                for key, value in request.POST.items():
+                    if key.startswith('historicalData_'):
+                        question_id = int(key.split('_')[1])
+                        historical_data = value
+
+                        if historical_data.strip():  # Only save if data exists
                             question_instance = get_object_or_404(
-                                Question, 
+                                Question,
                                 pk=question_id,
                                 fk_questionary__fk_product__fk_business__fk_user=request.user
                             )
-                            
-                            # Check if answer already exists
-                            existing_answer = Answer.objects.filter(
+
+                            # Validate historical data
+                            try:
+                                data_values = [float(x.strip()) for x in historical_data.split(',') if x.strip()]
+                                if len(data_values) < 30:
+                                    messages.warning(request, f"Datos históricos insuficientes para la pregunta {question_id}. Se requieren al menos 30 valores.")
+                                    continue
+                            except ValueError:
+                                messages.warning(request, f"Formato inválido en datos históricos para la pregunta {question_id}.")
+                                continue
+
+                            # Atomic upsert; reactivate if a previously cancelled/deleted
+                            # answer is re-saved so it stays visible and feeds the engine.
+                            Answer.objects.update_or_create(
                                 fk_question=question_instance,
-                                fk_questionary_result_id=questionary_result_id
-                            ).first()
-                            
-                            if existing_answer:
-                                existing_answer.answer = answer
-                                existing_answer.last_updated = timezone.now()
-                                existing_answer.save()
-                            else:
-                                Answer.objects.create(
-                                    fk_question=question_instance,
-                                    answer=answer,
-                                    fk_questionary_result_id=questionary_result_id
-                                )
+                                fk_questionary_result_id=questionary_result_id,
+                                defaults={
+                                    'answer': historical_data,
+                                    'is_active': True,
+                                    'last_updated': timezone.now(),
+                                },
+                            )
                             saved_count += 1
-                        except Exception as e:
-                            messages.warning(request, f"Error al guardar respuesta para pregunta {question_id}: {str(e)}")
-            
-            # Update questionary result timestamp
-            if questionary_result_id:
-                questionary_result = QuestionaryResult.objects.get(pk=questionary_result_id)
-                questionary_result.last_updated = timezone.now()
-                questionary_result.save()
+
+                # Save other types of answers
+                for key, value in request.POST.items():
+                    if key.startswith('question_') and not key.startswith('question_type_'):
+                        question_id = int(value)
+                        answer_key = f'answer_{question_id}'
+                        answer = request.POST.get(answer_key)
+
+                        if answer and answer.strip():  # Only save if answer is provided
+                            try:
+                                question_instance = get_object_or_404(
+                                    Question,
+                                    pk=question_id,
+                                    fk_questionary__fk_product__fk_business__fk_user=request.user
+                                )
+
+                                # Atomic upsert; reactivate if a previously cancelled/deleted
+                                # answer is re-saved so it stays visible and feeds the engine.
+                                Answer.objects.update_or_create(
+                                    fk_question=question_instance,
+                                    fk_questionary_result_id=questionary_result_id,
+                                    defaults={
+                                        'answer': answer,
+                                        'is_active': True,
+                                        'last_updated': timezone.now(),
+                                    },
+                                )
+                                saved_count += 1
+                            except Exception as e:
+                                messages.warning(request, f"Error al guardar respuesta para pregunta {question_id}: {str(e)}")
+
+                # Update questionary result timestamp
+                if questionary_result_id:
+                    questionary_result = QuestionaryResult.objects.get(pk=questionary_result_id)
+                    questionary_result.last_updated = timezone.now()
+                    questionary_result.save()
             
             if saved_count > 0:
                 messages.success(request, f"Se guardaron {saved_count} respuestas correctamente.")

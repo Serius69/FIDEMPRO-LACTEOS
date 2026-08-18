@@ -76,6 +76,8 @@ def test_dashboard_user_view(client, django_user_model):
     assert response.status_code == 200
     assert "greeting" in response.context
     assert "business" in response.context
+    assert response.context["roi_available"] is False
+    assert b"Falta inversi" in response.content
 
 
 @pytest.mark.django_db
@@ -148,3 +150,31 @@ def test_dashboard_user_multiple_businesses(client, django_user_model):
     assert response.url == reverse(URL_BUSINESS_LIST)
 
 # INTEGRATION TESTS
+
+
+# ── El resumen del dashboard no puede medir lo que no existe ────────────────
+#
+# `Avg()` devuelve `None` cuando no hay filas. `float(... or 0)` convertía eso en
+# Bs 0.00 de ingresos, costos y utilidad, y de ahí salía un margen de 0% que la
+# escala clasificaba como salud financiera 'fair'. Un negocio sin ninguna
+# simulación aparecía evaluado, con cifras, como si se hubiera medido.
+
+@pytest.mark.django_db
+def test_summary_api_reports_unavailable_instead_of_zero_without_results(
+    client, django_user_model
+):
+    user = django_user_model.objects.create_user(username="sinresultados", password="password")
+    client.login(username="sinresultados", password="password")
+    business = _make_business(user)
+
+    response = client.get(reverse("dashboard:summary_api"), {"business_id": business.id})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    assert body["avg_revenue"] is None
+    assert body["avg_costs"] is None
+    assert body["avg_profit"] is None
+    assert body["profit_margin"] is None
+    # Sin nada medido no se emite un veredicto de salud financiera.
+    assert body["financial_health"] == "unavailable"

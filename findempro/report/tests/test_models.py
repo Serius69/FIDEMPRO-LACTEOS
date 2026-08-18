@@ -60,3 +60,10 @@ def test_report_fk_product_null():
         fk_product=None
     )
     assert report.fk_product is None
+
+
+@pytest.mark.parametrize("roi, expected", [(0.0, "0.00%"), (None, "N/A"), (12.345, "12.35%")])
+def test_report_metrics_summary_preserves_zero_and_unavailable_roi(roi, expected):
+    report = Report(content={"resultados_simulacion": {"roi": roi}})
+
+    assert report.get_metrics_summary()["ROI"] == expected

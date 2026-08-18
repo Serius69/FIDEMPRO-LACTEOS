@@ -2,6 +2,13 @@
 Django settings — TESTING
 Optimizado para ejecución rápida de tests: SQLite local, sin Redis, sin email real.
 """
+import os
+
+# Debe definirse antes de importar base: base.py omite por completo la carga de
+# archivos ``.env`` en test y nunca toma configuración de development.
+os.environ["DJANGO_ENV"] = "testing"
+os.environ.setdefault("SECRET_KEY", "django-insecure-testing-key-not-for-production")
+
 from .base import *
 
 DEBUG = True
@@ -9,11 +16,9 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-testing-key-not-for-produc
 ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', 'testserver']
 
 # ─────────────────────────────────────────────
-# Base de datos — SQLite localmente, PostgreSQL en CI
-# Por defecto SIEMPRE SQLite en tests: base.py carga .env.development, que define
-# DB_ENGINE=postgresql; sin este blindaje los tests intentarían conectar al Postgres
-# de producción/desarrollo y fallarían con "Connection refused".
-# CI activa Postgres explícitamente con USE_POSTGRES_TESTS=1 (mayor fidelidad).
+# Base de datos — SQLite aislada en memoria localmente, PostgreSQL opt-in en CI.
+# Por defecto SIEMPRE SQLite: ninguna corrida local puede reutilizar una BD real.
+# CI puede activar PostgreSQL explícitamente con USE_POSTGRES_TESTS=1.
 # ─────────────────────────────────────────────
 _use_postgres = os.getenv('USE_POSTGRES_TESTS', '0').lower() in ('1', 'true', 'yes')
 _db_engine = os.getenv('DB_ENGINE', 'django.db.backends.sqlite3')
@@ -23,7 +28,7 @@ if _db_engine == 'django.db.backends.sqlite3':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db_test.sqlite3'),
+            'NAME': ':memory:',
         }
     }
 else:
