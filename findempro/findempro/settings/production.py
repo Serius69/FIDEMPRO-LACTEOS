@@ -108,7 +108,14 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
-CSRF_COOKIE_HTTPONLY = True
+# Django documenta que HttpOnly en la cookie CSRF no aporta protección práctica:
+# el token sólo defiende de ataques cross-domain, y quien puede leer la cookie por
+# JavaScript ya está en el mismo origen. A cambio rompe algo real — el JS del
+# producto (simulate-list, report-list, user-list, finance-list, profile-settings)
+# arma `X-CSRFToken` con `getCookie('csrftoken')` sobre `document.cookie`, que con
+# HttpOnly llega vacío y devuelve 403 en cada POST. Verificado con el E2E de
+# navegador: crear un modelo desde plantilla daba 403 hasta quitarlo.
+CSRF_COOKIE_HTTPONLY = False
 
 # ─────────────────────────────────────────────
 # CSRF confiable (necesario para frontend separado)
