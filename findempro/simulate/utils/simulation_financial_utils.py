@@ -21,6 +21,79 @@ from business.models import Business
 logger = logging.getLogger(__name__)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Semántica de ausencia
+#
+# `ResultSimulation.variables` es un JSON: una corrida vieja, parcial o fallida
+# puede no traer `IT`/`GT`/`TG`. Convertir esas ausencias en 0.0 hacía que la
+# falta de datos se presentara como un hecho observado — un negocio que factura
+# Bs 0.00 y pierde todos los días — y, peor, que una serie de ceros inventados
+# tuviera volatilidad cero y sumara puntos de "estabilidad".
+#
+#   AUSENTE != 0 · INDEFINIDO != 0 · DESCONOCIDO != SANO
+#
+# Todo lo que no se observó vale None y se propaga como None hasta la vista,
+# que debe mostrarlo como "no disponible".
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _num(source: Dict[str, Any], key: str) -> Optional[float]:
+    """Valor numérico observado, o None si no vino en la corrida."""
+    value = source.get(key)
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _observed(values) -> List[float]:
+    """Sólo lo realmente observado."""
+    return [v for v in values if v is not None]
+
+
+def _sum_obs(values) -> Optional[float]:
+    obs = _observed(values)
+    return sum(obs) if obs else None
+
+
+def _mean_obs(values) -> Optional[float]:
+    obs = _observed(values)
+    return float(np.mean(obs)) if obs else None
+
+
+def _min_obs(values) -> Optional[float]:
+    obs = _observed(values)
+    return min(obs) if obs else None
+
+
+def _max_obs(values) -> Optional[float]:
+    obs = _observed(values)
+    return max(obs) if obs else None
+
+
+def _std_obs(values) -> Optional[float]:
+    obs = _observed(values)
+    return float(np.std(obs)) if len(obs) > 1 else (0.0 if obs else None)
+
+
+def _ratio(numerator: Optional[float], denominator: Optional[float]) -> Optional[float]:
+    """Cociente, o None si falta un término o el denominador lo deja indefinido."""
+    if numerator is None or denominator is None or denominator == 0:
+        return None
+    return numerator / denominator
+
+
+def _gt(value: Optional[float], threshold: float) -> bool:
+    """`value > threshold` que trata lo no observado como "no se cumple"."""
+    return value is not None and value > threshold
+
+
+def _lt(value: Optional[float], threshold: float) -> bool:
+    """`value < threshold` que NO se dispara por un dato ausente."""
+    return value is not None and value < threshold
+
+
 class SimulationFinancialAnalyzer:
     """Enhanced financial analyzer for simulation results"""
     
@@ -313,44 +386,47 @@ class SimulationFinancialAnalyzer:
             if hasattr(result, 'variables') and result.variables:
                 vars = result.variables
                 
+                # Cada campo vale None si la corrida no lo trajo. Antes se leían
+                # con `.get(clave, 0)`, así que una corrida sin variables
+                # financieras producía un día completo de ceros indistinguible
+                # de un día realmente malo.
                 financial_data = {
                     'day': idx + 1,
                     'date': result.date,
                     # Revenue
-                    'revenue': float(vars.get('IT', 0)),
-                    'expected_revenue': float(vars.get('IE', 0)),
+                    'revenue': _num(vars, 'IT'),
+                    'expected_revenue': _num(vars, 'IE'),
                     # Costs
-                    'operating_costs': float(vars.get('GO', 0)),
-                    'general_expenses': float(vars.get('GG', 0)),
-                    'total_costs': float(vars.get('TG', 0)),
-                    'material_costs': float(vars.get('CTAI', 0)),
-                    'transport_costs': float(vars.get('CTTL', 0)),
-                    'storage_costs': float(vars.get('CA', 0)),
-                    'wastage_costs': float(vars.get('CTM', 0)),
+                    'operating_costs': _num(vars, 'GO'),
+                    'general_expenses': _num(vars, 'GG'),
+                    'total_costs': _num(vars, 'TG'),
+                    'material_costs': _num(vars, 'CTAI'),
+                    'transport_costs': _num(vars, 'CTTL'),
+                    'storage_costs': _num(vars, 'CA'),
+                    'wastage_costs': _num(vars, 'CTM'),
                     # Profit
-                    'gross_profit': float(vars['IB']) if vars.get('IB') is not None else None,
-                    'net_profit': float(vars.get('GT', 0)),
+                    'gross_profit': _num(vars, 'IB'),
+                    'net_profit': _num(vars, 'GT'),
                     # Margins
-                    'gross_margin': float(vars['MB']) if vars.get('MB') is not None else None,
-                    'net_margin': float(vars['NR']) if vars.get('NR') is not None else None,
+                    'gross_margin': _num(vars, 'MB'),
+                    'net_margin': _num(vars, 'NR'),
                     # Other metrics
-                    'roi': float(vars['RI']) if vars.get('RI') is not None else None,
-                    'break_even': float(vars.get('PED', 0)),
-                    'cost_efficiency': float(vars.get('COST_EFFICIENCY', 0)),
+                    'roi': _num(vars, 'RI'),
+                    'break_even': _num(vars, 'PED'),
+                    'cost_efficiency': _num(vars, 'COST_EFFICIENCY'),
                     # Operational data for context
-                    'sales_volume': float(vars.get('TPV', 0)),
-                    'price': float(vars.get('PVP', 0)),
+                    'sales_volume': _num(vars, 'TPV'),
+                    'price': _num(vars, 'PVP'),
                     'demand': float(result.demand_mean),
                 }
                 
-                # Calculate additional metrics
-                if financial_data['revenue'] > 0:
-                    financial_data['cost_ratio'] = financial_data['total_costs'] / financial_data['revenue']
-                else:
-                    financial_data['cost_ratio'] = None
+                # Sin ingresos observados el ratio es indefinido, no 0.
+                financial_data['cost_ratio'] = _ratio(
+                    financial_data['total_costs'], financial_data['revenue']
+                )
                 # EBITDA is not derivable from gross profit and operating
                 # costs without an explicit depreciation/amortization policy.
-                financial_data['ebitda'] = float(vars['EBITDA']) if vars.get('EBITDA') is not None else None
+                financial_data['ebitda'] = _num(vars, 'EBITDA')
                 
                 daily_financials.append(financial_data)
         
@@ -361,60 +437,75 @@ class SimulationFinancialAnalyzer:
         if not daily_financials:
             return {}
         
-        # Extract profit data
+        # Se agrega SÓLO lo observado y se declara sobre cuántos días se agregó,
+        # para que la vista pueda decir "X de Y días" en vez de insinuar que la
+        # serie está completa.
         revenues = [d['revenue'] for d in daily_financials]
         net_profits = [d['net_profit'] for d in daily_financials]
-        gross_margins = [d['gross_margin'] for d in daily_financials if d['gross_margin'] is not None]
-        net_margins = [d['net_margin'] for d in daily_financials if d['net_margin'] is not None]
-        roi_values = [d['roi'] for d in daily_financials if d['roi'] is not None]
-        ebitda_values = [d['ebitda'] for d in daily_financials if d['ebitda'] is not None]
-        
-        # Calculate statistics
-        total_revenue = sum(revenues)
-        total_profit = sum(net_profits)
-        avg_gross_margin = np.mean(gross_margins) if gross_margins else None
-        avg_net_margin = np.mean(net_margins) if net_margins else None
-        
-        # Profitability trends
-        profitable_days = sum(1 for p in net_profits if p > 0)
-        loss_days = len(net_profits) - profitable_days
-        
-        # Calculate profit volatility
-        profit_std = np.std(net_profits) if len(net_profits) > 1 else 0
-        profit_cv = profit_std / abs(np.mean(net_profits)) if np.mean(net_profits) != 0 else 0
-        
-        # Break-even analysis
+        gross_margins = _observed(d['gross_margin'] for d in daily_financials)
+        net_margins = _observed(d['net_margin'] for d in daily_financials)
+        roi_values = _observed(d['roi'] for d in daily_financials)
+        ebitda_values = _observed(d['ebitda'] for d in daily_financials)
+
+        observed_profits = _observed(net_profits)
+        observed_revenues = _observed(revenues)
+
+        total_revenue = _sum_obs(revenues)
+        total_profit = _sum_obs(net_profits)
+
+        # Días rentables/con pérdida se cuentan sobre lo observado. Un día sin
+        # datos no es un día con pérdida.
+        profitable_days = sum(1 for p in observed_profits if p > 0)
+        loss_days = sum(1 for p in observed_profits if p <= 0)
+
+        # Volatilidad: indefinida sin observaciones; una sola observación no
+        # tiene dispersión que medir.
+        if len(observed_profits) > 1:
+            mean_profit = float(np.mean(observed_profits))
+            profit_cv = (float(np.std(observed_profits)) / abs(mean_profit)
+                         if mean_profit != 0 else None)
+        else:
+            profit_cv = None
+
+        # Break-even sobre la serie observada.
         break_even_day = None
-        cumulative_profit = 0
-        for i, profit in enumerate(net_profits):
-            cumulative_profit += profit
-            if cumulative_profit > 0 and break_even_day is None:
-                break_even_day = i + 1
+        cumulative_profit = 0.0
+        for daily in daily_financials:
+            if daily['net_profit'] is None:
+                continue
+            cumulative_profit += daily['net_profit']
+            if cumulative_profit > 0:
+                break_even_day = daily['day']
+                break
         
         return {
             'total_revenue': total_revenue,
             'total_profit': total_profit,
-            'average_revenue_per_day': total_revenue / len(revenues) if revenues else 0,
-            'average_profit_per_day': total_profit / len(net_profits) if net_profits else 0,
+            'observed_days': len(observed_profits),
+            'total_days': len(daily_financials),
+            'average_revenue_per_day': _mean_obs(revenues),
+            'average_profit_per_day': _mean_obs(net_profits),
             'gross_margin': {
-                'average': avg_gross_margin,
-                'min': min(gross_margins) if gross_margins else None,
-                'max': max(gross_margins) if gross_margins else None,
-                'std': np.std(gross_margins) if len(gross_margins) > 1 else (0 if gross_margins else None)
+                'average': _mean_obs(gross_margins),
+                'min': _min_obs(gross_margins),
+                'max': _max_obs(gross_margins),
+                'std': _std_obs(gross_margins)
             },
             'net_margin': {
-                'average': avg_net_margin,
-                'min': min(net_margins) if net_margins else None,
-                'max': max(net_margins) if net_margins else None,
-                'std': np.std(net_margins) if len(net_margins) > 1 else (0 if net_margins else None)
+                'average': _mean_obs(net_margins),
+                'min': _min_obs(net_margins),
+                'max': _max_obs(net_margins),
+                'std': _std_obs(net_margins)
             },
             'profitable_days': profitable_days,
             'loss_days': loss_days,
-            'profitability_rate': profitable_days / len(net_profits) if net_profits else 0,
+            'profitability_rate': (profitable_days / len(observed_profits)
+                                   if observed_profits else None),
             'profit_volatility': profit_cv,
             'break_even_day': break_even_day,
-            'roi_average': np.mean(roi_values) if roi_values else None,
-            'ebitda_total': sum(ebitda_values) if ebitda_values else None
+            'roi_average': _mean_obs(roi_values),
+            'ebitda_total': _sum_obs(ebitda_values),
+            'observed_revenue_days': len(observed_revenues)
         }
     
     def _analyze_costs(self, daily_financials: List[Dict]) -> Dict[str, Any]:
@@ -422,59 +513,65 @@ class SimulationFinancialAnalyzer:
         if not daily_financials:
             return {}
         
-        # Cost components
         operating_costs = [d['operating_costs'] for d in daily_financials]
         material_costs = [d['material_costs'] for d in daily_financials]
         general_expenses = [d['general_expenses'] for d in daily_financials]
+        transport_costs = [d['transport_costs'] for d in daily_financials]
         total_costs = [d['total_costs'] for d in daily_financials]
         
-        # Calculate cost structure
-        total_operating = sum(operating_costs)
-        total_materials = sum(material_costs)
-        total_general = sum(general_expenses)
-        total_all_costs = sum(total_costs)
+        total_operating = _sum_obs(operating_costs)
+        total_materials = _sum_obs(material_costs)
+        total_general = _sum_obs(general_expenses)
+        total_transport = _sum_obs(transport_costs)
+        total_all_costs = _sum_obs(total_costs)
         
-        # Cost ratios
+        # Una participación sobre un total no observado es indefinida, no 0%.
         cost_structure = {
-            'operating': total_operating / total_all_costs if total_all_costs > 0 else 0,
-            'materials': total_materials / total_all_costs if total_all_costs > 0 else 0,
-            'general': total_general / total_all_costs if total_all_costs > 0 else 0
+            'operating': _ratio(total_operating, total_all_costs),
+            'materials': _ratio(total_materials, total_all_costs),
+            'general': _ratio(total_general, total_all_costs)
         }
         
-        # Variable vs fixed cost analysis
-        # Approximate: materials and transport are variable, others are more fixed
-        variable_costs = sum(d['material_costs'] + d['transport_costs'] for d in daily_financials)
-        fixed_costs = total_all_costs - variable_costs
+        # Variable vs fijo: sólo con ambos componentes observados.
+        variable_costs = _sum_obs(
+            [(d['material_costs'] + d['transport_costs'])
+             if d['material_costs'] is not None and d['transport_costs'] is not None
+             else None
+             for d in daily_financials]
+        )
+        fixed_costs = (total_all_costs - variable_costs
+                       if total_all_costs is not None and variable_costs is not None
+                       else None)
         
-        # Cost efficiency metrics
-        revenues = [d['revenue'] for d in daily_financials]
-        cost_to_revenue_ratios = [d['cost_ratio'] for d in daily_financials if d['revenue'] > 0]
+        cost_to_revenue_ratios = _observed(d['cost_ratio'] for d in daily_financials)
+        total_sales_volume = _sum_obs(d['sales_volume'] for d in daily_financials)
         
         return {
             'total_costs': total_all_costs,
-            'average_daily_cost': total_all_costs / len(daily_financials) if daily_financials else 0,
+            'observed_days': len(_observed(total_costs)),
+            'total_days': len(daily_financials),
+            'average_daily_cost': _mean_obs(total_costs),
             'cost_structure': cost_structure,
             'cost_breakdown': {
                 'operating': total_operating,
                 'materials': total_materials,
                 'general': total_general,
-                'transport': sum(d['transport_costs'] for d in daily_financials),
-                'storage': sum(d['storage_costs'] for d in daily_financials),
-                'wastage': sum(d['wastage_costs'] for d in daily_financials)
+                'transport': total_transport,
+                'storage': _sum_obs(d['storage_costs'] for d in daily_financials),
+                'wastage': _sum_obs(d['wastage_costs'] for d in daily_financials)
             },
             'variable_vs_fixed': {
                 'variable_costs': variable_costs,
                 'fixed_costs': fixed_costs,
-                'variable_ratio': variable_costs / total_all_costs if total_all_costs > 0 else 0
+                'variable_ratio': _ratio(variable_costs, total_all_costs)
             },
             'cost_efficiency': {
-                'average_cost_ratio': np.mean(cost_to_revenue_ratios) if cost_to_revenue_ratios else 0,
-                'best_cost_ratio': min(cost_to_revenue_ratios) if cost_to_revenue_ratios else 0,
-                'worst_cost_ratio': max(cost_to_revenue_ratios) if cost_to_revenue_ratios else 0
+                'average_cost_ratio': _mean_obs(cost_to_revenue_ratios),
+                'best_cost_ratio': _min_obs(cost_to_revenue_ratios),
+                'worst_cost_ratio': _max_obs(cost_to_revenue_ratios)
             },
             'cost_per_unit': {
-                'average': total_all_costs / sum(d['sales_volume'] for d in daily_financials) 
-                          if sum(d['sales_volume'] for d in daily_financials) > 0 else 0
+                'average': _ratio(total_all_costs, total_sales_volume)
             }
         }
     
@@ -483,40 +580,41 @@ class SimulationFinancialAnalyzer:
         if not daily_financials:
             return {}
         
-        # Efficiency metrics
         cost_efficiencies = [d['cost_efficiency'] for d in daily_financials]
         
-        # Revenue per unit analysis
+        # Por unidad: sólo con volumen vendido observado y > 0.
         revenue_per_unit = []
         cost_per_unit = []
         for d in daily_financials:
-            if d['sales_volume'] > 0:
-                revenue_per_unit.append(d['revenue'] / d['sales_volume'])
-                cost_per_unit.append(d['total_costs'] / d['sales_volume'])
+            unit_revenue = _ratio(d['revenue'], d['sales_volume'])
+            if unit_revenue is not None:
+                revenue_per_unit.append(unit_revenue)
+            unit_cost = _ratio(d['total_costs'], d['sales_volume'])
+            if unit_cost is not None:
+                cost_per_unit.append(unit_cost)
         
-        # Asset turnover proxy (using daily revenue)
-        avg_daily_revenue = np.mean([d['revenue'] for d in daily_financials])
-        
-        # Working capital efficiency (simplified)
-        inventory_days = []  # Would need inventory data
+        avg_revenue_per_unit = _mean_obs(revenue_per_unit)
+        avg_cost_per_unit = _mean_obs(cost_per_unit)
         
         return {
             'cost_efficiency': {
-                'average': np.mean(cost_efficiencies) if cost_efficiencies else 0,
-                'trend': self._calculate_trend([d['cost_efficiency'] for d in daily_financials])
+                'average': _mean_obs(cost_efficiencies),
+                'trend': self._calculate_trend(_observed(cost_efficiencies))
             },
             'revenue_per_unit': {
-                'average': np.mean(revenue_per_unit) if revenue_per_unit else 0,
-                'min': min(revenue_per_unit) if revenue_per_unit else 0,
-                'max': max(revenue_per_unit) if revenue_per_unit else 0
+                'average': avg_revenue_per_unit,
+                'min': _min_obs(revenue_per_unit),
+                'max': _max_obs(revenue_per_unit)
             },
             'cost_per_unit': {
-                'average': np.mean(cost_per_unit) if cost_per_unit else 0,
-                'trend': self._calculate_trend(cost_per_unit) if len(cost_per_unit) > 2 else 'stable'
+                'average': avg_cost_per_unit,
+                'trend': (self._calculate_trend(cost_per_unit)
+                          if len(cost_per_unit) > 2 else 'insufficient_data')
             },
             'contribution_margin': {
-                'per_unit': (np.mean(revenue_per_unit) - np.mean(cost_per_unit)) 
-                           if revenue_per_unit and cost_per_unit else 0
+                'per_unit': (avg_revenue_per_unit - avg_cost_per_unit
+                             if avg_revenue_per_unit is not None
+                             and avg_cost_per_unit is not None else None)
             },
             'operational_leverage': self._calculate_operational_leverage(daily_financials)
         }
@@ -526,74 +624,89 @@ class SimulationFinancialAnalyzer:
         if len(daily_financials) < 3:
             return {'status': 'insufficient_data'}
         
-        # Extract time series
-        revenues = [d['revenue'] for d in daily_financials]
-        profits = [d['net_profit'] for d in daily_financials]
-        costs = [d['total_costs'] for d in daily_financials]
-        margins = [d['net_margin'] for d in daily_financials if d['net_margin'] is not None]
+        # Las tendencias se calculan sobre la serie observada; una serie con
+        # huecos rellenados de ceros inventaba caídas y recuperaciones.
+        revenues = _observed(d['revenue'] for d in daily_financials)
+        profits = _observed(d['net_profit'] for d in daily_financials)
+        costs = _observed(d['total_costs'] for d in daily_financials)
+        margins = _observed(d['net_margin'] for d in daily_financials)
+
+        mean_revenue = _mean_obs(revenues)
+        mean_profit = _mean_obs(profits)
         
         return {
+            'observed_days': len(profits),
+            'total_days': len(daily_financials),
             'revenue_trend': {
                 'direction': self._calculate_trend(revenues),
                 'growth_rate': self._calculate_growth_rate(revenues),
-                'volatility': np.std(revenues) / np.mean(revenues) if np.mean(revenues) > 0 else 0
+                'volatility': (float(np.std(revenues)) / mean_revenue
+                               if mean_revenue not in (None, 0) and len(revenues) > 1
+                               else None)
             },
             'profit_trend': {
                 'direction': self._calculate_trend(profits),
                 'improvement_rate': self._calculate_improvement_rate(profits),
-                'stability': 1 - (np.std(profits) / (abs(np.mean(profits)) + 0.01))
+                'stability': (1 - (float(np.std(profits)) / (abs(mean_profit) + 0.01))
+                              if mean_profit is not None and len(profits) > 1 else None)
             },
             'cost_trend': {
                 'direction': self._calculate_trend(costs),
                 'growth_rate': self._calculate_growth_rate(costs),
-                'as_pct_of_revenue': self._calculate_cost_revenue_trend(costs, revenues)
+                'as_pct_of_revenue': self._calculate_cost_revenue_trend(
+                    [d['total_costs'] for d in daily_financials],
+                    [d['revenue'] for d in daily_financials])
             },
             'margin_trend': {
                 'direction': self._calculate_trend(margins),
-                'improvement': margins[-1] - margins[0] if margins else 0,
-                'consistency': 1 - np.std(margins) if margins else 0
+                'improvement': (margins[-1] - margins[0]) if len(margins) > 1 else None,
+                'consistency': (1 - float(np.std(margins))) if len(margins) > 1 else None
             },
             'sustainability': self._assess_trend_sustainability(daily_financials)
         }
     
-    def _calculate_financial_kpis(self, daily_financials: List[Dict]) -> Dict[str, float]:
+    def _calculate_financial_kpis(self, daily_financials: List[Dict]) -> Dict[str, Any]:
         """Calculate key financial performance indicators"""
         if not daily_financials:
             return {}
         
-        # Aggregate values
-        total_revenue = sum(d['revenue'] for d in daily_financials)
-        total_profit = sum(d['net_profit'] for d in daily_financials)
-        total_costs = sum(d['total_costs'] for d in daily_financials)
+        revenues = [d['revenue'] for d in daily_financials]
+        net_profits = [d['net_profit'] for d in daily_financials]
+        all_costs = [d['total_costs'] for d in daily_financials]
+
+        total_revenue = _sum_obs(revenues)
+        total_profit = _sum_obs(net_profits)
+        total_costs = _sum_obs(all_costs)
         
-        # Average values
-        avg_revenue = total_revenue / len(daily_financials)
-        avg_profit = total_profit / len(daily_financials)
-        margins = [d['net_margin'] for d in daily_financials if d['net_margin'] is not None]
-        avg_margin = np.mean(margins) if margins else None
-        roi_values = [d['roi'] for d in daily_financials if d['roi'] is not None]
+        margins = _observed(d['net_margin'] for d in daily_financials)
+        roi_values = _observed(d['roi'] for d in daily_financials)
         
-        # Best/worst days
-        best_day = max(daily_financials, key=lambda x: x['net_profit'])
-        worst_day = min(daily_financials, key=lambda x: x['net_profit'])
+        # "Mejor" y "peor" día sólo existen si hubo utilidades observadas.
+        days_with_profit = [d for d in daily_financials if d['net_profit'] is not None]
+        best_day = max(days_with_profit, key=lambda x: x['net_profit']) if days_with_profit else None
+        worst_day = min(days_with_profit, key=lambda x: x['net_profit']) if days_with_profit else None
+
+        total_demand = _sum_obs(d['demand'] for d in daily_financials)
+        total_sales_volume = _sum_obs(d['sales_volume'] for d in daily_financials)
         
         return {
             'total_revenue': total_revenue,
             'total_profit': total_profit,
             'total_costs': total_costs,
-            'average_daily_revenue': avg_revenue,
-            'average_daily_profit': avg_profit,
-            'profit_margin': total_profit / total_revenue if total_revenue > 0 else 0,
-            'average_margin': avg_margin,
-            'roi': np.mean(roi_values) if roi_values else None,
-            'best_day_profit': best_day['net_profit'],
-            'best_day_number': best_day['day'],
-            'worst_day_profit': worst_day['net_profit'],
-            'worst_day_number': worst_day['day'],
-            'revenue_per_demand': total_revenue / sum(d['demand'] for d in daily_financials) 
-                                 if sum(d['demand'] for d in daily_financials) > 0 else 0,
-            'cost_per_unit_sold': total_costs / sum(d['sales_volume'] for d in daily_financials)
-                                 if sum(d['sales_volume'] for d in daily_financials) > 0 else 0
+            'observed_days': len(days_with_profit),
+            'total_days': len(daily_financials),
+            'average_daily_revenue': _mean_obs(revenues),
+            'average_daily_profit': _mean_obs(net_profits),
+            # Sin ingresos observados el margen es indefinido, no 0%.
+            'profit_margin': _ratio(total_profit, total_revenue),
+            'average_margin': _mean_obs(margins),
+            'roi': _mean_obs(roi_values),
+            'best_day_profit': best_day['net_profit'] if best_day else None,
+            'best_day_number': best_day['day'] if best_day else None,
+            'worst_day_profit': worst_day['net_profit'] if worst_day else None,
+            'worst_day_number': worst_day['day'] if worst_day else None,
+            'revenue_per_demand': _ratio(total_revenue, total_demand),
+            'cost_per_unit_sold': _ratio(total_costs, total_sales_volume)
         }
     
     def _generate_financial_recommendations(self, simulation: Simulation,
@@ -708,10 +821,22 @@ class SimulationFinancialAnalyzer:
             'risk_score': 0
         }
         
+        # Sin observaciones no se puede afirmar ni riesgo alto ni bajo.
+        if not profitability or profitability.get('observed_days') == 0:
+            risks['overall_risk'] = 'unknown'
+            risks['risk_factors'].append({
+                'factor': 'no_financial_data',
+                'description': 'La corrida no registró variables financieras; '
+                               'no se puede evaluar el riesgo',
+                'severity': 'unknown'
+            })
+            return risks
+        
         risk_score = 0
         
-        # Profitability risk
-        if profitability.get('profitability_rate', 0) < 0.7:
+        # Profitability risk. Los umbrales sólo se evalúan sobre métricas
+        # observadas: un dato ausente no dispara ni silencia una alerta.
+        if _lt(profitability.get('profitability_rate'), 0.7):
             risk_score += 30
             risks['risk_factors'].append({
                 'factor': 'low_profitability',
@@ -720,7 +845,7 @@ class SimulationFinancialAnalyzer:
             })
         
         # Volatility risk
-        if profitability.get('profit_volatility', 0) > 0.5:
+        if _gt(profitability.get('profit_volatility'), 0.5):
             risk_score += 20
             risks['risk_factors'].append({
                 'factor': 'high_volatility',
@@ -729,7 +854,7 @@ class SimulationFinancialAnalyzer:
             })
         
         # Cost structure risk
-        if costs.get('variable_vs_fixed', {}).get('variable_ratio', 0) < 0.3:
+        if _lt(costs.get('variable_vs_fixed', {}).get('variable_ratio'), 0.3):
             risk_score += 15
             risks['risk_factors'].append({
                 'factor': 'high_fixed_costs',
@@ -737,9 +862,9 @@ class SimulationFinancialAnalyzer:
                 'severity': 'medium'
             })
         
-        # Margin risk
-        avg_margin = profitability.get('net_margin', {}).get('average', 0)
-        if avg_margin < 0.05:
+        # Margin risk. `.get('average', 0)` devolvía None cuando la clave existía
+        # con valor None, y `None < 0.05` reventaba con TypeError.
+        if _lt(profitability.get('net_margin', {}).get('average'), 0.05):
             risk_score += 25
             risks['risk_factors'].append({
                 'factor': 'low_margins',
@@ -764,11 +889,14 @@ class SimulationFinancialAnalyzer:
         """Create executive summary of financial analysis"""
         return {
             'status': self._determine_business_health(kpis, profitability, risk_assessment),
+            # Se propaga None: la vista debe mostrar "no disponible", no Bs 0.00.
             'key_metrics': {
-                'total_revenue': kpis.get('total_revenue', 0),
-                'total_profit': kpis.get('total_profit', 0),
-                'profit_margin': kpis.get('profit_margin', 0),
-                'roi': kpis.get('roi')
+                'total_revenue': kpis.get('total_revenue'),
+                'total_profit': kpis.get('total_profit'),
+                'profit_margin': kpis.get('profit_margin'),
+                'roi': kpis.get('roi'),
+                'observed_days': kpis.get('observed_days'),
+                'total_days': kpis.get('total_days')
             },
             'highlights': self._generate_highlights(kpis, profitability),
             'concerns': self._generate_concerns(profitability, risk_assessment),
@@ -779,11 +907,18 @@ class SimulationFinancialAnalyzer:
     
     def _calculate_trend(self, data: List[float]) -> str:
         """Calculate trend direction from time series data"""
+        data = _observed(data or [])
         if len(data) < 3:
             return 'insufficient_data'
+        # Una serie constante no tiene pendiente definida: linregress devuelve
+        # NaN y la comparación posterior mentiría en vez de fallar.
+        if len(set(data)) == 1:
+            return 'stable'
         
         x = np.arange(len(data))
         slope, _, r_value, p_value, _ = stats.linregress(x, data)
+        if p_value is None or np.isnan(p_value):
+            return 'stable'
         
         if p_value > 0.05:  # Not statistically significant
             return 'stable'
@@ -792,13 +927,19 @@ class SimulationFinancialAnalyzer:
         else:
             return 'declining'
     
-    def _calculate_growth_rate(self, data: List[float]) -> float:
+    def _calculate_growth_rate(self, data: List[float]) -> Optional[float]:
         """Calculate average growth rate"""
+        data = _observed(data or [])
+        # Sin dos observaciones, o partiendo de cero, la tasa es indefinida —
+        # no 0%, que se leía como "no creció".
         if len(data) < 2 or data[0] == 0:
-            return 0
+            return None
+        base = data[-1] / data[0]
+        if base < 0:
+            return None
         
         # Compound growth rate
-        return ((data[-1] / data[0]) ** (1 / (len(data) - 1)) - 1) * 100
+        return ((base) ** (1 / (len(data) - 1)) - 1) * 100
     
     def _calculate_growth_rate_between_values(self, initial: float, final: float) -> float:
         """Calculate growth rate between two specific values"""
@@ -806,10 +947,11 @@ class SimulationFinancialAnalyzer:
             return 0.0 if final == 0 else float('inf')
         return (final - initial) / initial
     
-    def _calculate_improvement_rate(self, data: List[float]) -> float:
+    def _calculate_improvement_rate(self, data: List[float]) -> Optional[float]:
         """Calculate improvement rate for metrics that can be negative"""
+        data = _observed(data or [])
         if len(data) < 2:
-            return 0
+            return None
         
         return (data[-1] - data[0]) / len(data)
     
@@ -819,31 +961,37 @@ class SimulationFinancialAnalyzer:
         if len(costs) != len(revenues) or not revenues:
             return 'unknown'
         
-        ratios = [c/r for c, r in zip(costs, revenues) if r > 0]
+        ratios = _observed(_ratio(c, r) for c, r in zip(costs, revenues))
         if not ratios:
             return 'unknown'
         
         return self._calculate_trend(ratios)
     
-    def _calculate_operational_leverage(self, daily_financials: List[Dict]) -> float:
+    def _calculate_operational_leverage(self, daily_financials: List[Dict]) -> Optional[float]:
         """Calculate degree of operational leverage"""
         if len(daily_financials) < 2:
-            return 0
+            return None
         
-        # Simplified: compare profit changes to revenue changes
-        revenues = [d['revenue'] for d in daily_financials]
-        profits = [d['net_profit'] for d in daily_financials]
+        # Simplified: compare profit changes to revenue changes. Sólo se
+        # comparan días consecutivos con AMBOS valores observados; antes un
+        # hueco rellenado de ceros producía un salto ficticio.
+        leverages = []
+        for prev, curr in zip(daily_financials, daily_financials[1:]):
+            if None in (prev['revenue'], curr['revenue'],
+                        prev['net_profit'], curr['net_profit']):
+                continue
+            revenue_change = curr['revenue'] - prev['revenue']
+            profit_change = curr['net_profit'] - prev['net_profit']
+            if revenue_change == 0:
+                continue
+            leverages.append(abs(profit_change / revenue_change))
         
-        revenue_changes = [revenues[i] - revenues[i-1] for i in range(1, len(revenues))]
-        profit_changes = [profits[i] - profits[i-1] for i in range(1, len(profits))]
+        # Sin pares comparables el apalancamiento es indefinido. Devolver 1.0
+        # afirmaba una relación 1:1 que nadie midió.
+        if not leverages:
+            return None
         
-        valid_pairs = [(p, r) for p, r in zip(profit_changes, revenue_changes) if r != 0]
-        
-        if not valid_pairs:
-            return 1.0
-        
-        leverages = [abs(p/r) for p, r in valid_pairs]
-        return np.median(leverages)
+        return float(np.median(leverages))
     
     def _assess_trend_sustainability(self, daily_financials: List[Dict]) -> str:
         """Assess if current trends are sustainable"""
@@ -851,10 +999,10 @@ class SimulationFinancialAnalyzer:
             return 'insufficient_data'
         
         # Check recent trends (last 7 days)
-        recent_profits = [d['net_profit'] for d in daily_financials[-7:]]
-        recent_margins = [d['net_margin'] for d in daily_financials[-7:] if d['net_margin'] is not None]
+        recent_profits = _observed(d['net_profit'] for d in daily_financials[-7:])
+        recent_margins = _observed(d['net_margin'] for d in daily_financials[-7:])
 
-        if len(recent_margins) < 3:
+        if len(recent_margins) < 3 or len(recent_profits) < 2:
             return 'insufficient_data'
         
         # Calculate volatility and trend
@@ -874,16 +1022,25 @@ class SimulationFinancialAnalyzer:
                                  profitability: Dict,
                                  risk_assessment: Dict) -> str:
         """Determine overall business health status"""
+        # Sin ninguna observación financiera no hay salud que calificar. Antes
+        # se caía a 'poor'/'fair' por acumulación de ceros, y peor: una serie de
+        # ceros inventados tiene volatilidad 0, así que la AUSENCIA de datos
+        # sumaba los 20 puntos de "estabilidad".
+        observed = profitability.get('observed_days')
+        if observed == 0 or (observed is None and not kpis):
+            return 'unknown'
+
         health_score = 0
         
         # Profitability check
-        if kpis.get('profit_margin', 0) > 0.15:
+        profit_margin = kpis.get('profit_margin')
+        if _gt(profit_margin, 0.15):
             health_score += 30
-        elif kpis.get('profit_margin', 0) > 0.05:
+        elif _gt(profit_margin, 0.05):
             health_score += 15
         
-        # Stability check
-        if profitability.get('profit_volatility', 1) < 0.3:
+        # Stability check — sólo si la volatilidad se midió de verdad.
+        if _lt(profitability.get('profit_volatility'), 0.3):
             health_score += 20
         
         # Risk check
@@ -893,9 +1050,10 @@ class SimulationFinancialAnalyzer:
             health_score += 15
         
         # ROI check
-        if (kpis.get('roi') or 0) > 0.2:
+        roi = kpis.get('roi')
+        if _gt(roi, 0.2):
             health_score += 20
-        elif (kpis.get('roi') or 0) > 0.1:
+        elif _gt(roi, 0.1):
             health_score += 10
         
         if health_score >= 70:
@@ -911,14 +1069,15 @@ class SimulationFinancialAnalyzer:
         """Generate positive highlights from analysis"""
         highlights = []
         
-        if kpis.get('profit_margin', 0) > 0.15:
+        # Nada se celebra sobre una métrica que no se observó.
+        if _gt(kpis.get('profit_margin'), 0.15):
             highlights.append(f"Excelente margen de ganancia: {kpis['profit_margin']:.1%}")
         
-        if profitability.get('profitability_rate', 0) > 0.8:
+        if _gt(profitability.get('profitability_rate'), 0.8):
             rate = profitability['profitability_rate'] * 100
             highlights.append(f"{rate:.0f}% de días fueron rentables")
         
-        if (kpis.get('roi') or 0) > 0.2:
+        if _gt(kpis.get('roi'), 0.2):
             highlights.append(f"Alto retorno de inversión: {kpis['roi']:.1%}")
         
         if profitability.get('break_even_day'):
@@ -931,13 +1090,19 @@ class SimulationFinancialAnalyzer:
         """Generate concerns from analysis"""
         concerns = []
         
+        if profitability.get('observed_days') == 0:
+            concerns.append(
+                "La corrida no registró variables financieras: no hay resultados "
+                "económicos que analizar")
+            return concerns
+
         if profitability.get('loss_days', 0) > profitability.get('profitable_days', 1):
             concerns.append("Más días con pérdidas que con ganancias")
         
         if risk_assessment.get('overall_risk') == 'high':
             concerns.append("Nivel de riesgo financiero alto")
         
-        if profitability.get('profit_volatility', 0) > 0.5:
+        if _gt(profitability.get('profit_volatility'), 0.5):
             concerns.append("Alta volatilidad en las ganancias")
         
         if not profitability.get('break_even_day'):
@@ -948,9 +1113,12 @@ class SimulationFinancialAnalyzer:
     def _generate_outlook(self, profitability: Dict, 
                         risk_assessment: Dict) -> str:
         """Generate business outlook statement"""
+        if profitability.get('observed_days') == 0:
+            return ('No hay datos financieros en esta corrida; no se puede '
+                    'emitir una perspectiva del negocio')
         if risk_assessment.get('overall_risk') == 'high':
             return 'El negocio enfrenta desafíos significativos que requieren acción inmediata'
-        elif profitability.get('profitability_rate', 0) > 0.7:
+        elif _gt(profitability.get('profitability_rate'), 0.7):
             return 'El negocio muestra buen desempeño con oportunidades de mejora'
         else:
             return 'Se requieren ajustes operativos para mejorar la rentabilidad'

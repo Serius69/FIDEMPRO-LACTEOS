@@ -628,7 +628,9 @@ class ScenariosAPIView(APIView):
                             'variable_costs': round(var_c, 2),
                             'total_costs': round(total_c, 2),
                             'gross_profit': round(gp, 2),
-                            'profit_margin_pct': round((gp / rev * 100) if rev > 0 else 0, 2),
+                            # Sin ingresos el margen es indefinido (0/0), no 0%.
+                            'profit_margin_pct': (round(gp / rev * 100, 2)
+                                                  if rev > 0 else None),
                             'roi_pct': round((gp / investment * 100), 2) if investment and investment > 0 else None,
                             'is_profitable': gp > 0,
                         }

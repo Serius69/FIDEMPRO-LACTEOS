@@ -45,8 +45,17 @@ wait_for_postgres() {
 # ─────────────────────────────────────────────
 wait_for_redis() {
     local redis_url="${REDIS_URL:-redis://redis:6379/0}"
-    local host=$(echo "$redis_url" | sed 's|redis://||' | cut -d: -f1)
-    local port=$(echo "$redis_url" | sed 's|redis://||' | cut -d: -f2 | cut -d/ -f1)
+    # Quitar el esquema Y las credenciales antes de parsear. Con una URL con
+    # password (redis://:SECRETO@host:6379/1) el parseo viejo dejaba el host
+    # vacío, el puerto en basura y —peor— imprimía el SECRETO en los logs del
+    # contenedor en cada arranque. Además el wait nunca funcionaba: caía
+    # siempre por timeout al "Redis no disponible, continuando sin cache".
+    local authority="${redis_url#*://}"   # host:puerto/db  (o user:pass@host:puerto/db)
+    authority="${authority##*@}"          # descarta credenciales si las hay
+    authority="${authority%%/*}"          # descarta /db
+    local host="${authority%%:*}"
+    local port="${authority##*:}"
+    [ "$port" = "$host" ] && port=6379
     local max_retries=20
     local retry=0
 

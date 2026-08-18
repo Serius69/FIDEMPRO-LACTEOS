@@ -41,6 +41,21 @@ from finance.models import FinanceRecommendation, FinanceRecommendationSimulatio
 logger = logging.getLogger(__name__)
 
 
+def _observed_metric(variables, key):
+    """Métrica observada, o None si la corrida no la registró.
+
+    `.get(clave, 0)` hacía indistinguible "no se midió" de "midió cero", y ese
+    cero entraba en rankings y porcentajes como si fuera un hecho.
+    """
+    value = variables.get(key)
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 class SimulateResultView(LoginRequiredMixin, View):
     """Enhanced view for displaying simulation results with daily analysis"""
     
@@ -1726,6 +1741,7 @@ class SimulateResultView(LoginRequiredMixin, View):
         ]
         
         rankings = []
+        incomplete = []
         for sim in all_simulations:
             # Get summary metrics
             try:
@@ -1736,22 +1752,46 @@ class SimulateResultView(LoginRequiredMixin, View):
                 
                 if results and hasattr(results, 'variables') and results.variables:
                     vars = results.variables
+                    # Una corrida sin NR/NSC/EOG no puntúa 0: no se midió. Antes
+                    # se le asignaba score 0 y aparecía en el ranking como el peor
+                    # negocio del conjunto, con "0% de margen" y "0% de eficiencia"
+                    # presentados como resultados observados.
+                    net_margin = _observed_metric(vars, 'NR')
+                    service_level = _observed_metric(vars, 'NSC')
+                    efficiency = _observed_metric(vars, 'EOG')
+
+                    if net_margin is None and service_level is None and efficiency is None:
+                        incomplete.append({
+                            'id': sim.id,
+                            'date': sim.date_created,
+                            'reason': 'sin métricas de desempeño registradas',
+                        })
+                        continue
+
                     score = (
-                        float(vars.get('NR', 0)) * 100 +  # Net margin weight
-                        float(vars.get('NSC', 0)) * 50 +  # Service level weight
-                        float(vars.get('EOG', 0)) * 30    # Efficiency weight
+                        (net_margin or 0) * 100 +   # Net margin weight
+                        (service_level or 0) * 50 + # Service level weight
+                        (efficiency or 0) * 30      # Efficiency weight
                     )
                     rankings.append({
                         'id': sim.id,
                         'date': sim.date_created,
                         'score': score,
+                        'partial': None in (net_margin, service_level, efficiency),
                         'metrics': {
-                            'profit_margin': float(vars.get('NR', 0)) * 100,
-                            'service_level': float(vars.get('NSC', 0)) * 100,
-                            'efficiency': float(vars.get('EOG', 0)) * 100
+                            'profit_margin': net_margin * 100 if net_margin is not None else None,
+                            'service_level': service_level * 100 if service_level is not None else None,
+                            'efficiency': efficiency * 100 if efficiency is not None else None,
                         }
                     })
-            except:
+            except Exception:
+                logger.exception(
+                    "No se pudo evaluar la simulación %s para el ranking", sim.id)
+                incomplete.append({
+                    'id': sim.id,
+                    'date': getattr(sim, 'date_created', None),
+                    'reason': 'error al leer los resultados',
+                })
                 continue
         
         # Sort by score
@@ -1767,6 +1807,9 @@ class SimulateResultView(LoginRequiredMixin, View):
         return {
             'current_rank': current_rank,
             'total_simulations': len(rankings),
+            # Las corridas sin métricas no se rankean; se declaran aparte para que
+            # la vista no insinúe que el conjunto está completo.
+            'unranked_simulations': incomplete,
             'rankings': rankings[:5],  # Top 5
             'is_best': current_rank == 1 if current_rank else False
         }

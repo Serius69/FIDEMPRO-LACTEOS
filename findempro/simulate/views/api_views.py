@@ -20,6 +20,26 @@ logger = logging.getLogger(__name__)
 _ACTIVE_STATES = {'PENDING', 'RECEIVED', 'STARTED', 'PROGRESS', 'RETRY'}
 
 
+def _observed_series(results, key):
+    """Serie con los períodos que SÍ registraron la variable.
+
+    Rellenar los ausentes con 0 convertía la falta de datos en ceros observados:
+    sumas deprimidas, probabilidad de pérdida artificialmente baja y una corrida
+    vacía compitiendo por ser la mejor.
+    """
+    series = []
+    for row in results:
+        variables = getattr(row, 'variables', None) or {}
+        value = variables.get(key)
+        if value is None:
+            continue
+        try:
+            series.append(float(value))
+        except (TypeError, ValueError):
+            continue
+    return series
+
+
 class SimulationProgressView(LoginRequiredMixin, View):
     """Check simulation progress — prefers live Celery task state, falls back to DB."""
 
@@ -277,18 +297,33 @@ class SimulationCompareView(LoginRequiredMixin, View):
                 comparisons.append({'simulation_id': sid, 'no_results': True})
                 continue
 
-            # Aggregate from variables JSONField
-            profit_series = [float(r.variables.get('GT', 0)) for r in results]
-            revenue_series = [float(r.variables.get('IT', 0)) for r in results]
-            cost_series = [float(r.variables.get('TG', 0)) for r in results]
+            # Sólo períodos con la variable observada. Con `.get(clave, 0)` una
+            # corrida sin variables financieras entraba a la comparación como un
+            # negocio que factura 0, no pierde nunca (0 no es < 0) y competía por
+            # ser "ganador".
+            profit_series = _observed_series(results, 'GT')
+            revenue_series = _observed_series(results, 'IT')
+            cost_series = _observed_series(results, 'TG')
             demand_series = [float(r.demand_mean) for r in results]
 
+            if not profit_series:
+                comparisons.append({
+                    'simulation_id': sid,
+                    'product_name': sim.fk_questionary_result.fk_questionary.fk_product.name,
+                    'duration_days': sim.duration_in_days,
+                    'status': 'sin_datos_financieros',
+                    'observed_periods': 0,
+                    'total_periods': len(results),
+                })
+                continue
+
             arr = np.array(profit_series)
-            rev_arr = np.array(revenue_series)
 
             total_profit = float(arr.sum())
-            total_revenue = float(rev_arr.sum())
-            profit_margin = round(total_profit / total_revenue * 100, 2) if total_revenue else 0
+            total_revenue = float(np.array(revenue_series).sum()) if revenue_series else None
+            # Sin ingresos observados el margen es indefinido, no 0%.
+            profit_margin = (round(total_profit / total_revenue * 100, 2)
+                             if total_revenue else None)
 
             var_95 = float(np.percentile(arr, 5))
             prob_loss = float(np.mean(arr < 0)) * 100
@@ -300,9 +335,13 @@ class SimulationCompareView(LoginRequiredMixin, View):
                 'distribution': sim.fk_fdp.name if sim.fk_fdp else '—',
                 'confidence_level': sim.confidence_level,
                 'date_created': sim.date_created.strftime('%d/%m/%Y') if sim.date_created else '—',
+                'status': 'ok',
+                'observed_periods': len(profit_series),
+                'total_periods': len(results),
                 'total_profit': round(total_profit, 2),
-                'total_revenue': round(total_revenue, 2),
-                'total_costs': round(float(np.array(cost_series).sum()), 2),
+                'total_revenue': round(total_revenue, 2) if total_revenue is not None else None,
+                'total_costs': (round(float(np.array(cost_series).sum()), 2)
+                                if cost_series else None),
                 'profit_margin_pct': profit_margin,
                 'mean_daily_profit': round(float(arr.mean()), 2),
                 'std_daily_profit': round(float(arr.std()), 2),
