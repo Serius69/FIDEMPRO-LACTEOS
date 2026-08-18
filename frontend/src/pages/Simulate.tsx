@@ -168,7 +168,7 @@ export default function Simulate() {
                 </CardContent></Card>
                 <Card><CardContent className="p-4">
                   <p className="text-xs text-muted-foreground">Sharpe Ratio</p>
-                  <p className="text-xl font-bold mt-1">{result.profit.ratio_basis === 'monetary_profit' ? 'N/A' : fmtNum(result.profit.sharpe_ratio ?? 0)}</p>
+                  <p className="text-xl font-bold mt-1">{result.profit.ratio_basis === 'monetary_profit' ? 'N/A' : fmtNum(result.profit.sharpe_ratio)}</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">{result.profit.ratio_basis === 'monetary_profit' ? 'Requiere retornos periodizados' : 'Retorno ajustado por riesgo'}</p>
                 </CardContent></Card>
                 <Card><CardContent className="p-4">

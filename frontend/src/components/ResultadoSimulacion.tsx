@@ -1,10 +1,13 @@
 import { useState, useCallback } from 'react'
 import { TooltipSimple } from './TooltipSimple'
 
+// Un percentil puede no venir: la corrida pudo no calcularlo. `null` significa
+// "no disponible" y se muestra como tal — nunca como Bs. 0, que se leería como
+// un resultado observado.
 interface Escenarios {
-  p5:  number   // peor caso
-  p50: number   // probable
-  p95: number   // optimista
+  p5:  number | null   // peor caso
+  p50: number | null   // probable
+  p95: number | null   // optimista
 }
 
 interface ResultadoSimulacionProps {
@@ -17,8 +20,8 @@ interface ResultadoSimulacionProps {
 }
 
 // Traduce un monto en bolivianos a un ejemplo concreto según tipo de negocio
-function calcularEquivalente(monto: number, tipoNegocio: string): string {
-  if (monto <= 0) return ''
+function calcularEquivalente(monto: number | null | undefined, tipoNegocio: string): string {
+  if (monto == null || monto <= 0) return ''
 
   const ejemplos: Record<string, { unidad: string; precioPromedio: number }> = {
     comercio:     { unidad: 'artículos de Bs. 50',     precioPromedio: 50    },
@@ -34,11 +37,16 @@ function calcularEquivalente(monto: number, tipoNegocio: string): string {
   return `como vender ${cantidad.toLocaleString('es-BO')} ${e.unidad}`
 }
 
-function formatBOB(n: number): string {
+const NO_DISPONIBLE = 'No disponible'
+
+function formatBOB(n: number | null | undefined): string {
+  // Sin guarda, `undefined.toLocaleString()` reventaba el render entero.
+  if (n == null || !Number.isFinite(n)) return NO_DISPONIBLE
   return `Bs. ${n.toLocaleString('es-BO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 }
 
-function formatBOBMes(n: number): string {
+function formatBOBMes(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return NO_DISPONIBLE
   return `Bs. ${(n / 12).toLocaleString('es-BO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 }
 
@@ -50,8 +58,11 @@ export function ResultadoSimulacion({
   onDescargar,
   onNuevaSim,
 }: ResultadoSimulacionProps) {
-  const esViable = escenarios.p50 > 0
-  const reservaRecomendada = Math.round(escenarios.p5 * 0.15 / 1000) * 1000
+  // Sin el escenario probable no hay veredicto: `null` es "no se puede afirmar",
+  // distinto de `false` ("el negocio no es viable").
+  const esViable = escenarios.p50 == null ? null : escenarios.p50 > 0
+  const reservaRecomendada =
+    escenarios.p5 == null ? null : Math.round(escenarios.p5 * 0.15 / 1000) * 1000
   const [copiado, setCopiado] = useState(false)
 
   const compartirWhatsApp = useCallback(async () => {
@@ -64,7 +75,9 @@ export function ResultadoSimulacion({
       `👍 Probable (50%): ${formatBOB(escenarios.p50)}`,
       `⚠️ Difícil (5%): ${formatBOB(escenarios.p5)}`,
       '',
-      esViable
+      esViable == null
+        ? '❔ No hay escenario probable calculado: no se puede afirmar viabilidad.'
+        : esViable
         ? `💡 Negocio *viable*. Reserva mínima recomendada: ${formatBOB(reservaRecomendada)}`
         : '⚠️ El negocio *necesita ajustes* antes de ser viable.',
       '',
@@ -155,18 +168,34 @@ export function ResultadoSimulacion({
         />
 
         {/* Recomendación principal */}
-        <div className={`rounded-2xl p-5 border-2 ${esViable ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+        <div className={`rounded-2xl p-5 border-2 ${
+          esViable == null
+            ? 'bg-muted border-border'
+            : esViable
+            ? 'bg-green-50 border-green-200'
+            : 'bg-red-50 border-red-200'
+        }`}>
           <div className="flex items-start gap-3">
-            <span className="text-2xl shrink-0" aria-hidden="true">{esViable ? '💡' : '⚠'}</span>
+            <span className="text-2xl shrink-0" aria-hidden="true">
+              {esViable == null ? '❔' : esViable ? '💡' : '⚠'}
+            </span>
             <div>
-              <p className={`font-bold text-lg ${esViable ? 'text-green-800' : 'text-red-800'}`}>
-                {esViable
+              <p className={`font-bold text-lg ${
+                esViable == null ? 'text-foreground' : esViable ? 'text-green-800' : 'text-red-800'
+              }`}>
+                {esViable == null
+                  ? 'No se puede determinar la viabilidad: falta el escenario probable.'
+                  : esViable
                   ? 'Tu negocio ES VIABLE según estos datos.'
                   : 'El negocio necesita ajustes antes de ser viable.'
                 }
               </p>
-              <p className={`text-sm mt-2 ${esViable ? 'text-green-700' : 'text-red-700'}`}>
-                {esViable
+              <p className={`text-sm mt-2 ${
+                esViable == null ? 'text-muted-foreground' : esViable ? 'text-green-700' : 'text-red-700'
+              }`}>
+                {esViable == null
+                  ? 'La simulación no devolvió el percentil 50; no hay recomendación que dar sobre estos datos.'
+                  : esViable
                   ? `Para cubrirte ante el peor escenario, te recomendamos tener al menos ${formatBOB(reservaRecomendada)} de reserva.`
                   : 'Revisa tus gastos fijos y el precio de venta antes de continuar.'
                 }
