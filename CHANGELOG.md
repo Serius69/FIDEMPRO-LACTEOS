@@ -97,8 +97,10 @@ bloques. Suite: **697 → 707 passed** (+10 tests, 0 regresiones).
   el superuser `sergio` sin efectos colaterales — lo crea si falta (super/staff/
   activo, email allauth verificado) y, si ya existe, corrige flags **sin pisar la
   contraseña** (regla del ecosistema Kapitalya, igual que xgol/forex-erp). Defaults:
-  usuario `sergio`, email `kapitalyabolivia@gmail.com`, password `Kapitalya2026!`
-  (idénticos a xgol); configurables por flag o env (`FINDEMPRO_SUPERUSER*` /
+  usuario `sergio`, email `kapitalyabolivia@gmail.com`. La contraseña que este
+  changelog publicaba en claro fue retirada y **rotada en producción el 2026-08-18**:
+  ya no hay default, crear el superusuario exige darla por flag o env
+  (`FINDEMPRO_SUPERUSER*` /
   `DJANGO_SUPERUSER_PASSWORD`). Pensado para correr tras cada `migrate` en dev/
   test/prod — **siempre también en prod**.
 - **Tests**: `business/tests/test_ensure_superuser.py` (5: crea, idempotente sin

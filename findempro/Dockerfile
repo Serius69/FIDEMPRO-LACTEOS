@@ -41,6 +41,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# El pip que trae python:3.12-slim-bookworm (25.0.1) arrastra 6 CVEs propias
+# (PYSEC-2026-196/1795/1796/2875/2876). No lo usamos en runtime, pero queda
+# instalado en la imagen y pip-audit contra la imagen lo reporta. Se actualiza
+# SOLO en runtime: el builder resuelve las dependencias con su propio pip, así
+# que el grafo de paquetes de la app no cambia.
+RUN pip install --no-cache-dir --upgrade "pip>=26.1.2" \
+    && pip --version
+
 # Usuario no-root
 RUN useradd -m -u 1000 -s /bin/bash appuser
 
