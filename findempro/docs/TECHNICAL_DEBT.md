@@ -8,15 +8,16 @@ integración o producción en PASS.
 
 | Estado | Evidencia |
 |---|---|
-| 0 abiertos observados en el entorno local | Suite Django: 975/975; `check`; `makemigrations --check --dry-run`; `git diff --check` pasan. |
+| 0 abiertos observados | Suite Django **1002/1002** en SQLite y en **PostgreSQL 16**; `check` limpio; `makemigrations --check --dry-run` sin cambios. Confirmado además en GitHub Actions (run 32139967469): 1002 passed contra PostgreSQL. |
 
 ## P1 — obligatorio antes de integrar o publicar
 
 | Estado | Clase | Ítem | Evidencia / cierre requerido |
 |---|---|---|---|
-| OPEN | RELEASE_GATE | Browser E2E | **Arnés escrito y listo; falta un paquete del sistema.** `simulate/tests/e2e_browser_flow.js` cubre el flujo crítico contra una instancia desechable (`findempro.settings.e2e`, SQLite en archivo temporal, Celery síncrono). Chromium sigue sin arrancar: `ldd` sobre `chromium-1234/chrome-linux64/chrome` reporta **una sola** dependencia ausente, `libasound.so.2`, y `ldconfig -p` no la encuentra en el sistema. Acción exacta en Ubuntu 26.04: `sudo apt-get install -y libasound2t64` (candidato 1.2.15.3-1ubuntu1.1, no instalado). Mientras tanto, el mismo flujo se verificó a nivel HTTP contra la app corriendo: `simulate/tests/e2e_http_flow.py` → **18/18** (login, negocio, plantilla, modelo, validación, simulación, iteraciones inválidas → 400, JSON malformado → 400, valor no finito rechazado, dueño ajeno 403/404, anónimo redirigido). Eso cubre servidor y autorización, **no** el render ni el JavaScript. |
-| OPEN | RELEASE_GATE | Integración y release | La rama no está committeada/mergeada/desplegada por las restricciones del worktree. Requiere revisión de diff, PR, backup, migraciones en staging, owner login y post-deploy. |
+| CLOSED | RELEASE_GATE | Browser E2E | `libasound2t64` ya está instalado en el host, así que Chromium arranca y el arnés corre de verdad. `simulate/tests/e2e_browser_flow.js` → **23/23** sobre la pila actualizada (Django 5.2.17): login → negocio → plantilla → modelo → validar → datos → simular → progreso → resultados → escenarios → reporte, más los negativos (símbolo desconocido, no finito, iteraciones inválidas, JSON malformado), la autorización entre dueños y la consola sin errores. `simulate/tests/e2e_http_flow.py` → **18/18**. Ambos siguen fuera del CI: exigen sembrar usuarios y un negocio contra una instancia desechable, y ese sembrado todavía no es un comando reproducible. |
+| OPEN | RELEASE_GATE | Integración y release | Avanzado: la rama está committeada y publicada en la PR #27, y el CI de GitHub Actions pasa **entero** (static, checks+migraciones, tests, auditoría de dependencias, frontend, y la compuerta de release). Queda el merge y, después, backup, migraciones en staging, login del dueño y verificación post-deploy. No hay destino de producción canónico verificado para FindemproAI. |
 | OPEN | RELEASE_GATE | Cobertura frontend de componentes | Existe smoke de contratos de rutas/UI; no se afirma cobertura de componentes ni E2E hasta disponer del runner aprobado. |
+| CLOSED | RELEASE_GATE | Soporte de dependencias y CVEs | Django **4.2.30 → 5.2.17 LTS** y 20 paquetes más. `pip-audit`: **63 vulnerabilidades en 17 paquetes → 0**, en `production.txt`, en `development.txt` y sobre el entorno instalado completo, sin ningún `--ignore-vuln`. Verificado también en el CI. Sin deriva de esquema. |
 | OPEN | PRODUCT_DEBT | Auditoría legacy estadística/financiera completa | Cerrados en esta ola: fallbacks aleatorios de charts; mutación de proyecciones en charts; reconstrucción PDF de muestras/VaR/CVaR; riesgo sin muestras ahora N/A; onboarding no persiste fixtures como verdad; forecast React usa la serie enviada. Sigue pendiente normalizar `simulation_financial_utils`, exports/API legacy y dashboards que aún convierten campos monetarios ausentes a cero. |
 
 ## P2 — no bloqueante para el slice actual, planificado
