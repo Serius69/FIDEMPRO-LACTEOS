@@ -16,8 +16,19 @@ class HubAuthMiddleware:
 
     def __call__(self, request):
         hub_token = request.GET.get("hub_token")
-        if hub_token:
-            return self._manejar_sso_redirect(request, hub_token)
+        # El canje ocurre UNICAMENTE en `/hub/callback/`, donde se compara el state
+        # y se redime el jti. Un `?hub_token=` en cualquier otra ruta ya no crea
+        # sesion: era exactamente la forma del ataque (mandarle a alguien
+        # `https://app…/?hub_token=<mio>` y dejarlo con mi sesion).
+        #
+        # No se ignora en silencio: se descarta ese token y se arranca un login
+        # propio, asi un enlace viejo del Hub sigue funcionando — pero termina con
+        # la sesion de QUIEN navega, no la de quien armo el enlace.
+        if hub_token and not request.path.startswith("/hub/"):
+            from urllib.parse import urlencode
+
+            destino = request.path if request.path.startswith("/") else "/"
+            return HttpResponseRedirect(f'/hub/login/?{urlencode({"next": destino})}')
 
         cookie = request.COOKIES.get("hub_access_token")
         if cookie:

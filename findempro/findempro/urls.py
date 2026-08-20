@@ -11,6 +11,7 @@ from django.conf.urls.static import static
 from django.conf import settings
 from django.shortcuts import render
 from .health import health_check, health_ready, health_live
+from hub_auth import views as hub_auth_views
 
 
 def hub_logout(request):
@@ -42,6 +43,10 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    # SSO del Hub ligado a state: el satelite inicia en hub/login/ y el Hub vuelve
+    # a hub/callback/ (el unico sitio donde se canjea un project_token).
+    path('hub/login/', hub_auth_views.hub_login, name='hub-login'),
+    path('hub/callback/', hub_auth_views.hub_callback, name='hub-callback'),
     path('hub/logout/', hub_logout, name='hub-logout'),
     # ── Health checks (sin autenticación) ───────────────────────────────────
     path('health/', health_check, name='health_check'),

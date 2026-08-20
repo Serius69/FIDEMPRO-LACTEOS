@@ -8,6 +8,9 @@ Cubre el módulo que antes NO tenía tests pese a ser crítico de seguridad:
 """
 import time
 import jwt
+import uuid
+from urllib.parse import quote
+
 import pytest
 from django.test import RequestFactory
 
@@ -94,16 +97,45 @@ class TestValidarToken:
 # ─────────────────────────────────────────────
 # Middleware — open redirect en `next`
 # ─────────────────────────────────────────────
+class _FakeRedisSSO:
+    """Lo justo de Redis para `SET NX EX`, que es toda la semantica que usamos."""
+
+    def __init__(self):
+        self.datos = {}
+
+    def set(self, clave, valor, nx=False, ex=None):
+        if nx and clave in self.datos:
+            return None
+        self.datos[clave] = valor
+        return True
+
+
+@pytest.mark.django_db
 class TestMiddlewareOpenRedirect:
-    def _dispatch(self, next_url):
-        rf = RequestFactory()
+    """Migrado al flujo ligado a state (2026-08-20).
+
+    El canje ya no ocurre en una ruta arbitraria sino en `/hub/callback/`, asi que la
+    MISMA matriz hostil se ejercita ahora por el camino nuevo. La proteccion contra
+    open redirect no se retira: cambia de puerta de entrada.
+    """
+
+    def _dispatch(self, next_url, monkeypatch=None):
+        from django.test import Client
+
+        from hub_auth import views
+
+        fake = _FakeRedisSSO()
+        views._redis_sso = lambda: fake          # noqa: SLF001 — sustitucion local del store
+        c = Client()
+        url = "/hub/login/" + (f"?next={quote(next_url, safe='')}" if next_url else "")
+        state = c.get(url)["Location"].split("state=")[1].split("&")[0]
+        # `jti` es obligatorio: la redencion de un solo uso falla CERRADA sin el.
+        # Los project_token reales del Hub siempre lo traen (uuid4).
         token = _make_token(
-            tipo="project_token", proyecto=PROYECTO_SLUG,
+            tipo="project_token", proyecto=PROYECTO_SLUG, jti=str(uuid.uuid4()),
             email="a@b.co", nombre="A", rol="viewer", proyectos=[PROYECTO_SLUG],
         )
-        request = rf.get("/", {"hub_token": token, "next": next_url})
-        mw = HubAuthMiddleware(lambda r: r)
-        return mw(request)
+        return c.get(f"/hub/callback/?hub_token={token}&state={state}")
 
     def test_next_externo_es_neutralizado(self, hub_settings):
         """Una URL externa en `next` NO debe usarse como destino del redirect."""
@@ -120,10 +152,16 @@ class TestMiddlewareOpenRedirect:
         assert response["Location"] == "/dashboard/"
 
     def test_project_token_de_otro_proyecto_rechazado(self, hub_settings):
-        rf = RequestFactory()
-        token = _make_token(tipo="project_token", proyecto="otro-proyecto")
-        request = rf.get("/", {"hub_token": token})
-        mw = HubAuthMiddleware(lambda r: r)
-        response = mw(request)
-        assert response.status_code == 302
-        assert "proyecto_incorrecto" in response["Location"]
+        """El HUB_JWT_SECRET es del ecosistema entero: la firma sola no alcanza."""
+        from django.test import Client
+
+        from hub_auth import views
+
+        fake = _FakeRedisSSO()
+        views._redis_sso = lambda: fake          # noqa: SLF001
+        c = Client()
+        state = c.get("/hub/login/")["Location"].split("state=")[1].split("&")[0]
+        token = _make_token(tipo="project_token", proyecto="otro-proyecto", jti=str(uuid.uuid4()))
+        response = c.get(f"/hub/callback/?hub_token={token}&state={state}")
+        assert response.status_code == 403
+        assert "hub_access_token" not in response.cookies
