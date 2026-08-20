@@ -165,6 +165,35 @@ def test_state_es_de_un_solo_uso(client, redis):
     assert not _emite_sesion(client.get(f"/hub/callback/?hub_token={_token()}&state={state}"))
 
 
+@pytest.mark.parametrize(
+    "token_malo",
+    [
+        pytest.param("esto.no.es-un-jwt", id="jwt-malformado"),
+        pytest.param(_token(proyecto="xgol"), id="otro-proyecto"),
+        pytest.param(_token(tipo="access_token"), id="tipo-equivocado"),
+    ],
+)
+def test_token_rechazado_no_quema_el_state_del_mismo_navegador(client, redis, token_malo):
+    """Un token que no sirve NO puede dejar al navegador sin poder reintentar.
+
+    El project_token vive 5 minutos: llegar al callback con uno vencido, de otro
+    proyecto o directamente malformado es rutina, no un ataque. Si el state se
+    consumiera antes de mirar el token, ese fallo corriente lo quemaría y el
+    SIGUIENTE intento del MISMO navegador (mismo state en la cookie) se leería como
+    replay: el login queda trabado hasta que expire la cookie. El state es el
+    candado que liga el canje a ESTE navegador; solo se gasta cuando de verdad se
+    cambia por una sesión.
+    """
+    state = _iniciar(client)
+
+    r_malo = client.get(f"/hub/callback/?hub_token={token_malo}&state={state}")
+    assert not _emite_sesion(r_malo)
+
+    # Mismo navegador, mismo state, ahora con un token bueno.
+    r_bueno = client.get(f"/hub/callback/?hub_token={_token()}&state={state}")
+    assert _emite_sesion(r_bueno)
+
+
 # --- audiencia y replay ---------------------------------------------------------
 
 

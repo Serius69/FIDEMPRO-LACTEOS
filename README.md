@@ -319,11 +319,30 @@ de UI que nunca se creó, y la generación de PDF migró a tarea async de Celery
 
 Integrado con [Kapitalya Hub](https://kapitalya.com.bo) — un solo login para todo el ecosistema.
 
-**Flujo:** Hub emite `project_token` (5 min) → redirect `?hub_token=XXX` → `HubAuthMiddleware` valida y crea sesión local sin segundo login.
+**Flujo vigente — lo inicia el satélite y va ligado a ESTE navegador:**
+
+1. `GET /hub/login/` (opcionalmente `?next=/ruta/interna/`) — FindemproAI genera un `state`
+   aleatorio, lo guarda en una cookie firmada (`findempro_sso_state`, `HttpOnly`) y redirige
+   al Hub.
+2. El Hub autentica y vuelve **solo** a `GET /hub/callback/?hub_token=<project_token>&state=<state>`.
+3. El callback exige, en este orden: que el `state` de la URL coincida **por valor** con el de
+   la cookie → que el `project_token` (5 min) sea válido y sea de `findemproai` → recién ahí
+   consume el `state` y el `jti`, cada uno una sola vez en Redis. Si algo falla, no hay sesión.
+
+> **Retirado:** el lanzamiento directo `?hub_token=…` en una ruta cualquiera **ya no crea
+> sesión**. No ligaba el canje al navegador que inició el login, así que un token propio
+> enviado a otra persona la dejaba operando dentro de la sesión del atacante (login CSRF /
+> fijación de sesión); `SameSite=Lax` no lo impide. Un `?hub_token=` suelto hoy solo redirige
+> a `/hub/login/`. Quien enlace a FindemproAI desde el Hub debe apuntar a `/hub/login/`.
 
 | Variable | Descripción |
 |----------|-------------|
-| `HUB_JWT_SECRET` | Secret compartido — debe ser IDÉNTICO en todos los proyectos |
+| `HUB_JWT_SECRET` | Secret compartido — debe ser IDÉNTICO en todos los proyectos. Sin él, `/hub/login/` y `/hub/callback/` responden 503 |
+| `HUB_URL` | Base del Hub (por defecto `https://kapitalya.com.bo`) |
+| `REDIS_URL` | El SSO usa la **DB 2** de este Redis para la redención de un solo uso de `state`/`jti`. Sin Redis alcanzable **no se emite sesión** (falla cerrado) |
 | `PROYECTO_SLUG` | `findemproai` — identificador del proyecto en el Hub |
 
-**Archivos:** `findempro/hub_auth/tokens.py` · `findempro/hub_auth/middleware.py`
+**Archivos:** `findempro/hub_auth/views.py` (login + callback) · `findempro/hub_auth/sso_state.py`
+(state y redención) · `findempro/hub_auth/tokens.py` · `findempro/hub_auth/middleware.py`
+
+**Tests:** `findempro/hub_auth/test_sso_state.py` — `pytest hub_auth/` desde `findempro/`.

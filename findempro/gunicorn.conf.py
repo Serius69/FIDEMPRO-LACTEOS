@@ -4,6 +4,9 @@ Uso: gunicorn -c gunicorn.conf.py findempro.wsgi:application
 """
 import multiprocessing
 import os
+import re
+
+from gunicorn import glogging
 
 # ─────────────────────────────────────────────
 # Binding
@@ -44,6 +47,44 @@ accesslog = os.getenv('GUNICORN_ACCESS_LOG', '-')   # stdout
 errorlog = os.getenv('GUNICORN_ERROR_LOG', '-')     # stderr
 loglevel = os.getenv('GUNICORN_LOG_LEVEL', 'info')
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)sμs'
+
+# ─────────────────────────────────────────────
+# Redacción de secretos del SSO en el access log
+#
+# El callback del Hub viaja como GET: `/hub/callback/?hub_token=<JWT>&state=<…>`.
+# `%(r)s` es la línea de petición COMPLETA y `%(f)s` el Referer, así que sin esto
+# el project_token se escribe en claro en stdout → `docker logs`, el driver de
+# logging del contenedor y cualquier agregador. Ese JWT sigue siendo canjeable
+# hasta que expire, y el `state` es lo que liga el canje a un navegador.
+#
+# Se redacta el VALOR y se deja el nombre del parámetro: la línea sigue diciendo
+# qué ruta se pidió y con qué parámetros, que es para lo que se lee un access log.
+# ─────────────────────────────────────────────
+_PARAMS_SECRETOS = re.compile(r'(?i)\b(hub_token|state)=[^&\s"]*')
+
+
+def _redactar(valor):
+    if isinstance(valor, str) and ('hub_token' in valor or 'state=' in valor):
+        return _PARAMS_SECRETOS.sub(r'\1=[redactado]', valor)
+    return valor
+
+
+class RedactingLogger(glogging.Logger):
+    """Access logger que tacha `hub_token`/`state` en todos los átomos.
+
+    Se sanean los átomos ya construidos, no solo `%(r)s`: `%(q)s` (query),
+    `%(f)s` (Referer) y los `%({header}i)s` transportan el mismo secreto, y el
+    formato del log es configurable por entorno.
+    """
+
+    def atoms(self, resp, req, environ, request_time):
+        return {
+            clave: _redactar(valor)
+            for clave, valor in super().atoms(resp, req, environ, request_time).items()
+        }
+
+
+logger_class = RedactingLogger
 
 # ─────────────────────────────────────────────
 # Process naming

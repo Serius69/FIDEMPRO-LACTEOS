@@ -114,13 +114,11 @@ def hub_callback(request):
     if not sso_state.coincide(state, esperado):
         return _reiniciar()
 
-    # 2. De un solo uso, atómico y compartido entre workers.
-    try:
-        if not sso_state.consumir_state(_redis_sso(), esperado):
-            return _reiniciar()                       # replay
-    except sso_state.RedencionNoVerificable:
-        return JsonResponse({"detail": "No se pudo verificar el inicio de sesion."}, status=503)
-
+    # 2. El token, ANTES de gastar el state. El project_token dura 5 min, así que
+    #    llegar acá con uno vencido es corriente; si el state se consumiera primero,
+    #    ese fallo normal dejaría al MISMO navegador sin poder reintentar (su
+    #    siguiente intento se vería como replay). El state se gasta solo cuando de
+    #    verdad se cambia por una sesión.
     try:
         payload = validar_token(hub_token, tipo_esperado="project_token")
     except AuthError as e:
@@ -131,7 +129,15 @@ def hub_callback(request):
     if payload.get("proyecto") != PROYECTO_SLUG:
         return JsonResponse({"detail": "Token de otro proyecto."}, status=403)
 
-    # 4. El mismo token no se canjea dos veces en FindemproAI.
+    # 4. De un solo uso, atómico y compartido entre workers. Va antes del jti para
+    #    que el state siga siendo el candado que liga el canje a ESTE navegador.
+    try:
+        if not sso_state.consumir_state(_redis_sso(), esperado):
+            return _reiniciar()                       # replay
+    except sso_state.RedencionNoVerificable:
+        return JsonResponse({"detail": "No se pudo verificar el inicio de sesion."}, status=503)
+
+    # 5. El mismo token no se canjea dos veces en FindemproAI.
     try:
         if not sso_state.redimir_jti(
             _redis_sso(), PROYECTO_SLUG, str(payload.get("jti") or ""), int(payload["exp"])

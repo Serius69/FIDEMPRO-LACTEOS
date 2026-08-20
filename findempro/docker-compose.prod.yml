@@ -35,7 +35,19 @@ services:
     image: redis:7.2-alpine
     container_name: findempro_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD}
+    # `noeviction` (antes `allkeys-lru`) por dos motivos, ambos de corrección:
+    #
+    # 1. SSO: las claves `sso:state:*` y `sso:jti:*` son candados de UN SOLO USO
+    #    (SET NX). Con allkeys-lru, Redis puede desalojar una de esas claves ANTES
+    #    de que venza su TTL para hacer sitio; el siguiente SET NX vuelve a tener
+    #    éxito y el state/token queda replayable. El candado se abre solo.
+    # 2. Celery: esta misma instancia es el broker (DB 0). allkeys-lru desaloja
+    #    también las listas de tareas encoladas — trabajo que se pierde en
+    #    silencio, sin error. `noeviction` es la política documentada para brokers.
+    #
+    # Con noeviction, llenar los 256mb hace que las escrituras fallen con error
+    # (visible y alertable) en vez de tirar datos a la basura sin avisar.
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy noeviction --requirepass ${REDIS_PASSWORD}
     environment:
       # Necesario para que el healthcheck autenticado (redis-cli -a) resuelva la
       # password DENTRO del contenedor (el command la toma por substitución de compose).
