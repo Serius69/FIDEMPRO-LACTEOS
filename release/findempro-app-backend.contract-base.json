@@ -1,0 +1,80 @@
+{
+  "product": "findempro",
+  "migrations": {
+    "status": "not_run",
+    "pending": [],
+    "zero_downtime_verified": null
+  },
+  "database_compatibility": {
+    "status": "not_run",
+    "rollback_safe": true,
+    "min_compatible_app_version": null,
+    "engine": "postgresql-16"
+  },
+  "config_schema": {
+    "version": "1",
+    "required_env": [
+      "DJANGO_ENV",
+      "DJANGO_SETTINGS_MODULE",
+      "SECRET_KEY",
+      "DB_ENGINE",
+      "DB_NAME",
+      "DB_USER",
+      "DB_PASSWORD",
+      "DB_HOST",
+      "DB_PORT",
+      "REDIS_URL",
+      "CELERY_BROKER_URL",
+      "CELERY_RESULT_BACKEND"
+    ],
+    "breaking_changes_since": []
+  },
+  "healthchecks": [
+    {
+      "name": "live",
+      "kind": "http",
+      "target": "/health/live/",
+      "expect": "200",
+      "timeout_seconds": 10
+    },
+    {
+      "name": "ready",
+      "kind": "http",
+      "target": "/health/ready/",
+      "expect": "200",
+      "timeout_seconds": 10
+    }
+  ],
+  "rollback": {
+    "target_digest": null,
+    "target_manifest": null,
+    "method": "none_first_release",
+    "verified": false
+  },
+  "delivery": {
+    "product_has_multiple_components": true,
+    "public_url": "https://app.kapitalya.com.bo",
+    "source_lineage": "DEPLOYED_LINEAGE",
+    "base_prod_sha": "5ab767ee4a2e2020c6de5efd03e4b788d3764d96",
+    "db_changed": false,
+    "stateful": true,
+    "schema_change_class": "NONE",
+    "target_runtime": "docker-compose",
+    "rollback_requirements": "Swap the image digest. No migration is required, so the previous image reads the same schema. Throttle scopes are declared per environment, so a rollback must not be paired with a partial settings revert.",
+    "primary_workflows": [
+      "sign in and reach the authenticated dashboard",
+      "create and run a simulation",
+      "read cash-flow and supply-chain results",
+      "export or download a result"
+    ],
+    "no_new_visible_delta": false,
+    "prod_ready": false,
+    "component": "findempro-app-backend",
+    "frontend_changed": false,
+    "backend_changed": true,
+    "expected_visible_changes": [
+      "rate limiting applies consistently across all four environments",
+      "the new public endpoint responds without authentication"
+    ]
+  }
+}
