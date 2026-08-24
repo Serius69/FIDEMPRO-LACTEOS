@@ -13,7 +13,13 @@ from .base import *
 
 DEBUG = True
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-testing-key-not-for-production')
-ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', 'testserver']
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv(
+        'DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver'
+    ).split(',')
+    if host.strip()
+]
 
 # ─────────────────────────────────────────────
 # Base de datos — SQLite aislada en memoria localmente, PostgreSQL opt-in en CI.
