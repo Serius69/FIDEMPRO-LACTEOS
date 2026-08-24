@@ -77,6 +77,7 @@ jobs:
       DJANGO_ENV: test
       DJANGO_SETTINGS_MODULE: findempro.settings.testing
       SECRET_KEY: ci-insecure-key-1234567890-only-for-tests
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
       USE_POSTGRES_TESTS: "1"
       DB_ENGINE: django.db.backends.postgresql
       DB_NAME: findempro_test
@@ -145,6 +146,7 @@ jobs:
       DJANGO_ENV: test
       DJANGO_SETTINGS_MODULE: findempro.settings.testing
       SECRET_KEY: ci-insecure-key-1234567890-only-for-tests
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
       USE_POSTGRES_TESTS: "1"
       DB_ENGINE: django.db.backends.postgresql
       DB_NAME: findempro_test
@@ -168,13 +170,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements/production.txt -r requirements/development.txt
       - name: Suite completa
-        run: pytest -p no:warnings --tb=short
+        run: pytest -p no:warnings --tb=short --junitxml=../backend-junit.xml
       - name: Upload coverage
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: findempro/.pytest_cache/
+          path: backend-junit.xml
           retention-days: 7
 
   # ───────────────────────────────────────────────────────────
