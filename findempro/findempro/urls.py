@@ -12,6 +12,7 @@ from django.conf import settings
 from django.shortcuts import render
 from .health import health_check, health_ready, health_live
 from hub_auth import views as hub_auth_views
+from simulate.views.public_views import PublicMonteCarloAPIView
 
 
 def hub_logout(request):
@@ -67,6 +68,10 @@ urlpatterns = [
     path('product/', include('product.urls')),
     path('variable/', include('variable.urls')),
     path('questionary/', include('questionary.urls')),
+    # Simulador público sin estado: la ruta que el onboarding anónimo ya
+    # llamaba y que no existía. Fuera de `simulate.urls` a propósito, para que
+    # la única superficie anónima quede a la vista y no se mezcle con el resto.
+    path('api/simulate/montecarlo/', PublicMonteCarloAPIView.as_view(), name='api.public.montecarlo'),
     path('simulate/', include('simulate.urls')),
     path('api/v2/', include('simulate.urls_canvas')),
     path('report/', include('report.urls')),

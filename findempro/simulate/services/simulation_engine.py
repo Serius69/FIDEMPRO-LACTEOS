@@ -115,6 +115,11 @@ class SimulationResult:
     profit_std: float
     profit_p5: float
     profit_p95: float
+    # La mediana faltaba: en una distribución de utilidad asimétrica la media no
+    # es el "escenario típico", y es la mediana la que responde a "¿cómo me suele
+    # ir?". Sin ella, quien consume el resultado acaba usando la media como si lo
+    # fuera.
+    profit_median: float
 
     # Métricas de riesgo
     probability_of_loss: float       # P(profit < 0)
@@ -420,6 +425,7 @@ class MonteCarloEngine:
             profit_std=float(np.std(fin['gross_profit'])),
             profit_p5=float(np.percentile(fin['gross_profit'], 5)),
             profit_p95=float(np.percentile(fin['gross_profit'], 95)),
+            profit_median=float(np.median(fin['gross_profit'])),
             # Riesgo
             probability_of_loss=risk['probability_of_loss'],
             probability_breakeven=risk['probability_breakeven'],

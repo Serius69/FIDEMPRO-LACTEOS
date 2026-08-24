@@ -321,6 +321,7 @@ REST_FRAMEWORK = {
         'anon': '100/hour',
         'user': '1000/hour',
         'simulate': '20/hour',    # simulación Monte Carlo — costosa (numpy/CuPy)
+        'public_simulate': '30/hour',  # simulador público anónimo, por IP
         'report_pdf': '10/hour',  # generación PDF async — costosa
         'export': '30/hour',      # exportación CSV/Excel
     },

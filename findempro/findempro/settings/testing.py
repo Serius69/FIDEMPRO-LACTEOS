@@ -116,6 +116,7 @@ REST_FRAMEWORK = {
         'simulate': '1000/hour',
         'report_pdf': '1000/hour',
         'export': '1000/hour',
+        'public_simulate': '1000/hour',
     },
 }
 

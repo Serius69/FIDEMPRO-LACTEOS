@@ -90,6 +90,18 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    # Los scopes propios se declaran también aquí (este diccionario reemplaza al
+    # de base.py): si faltan, la vista revienta con ImproperlyConfigured en vez
+    # de limitar. Holgados en local, pero presentes, para que desarrollo no
+    # esconda un fallo que producción sí tendría.
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '1000/hour',
+        'user': '10000/hour',
+        'simulate': '1000/hour',
+        'report_pdf': '1000/hour',
+        'export': '1000/hour',
+        'public_simulate': '1000/hour',
+    },
 }
 
 # ─────────────────────────────────────────────

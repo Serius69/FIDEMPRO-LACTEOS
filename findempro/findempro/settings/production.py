@@ -165,9 +165,18 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
     ],
+    # Cada entorno REEMPLAZA `REST_FRAMEWORK` entero, así que los scopes propios
+    # hay que repetirlos aquí: sin ellos DRF levanta ImproperlyConfigured al
+    # instanciar el throttle y la vista responde 500. Faltaban, y con ellos
+    # faltaban en producción /api/v1/simulate/, /simulate/async/, /forecast/ y
+    # /full-pipeline/ — es decir, el motor de simulación entero.
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
         'user': '1000/hour',
+        'simulate': '20/hour',
+        'report_pdf': '10/hour',
+        'export': '30/hour',
+        'public_simulate': '30/hour',
     },
 }
 
