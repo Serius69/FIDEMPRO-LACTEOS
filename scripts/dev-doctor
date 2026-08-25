@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+# scripts/dev-doctor — environment/readiness checks for FindemproAI local dev.
+#
+# Prints one KEY=VALUE line per check (concrete values, never a bare "yes").
+# Exits non-zero if any REQUIRED check fails. Safe to run before `dev-up`
+# (stack-dependent checks report "skip" rather than failing when the stack
+# is simply not up yet) and after it (then they report real container state).
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+# shellcheck source=./_common.sh
+source "${SCRIPT_DIR}/_common.sh"
+
+overall_rc=0
+fail() { overall_rc=1; }
+
+# ── HOST_DOCKER ──────────────────────────────────────────────
+if ! command -v docker >/dev/null 2>&1; then
+    echo "HOST_DOCKER=fail docker binary not found on PATH"
+    fail
+elif ! docker info >/dev/null 2>&1; then
+    echo "HOST_DOCKER=fail docker daemon unreachable (is it running? do you need to be in the docker group?)"
+    fail
+else
+    ver="$(docker version --format '{{.Server.Version}}' 2>/dev/null || echo unknown)"
+    rootless="no"
+    docker info --format '{{.SecurityOptions}}' 2>/dev/null | grep -q rootless && rootless="yes"
+    echo "HOST_DOCKER=ok docker=${ver} rootless=${rootless} no-sudo-required"
+fi
+
+# ── COMPOSE ──────────────────────────────────────────────────
+if ! docker compose version >/dev/null 2>&1; then
+    echo "COMPOSE=fail docker compose v2 plugin not available"
+    fail
+else
+    cver="$(docker compose version --short 2>/dev/null || echo unknown)"
+    echo "COMPOSE=ok docker-compose-v2=${cver}"
+fi
+
+# ── DISK ─────────────────────────────────────────────────────
+disk_avail_kb="$(df -Pk "${REPO_ROOT}" | awk 'NR==2 {print $4}')"
+disk_avail_gb=$(( disk_avail_kb / 1024 / 1024 ))
+if [ "${disk_avail_gb}" -lt 2 ]; then
+    echo "DISK=fail free=${disk_avail_gb}G at=${REPO_ROOT} (need >= 2G)"
+    fail
+elif [ "${disk_avail_gb}" -lt 5 ]; then
+    echo "DISK=warn free=${disk_avail_gb}G at=${REPO_ROOT} (recommend >= 5G for images+volumes)"
+else
+    echo "DISK=ok free=${disk_avail_gb}G at=${REPO_ROOT}"
+fi
+
+# ── MEMORY ───────────────────────────────────────────────────
+if command -v free >/dev/null 2>&1; then
+    mem_avail_mb="$(free -m | awk '/^Mem:/ {print $7}')"
+    mem_total_mb="$(free -m | awk '/^Mem:/ {print $2}')"
+    if [ "${mem_avail_mb}" -lt 512 ]; then
+        echo "MEMORY=fail available=${mem_avail_mb}Mi total=${mem_total_mb}Mi (need >= 512Mi)"
+        fail
+    elif [ "${mem_avail_mb}" -lt 1536 ]; then
+        echo "MEMORY=warn available=${mem_avail_mb}Mi total=${mem_total_mb}Mi (recommend >= 1536Mi for db+redis+backend+celery)"
+    else
+        echo "MEMORY=ok available=${mem_avail_mb}Mi total=${mem_total_mb}Mi"
+    fi
+else
+    echo "MEMORY=warn cannot-determine free(1)-not-found"
+fi
+
+# ── REQUIRED_TOOLS ───────────────────────────────────────────
+missing=()
+for t in docker make curl openssl; do
+    command -v "$t" >/dev/null 2>&1 || missing+=("$t")
+done
+docker compose version >/dev/null 2>&1 || missing+=("docker-compose-plugin")
+if [ "${#missing[@]}" -eq 0 ]; then
+    echo "REQUIRED_TOOLS=ok docker,docker-compose,make,curl,openssl present"
+else
+    echo "REQUIRED_TOOLS=fail missing=$(IFS=,; echo "${missing[*]}")"
+    fail
+fi
+
+# ── PROJECT_ENV ──────────────────────────────────────────────
+if [ -f "${ENV_FILE}" ]; then
+    if grep -q '^SECRET_KEY=..' "${ENV_FILE}" 2>/dev/null; then
+        echo "PROJECT_ENV=ok $(basename "${ENV_FILE}") present secret_key=set"
+    else
+        echo "PROJECT_ENV=warn $(basename "${ENV_FILE}") present but SECRET_KEY looks empty"
+    fi
+elif [ -f "${ENV_EXAMPLE}" ]; then
+    echo "PROJECT_ENV=warn $(basename "${ENV_FILE}") missing, will be generated from .env.example by dev-up"
+else
+    echo "PROJECT_ENV=fail $(basename "${ENV_FILE}") missing and no .env.example template found"
+    fail
+fi
+
+# ── PROJECT_RUNTIME ──────────────────────────────────────────
+runtime_missing=()
+[ -f "${COMPOSE_FILE}" ] || runtime_missing+=("docker-compose.dev.yml")
+[ -f "${FINDEMPRO_DIR}/Dockerfile" ] || runtime_missing+=("Dockerfile")
+[ -f "${FINDEMPRO_DIR}/Makefile" ] || runtime_missing+=("Makefile")
+if [ "${#runtime_missing[@]}" -gt 0 ]; then
+    echo "PROJECT_RUNTIME=fail missing=$(IFS=,; echo "${runtime_missing[*]}")"
+    fail
+elif ! "${DEV_COMPOSE[@]}" config -q 2>/tmp/dev-doctor-compose-err; then
+    echo "PROJECT_RUNTIME=fail docker-compose.dev.yml failed to parse: $(tr '\n' ' ' </tmp/dev-doctor-compose-err)"
+    fail
+else
+    echo "PROJECT_RUNTIME=ok docker-compose.dev.yml valid Dockerfile=present Makefile=present"
+fi
+rm -f /tmp/dev-doctor-compose-err 2>/dev/null || true
+
+# ── DB ───────────────────────────────────────────────────────
+db_state="$(container_state findempro_db_dev)"
+if [ "${db_state}" = "missing" ]; then
+    echo "DB=skip container findempro_db_dev not created yet (run ./scripts/dev-up)"
+elif [ "${db_state}" = "stopped" ]; then
+    echo "DB=fail container findempro_db_dev exists but is stopped"
+    fail
+else
+    db_health="$(container_health findempro_db_dev)"
+    if [ "${db_health}" = "healthy" ]; then
+        echo "DB=ok postgres:16-alpine port=127.0.0.1:${DEV_PORT_DB} healthy"
+    else
+        echo "DB=fail postgres:16-alpine port=127.0.0.1:${DEV_PORT_DB} health=${db_health}"
+        fail
+    fi
+fi
+
+# ── REDIS ────────────────────────────────────────────────────
+redis_state="$(container_state findempro_redis_dev)"
+if [ "${redis_state}" = "missing" ]; then
+    echo "REDIS=skip container findempro_redis_dev not created yet (run ./scripts/dev-up)"
+elif [ "${redis_state}" = "stopped" ]; then
+    echo "REDIS=fail container findempro_redis_dev exists but is stopped"
+    fail
+else
+    redis_health="$(container_health findempro_redis_dev)"
+    if [ "${redis_health}" = "healthy" ]; then
+        echo "REDIS=ok redis:7-alpine port=127.0.0.1:${DEV_PORT_REDIS} healthy"
+    else
+        echo "REDIS=fail redis:7-alpine port=127.0.0.1:${DEV_PORT_REDIS} health=${redis_health}"
+        fail
+    fi
+fi
+
+# ── TEST_READINESS ───────────────────────────────────────────
+# pytest.ini forces DJANGO_SETTINGS_MODULE=findempro.settings.testing, which
+# uses in-memory SQLite and LocMemCache — DB/Redis containers are NOT required
+# to run the suite, only a running findempro_backend_dev container (that is
+# where `make test` execs into).
+backend_state="$(container_state findempro_backend_dev)"
+if [ "${backend_state}" = "running" ]; then
+    echo "TEST_READINESS=ok findempro_backend_dev running, settings=findempro.settings.testing (sqlite in-memory, no DB/Redis needed)"
+else
+    echo "TEST_READINESS=skip findempro_backend_dev not running (run ./scripts/dev-up then ./scripts/dev-test)"
+fi
+
+exit "${overall_rc}"

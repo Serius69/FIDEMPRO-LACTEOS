@@ -82,3 +82,23 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["gunicorn", "-c", "gunicorn.conf.py", "findempro.wsgi:application"]
+
+# ─────────────────────────────────────────────
+# STAGE 3: builder-dev — deps de producción + development.txt (pytest, etc.)
+# Solo se construye si algo pide el target `runtime-dev` de abajo — no afecta
+# `docker build` sin --target ni docker-compose.prod.yml (target: runtime).
+# ─────────────────────────────────────────────
+FROM builder AS builder-dev
+
+COPY requirements/development.txt requirements/development.txt
+RUN pip install --user --no-cache-dir -r requirements/development.txt
+
+# ─────────────────────────────────────────────
+# STAGE 4: runtime-dev — imagen runtime + tooling de dev/test (pytest,
+# pytest-django, factory-boy, ...). Usada SOLO por docker-compose.dev.yml
+# (`make test` execa pytest dentro de este contenedor). La imagen de
+# producción (target: runtime, arriba) nunca incluye estas dependencias.
+# ─────────────────────────────────────────────
+FROM runtime AS runtime-dev
+
+COPY --from=builder-dev --chown=appuser:appuser /root/.local /home/appuser/.local

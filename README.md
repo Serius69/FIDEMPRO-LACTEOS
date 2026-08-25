@@ -234,11 +234,33 @@ docker save kapitalya/findemproai:v$(date +%Y%m%d) | docker exec -i <nodo-worker
 
 ## Desarrollo local
 
-```bash
-# Con Docker Compose
-make deploy    # build + up + migrate + collectstatic + health check
+**Camino recomendado — scripts de dev estandarizados (raíz del repo):**
 
-# Comandos operacionales
+```bash
+./scripts/dev-doctor   # chequea Docker, Compose, disco, memoria, herramientas y estado del stack
+./scripts/dev-up       # crea .env.development si falta (secretos DEV aleatorios) y levanta el stack
+./scripts/dev-test     # corre la suite de pytest dentro del contenedor backend
+./scripts/dev-down     # detiene SOLO el stack de findempro (docker-compose.dev.yml)
+```
+
+Estos scripts delegan en `findempro/Makefile` (no lo reemplazan), apuntándolo
+explícitamente a `docker-compose.dev.yml` en vez del `docker-compose.prod.yml`
+que el Makefile usa por defecto. Puertos de host del stack de dev — reasignados
+a loopback para no chocar con otros productos Kapitalya en el mismo host, ver
+`findempro/ENVIRONMENTS.md` para el detalle de qué `.env.*` es cuál:
+
+| Servicio | Puerto host (dev) |
+|---|---|
+| PostgreSQL | `127.0.0.1:55436` |
+| Redis | `127.0.0.1:56383` |
+| Backend Django | `127.0.0.1:58003` |
+
+**Makefile directo** (opera sobre `docker-compose.prod.yml` por defecto — usar
+`COMPOSE=` para apuntarlo a otro compose file, que es justo lo que hacen los
+scripts de arriba):
+
+```bash
+make deploy    # build + up + migrate + collectstatic + health check
 make up        # Levantar servicios
 make down      # Detener servicios
 make logs      # Logs en tiempo real

@@ -1,3 +1,8 @@
+# Nombre de proyecto explícito: aísla contenedores/red/volúmenes de otros
+# productos Kapitalya que corren en este mismo host compartido (ver
+# ENVIRONMENTS.md — puertos host reasignados al rango dedicado de findempro).
+name: findempro
+
 services:
 
   # ────────────────────────────────────────────
@@ -12,7 +17,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-devpassword}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - "127.0.0.1:55436:5432"
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
     healthcheck:
@@ -30,7 +35,7 @@ services:
     image: redis:7-alpine
     container_name: findempro_redis_dev
     ports:
-      - "6379:6379"
+      - "127.0.0.1:56383:6379"
     volumes:
       - redis_data_dev:/data
     healthcheck:
@@ -48,7 +53,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: runtime
+      target: runtime-dev
     container_name: findempro_backend_dev
     command: python manage.py runserver 0.0.0.0:8000
     environment:
@@ -65,7 +70,11 @@ services:
     volumes:
       - ./:/app
     ports:
-      - "8000:8000"
+      # NOTA: el rango asignado a findempro pedía 58002, pero ese puerto está
+      # tomado en este host por kapdev-hub-frontend (verificado con
+      # `ss -ltn` el 2026-08-25). Se usa 58003 (libre, fuera de los rangos
+      # reservados de otros productos) — ver ENVIRONMENTS.md.
+      - "127.0.0.1:58003:8000"
     depends_on:
       findempro_db:
         condition: service_healthy
@@ -81,7 +90,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: runtime
+      target: runtime-dev
     container_name: findempro_celery_dev
     command: celery -A findempro worker --loglevel=debug
     environment:
@@ -114,7 +123,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: runtime
+      target: runtime-dev
     container_name: findempro_celery_beat_dev
     command: celery -A findempro beat --loglevel=debug --scheduler django_celery_beat.schedulers:DatabaseScheduler
     environment:
@@ -149,8 +158,11 @@ volumes:
     driver: local
 
 # ────────────────────────────────────────────
-# Red interna
+# Red interna — nombre explícito y dedicado (no depende del prefijo de
+# proyecto) para no colisionar con la red homónima de docker-compose.prod.yml
+# si ambos compose se levantaran desde el mismo directorio.
 # ────────────────────────────────────────────
 networks:
   findempro_network:
+    name: findempro_dev_network
     driver: bridge

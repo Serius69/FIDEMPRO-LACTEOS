@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# scripts/dev-down — stop the FindemproAI dev stack ONLY (docker-compose.dev.yml,
+# compose project "findempro"). Never touches other Kapitalya products' containers,
+# volumes, networks or images sharing this host.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+# shellcheck source=./_common.sh
+source "${SCRIPT_DIR}/_common.sh"
+
+log "[dev-down] make down (COMPOSE=docker compose -f docker-compose.dev.yml --env-file .env.development)"
+make -C "${FINDEMPRO_DIR}" COMPOSE="docker compose -f docker-compose.dev.yml --env-file .env.development" down
+
+log "[dev-down] Stack stopped."

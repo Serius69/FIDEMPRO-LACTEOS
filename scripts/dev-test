@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# scripts/dev-test — run the Django test suite inside the running dev backend
+# container. Delegates to `make test` (findempro/Makefile), pointed at
+# docker-compose.dev.yml instead of the Makefile's default prod compose file.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+# shellcheck source=./_common.sh
+source "${SCRIPT_DIR}/_common.sh"
+
+state="$(container_state findempro_backend_dev)"
+if [ "${state}" != "running" ]; then
+    die "findempro_backend_dev is not running (state=${state}). Run ./scripts/dev-up first."
+fi
+
+# NOTE: this does NOT delegate to `make test` as-is. The Makefile's `test`
+# target is just `$(COMPOSE) exec findempro_backend python -m pytest simulate/tests/ -v`
+# with no way to inject an extra `-e` flag into the `exec` call through the
+# `COMPOSE=` override. That matters here because findempro_backend_dev's own
+# container environment has DJANGO_SETTINGS_MODULE=findempro.settings.development
+# baked in (docker-compose.dev.yml, so the live runserver uses dev settings —
+# correct for that). pytest-django resolves DJANGO_SETTINGS_MODULE with the
+# process environment taking priority over pytest.ini's `DJANGO_SETTINGS_MODULE
+# = findempro.settings.testing`, so a bare `docker compose exec ... pytest`
+# silently runs the suite against *development* settings (real-ish Postgres
+# config, AXES enabled, slow password hashers, strict permissions) instead of
+# the fast in-memory-sqlite `testing` settings the suite is written for —
+# verified empirically: it mass-fails under `development` and passes under
+# `testing`. Fix: override DJANGO_SETTINGS_MODULE for this one `exec` only, via
+# `-e`, without touching the container's baked-in env (the live dev server
+# keeps using `development` as intended).
+log "[dev-test] docker compose exec -e DJANGO_SETTINGS_MODULE=findempro.settings.testing findempro_backend python -m pytest simulate/tests/ -v"
+log "[dev-test]    (pytest.ini also asks for settings.testing, but the container's own env would otherwise win — see comment in this script)"
+
+"${DEV_COMPOSE[@]}" exec -e DJANGO_SETTINGS_MODULE=findempro.settings.testing findempro_backend python -m pytest simulate/tests/ -v

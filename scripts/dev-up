@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# scripts/dev-up — bring up the FindemproAI dev stack from a clean checkout,
+# no human input required. Delegates to findempro/Makefile (`make up`),
+# pointed at docker-compose.dev.yml, then waits for db/redis/backend health.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+# shellcheck source=./_common.sh
+source "${SCRIPT_DIR}/_common.sh"
+
+THIRD_PARTY_KEYS=(
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+    OPENAI_API_KEY
+    ANTHROPIC_API_KEY
+    SENTRY_DSN
+    HUB_JWT_SECRET
+    EMAIL_HOST_USER
+    EMAIL_HOST_PASSWORD
+)
+
+generate_env_file() {
+    log "[dev-up] ${ENV_FILE} not found — generating a DEV-only env file from $(basename "${ENV_EXAMPLE}")."
+    [ -f "${ENV_EXAMPLE}" ] || die "template ${ENV_EXAMPLE} is also missing — cannot bootstrap an env file."
+    command -v openssl >/dev/null 2>&1 || die "openssl is required to generate dev secrets."
+
+    local secret_key db_password
+    secret_key="$(openssl rand -base64 48 | tr -d '\n=+/' | cut -c1-64)"
+    db_password="$(openssl rand -hex 16)"
+
+    cat >"${ENV_FILE}" <<EOF
+# ══════════════════════════════════════════════════════════════
+# FINDEMPRO — Entorno DEVELOPMENT (auto-generado por scripts/dev-up)
+# Generado: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+# Secretos abajo son ALEATORIOS y SOLO para este checkout local — no compartir,
+# no reutilizar en staging/producción. Regenerar borrando este archivo y
+# volviendo a correr ./scripts/dev-up.
+# ══════════════════════════════════════════════════════════════
+
+DJANGO_ENV=development
+DEBUG=True
+SECRET_KEY=${secret_key}
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,.ngrok.io,.ngrok-free.app
+
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=findempro_dev
+DB_USER=findempro
+DB_PASSWORD=${db_password}
+DB_HOST=findempro_db
+DB_PORT=5432
+POSTGRES_DB=findempro_dev
+POSTGRES_USER=findempro
+POSTGRES_PASSWORD=${db_password}
+
+REDIS_URL=redis://findempro_redis:6379/1
+CELERY_BROKER_URL=redis://findempro_redis:6379/0
+CELERY_RESULT_BACKEND=redis://findempro_redis:6379/0
+CELERY_ALWAYS_EAGER=True
+
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=
+EMAIL_HOST_PASSWORD=
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=
+
+SITE_ID=1
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+SENTRY_DSN=
+HUB_JWT_SECRET=
+EOF
+
+    log "[dev-up] Generated ${ENV_FILE} with random DEV-only SECRET_KEY and DB_PASSWORD."
+    log "[dev-up] NOTICE: these third-party keys were intentionally left EMPTY (no value invented)."
+    log "[dev-up]         Fill them in manually if the feature that needs them is required:"
+    for k in "${THIRD_PARTY_KEYS[@]}"; do
+        log "[dev-up]           - ${k}"
+    done
+}
+
+check_ports_free() {
+    local busy=()
+    for p in "${DEV_PORT_DB}" "${DEV_PORT_REDIS}" "${DEV_PORT_BACKEND}"; do
+        if port_in_use "$p"; then
+            # It's fine if it's our own stack already up (idempotent re-run).
+            busy+=("$p")
+        fi
+    done
+    if [ "${#busy[@]}" -gt 0 ]; then
+        log "[dev-up] Note: port(s) $(IFS=,; echo "${busy[*]}") already have a listener on 127.0.0.1."
+        log "[dev-up]       If that's this stack from a previous run, this is fine (compose will reuse it)."
+        log "[dev-up]       If it's a DIFFERENT project, dev-up will fail below — stop that other service first."
+    fi
+}
+
+wait_for_container_health() {
+    local name="$1" timeout="$2" waited=0
+    while [ "${waited}" -lt "${timeout}" ]; do
+        local health
+        health="$(container_health "${name}")"
+        if [ "${health}" = "healthy" ]; then
+            log "[dev-up] ${name}: healthy"
+            return 0
+        fi
+        sleep 2
+        waited=$((waited + 2))
+    done
+    log "[dev-up] TIMEOUT waiting for ${name} to become healthy (last status: $(container_health "${name}"))"
+    return 1
+}
+
+wait_for_backend_http() {
+    local url="http://127.0.0.1:${DEV_PORT_BACKEND}/health/ready/"
+    local timeout="$1" waited=0
+    while [ "${waited}" -lt "${timeout}" ]; do
+        if curl -sf -o /dev/null "${url}"; then
+            log "[dev-up] backend: ${url} responding"
+            return 0
+        fi
+        sleep 2
+        waited=$((waited + 2))
+    done
+    log "[dev-up] TIMEOUT waiting for backend HTTP health at ${url}"
+    return 1
+}
+
+main() {
+    log "[dev-up] Repo root: ${REPO_ROOT}"
+    log "[dev-up] Compose file: ${COMPOSE_FILE}"
+
+    if [ ! -f "${ENV_FILE}" ]; then
+        generate_env_file
+    else
+        log "[dev-up] Using existing ${ENV_FILE} (not touched)."
+    fi
+
+    check_ports_free
+
+    log "[dev-up] make up (COMPOSE=docker compose -f docker-compose.dev.yml --env-file .env.development)"
+    make -C "${FINDEMPRO_DIR}" COMPOSE="docker compose -f docker-compose.dev.yml --env-file .env.development" up
+
+    log "[dev-up] Waiting for db/redis containers to report healthy..."
+    ok=0
+    wait_for_container_health findempro_db_dev 120 || ok=1
+    wait_for_container_health findempro_redis_dev 60 || ok=1
+
+    log "[dev-up] Waiting for backend HTTP health endpoint..."
+    wait_for_backend_http 120 || ok=1
+
+    if [ "${ok}" -ne 0 ]; then
+        log "[dev-up] Stack did not become fully healthy in time. Recent logs:"
+        "${DEV_COMPOSE[@]}" logs --tail=50 || true
+        exit 1
+    fi
+
+    log "[dev-up] Stack is up and healthy."
+    "${DEV_COMPOSE[@]}" ps
+}
+
+main "$@"
