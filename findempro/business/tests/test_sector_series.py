@@ -234,9 +234,37 @@ def test_regional_price_pressure_none_without_signal(tmp_path, monkeypatch):
 # ─────────────────────────────────────────────────────────────────────────────
 # scrape_bolivia_data — inflación interanual vía WP REST con fallback
 # ─────────────────────────────────────────────────────────────────────────────
+def _sin_kdp(monkeypatch):
+    """Neutraliza la capa KDP para poder ejercitar las de abajo.
+
+    Desde la integración, `_scrape_inflation` consulta KDP antes que INE. Estos
+    dos tests documentan el orden por DEBAJO de KDP, así que lo apagan a
+    propósito en vez de depender de que el servicio no esté corriendo.
+    """
+    from business import kdp_source
+
+    def caido():
+        raise kdp_source.KdpUnavailable("KDP apagado en el test")
+
+    monkeypatch.setattr(kdp_source, "fetch_inflacion_anual", caido)
+    monkeypatch.setattr(kdp_source, "fetch_fx_oficial", caido)
+
+
+def test_scrape_inflation_prefiere_kdp_cuando_esta(monkeypatch):
+    from business.management.commands.scrape_bolivia_data import Command
+    from business import kdp_source
+    monkeypatch.setattr(kdp_source, "fetch_inflacion_anual",
+                        lambda: (4.93, "kdp:bcb-semanal-bulk"))
+    val, src, detail = Command()._scrape_inflation(timeout=1)
+    assert val == 4.93
+    assert src == "kdp:bcb-semanal-bulk"
+    assert detail is None
+
+
 def test_scrape_inflation_prefers_wp_rest(monkeypatch):
     from business.management.commands.scrape_bolivia_data import Command
     from business.management.commands import ingest_ine_series
+    _sin_kdp(monkeypatch)
     ipc = {"period": "junio de 2026", "annual_pct": 9.23, "regional": {"Oruro": 3.86}}
     monkeypatch.setattr(ingest_ine_series.Command, "_fetch_ipc_wp",
                         lambda self, timeout: ipc)
@@ -253,6 +281,7 @@ def test_scrape_inflation_falls_back_to_curated(monkeypatch):
     def boom(self, timeout):
         raise RuntimeError("INE caído")
 
+    _sin_kdp(monkeypatch)
     monkeypatch.setattr(ingest_ine_series.Command, "_fetch_ipc_wp", boom)
     monkeypatch.setattr(Command, "_fetch", boom)
     val, src, detail = Command()._scrape_inflation(timeout=1)
