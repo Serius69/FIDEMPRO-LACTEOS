@@ -37,12 +37,13 @@ export default function ForecastPage() {
     finally { setLoading(false) }
   }
 
+  // `forecast` es un objeto con series paralelas, no un array de valores.
   const chartData = result ? [
     ...submittedHistory.map((v, i) => ({ label: `H${i + 1}`, historical: v, forecast: null, lower: null, upper: null })),
-    ...result.forecast.map((v, i) => ({
+    ...result.forecast.values.map((v, i) => ({
       label: `F${i + 1}`, historical: null, forecast: v,
-      lower: result.confidence_intervals.lower[i],
-      upper: result.confidence_intervals.upper[i],
+      lower: result.forecast.ci_lower[i],
+      upper: result.forecast.ci_upper[i],
     })),
   ] : []
 
@@ -121,10 +122,12 @@ export default function ForecastPage() {
             <>
               <div className="grid grid-cols-4 gap-4 animate-fade-in">
                 {[
-                  { label: 'Método usado', value: result.method_used },
-                  { label: 'MAE', value: fmtNum(result.metrics.mae) },
-                  { label: 'RMSE', value: fmtNum(result.metrics.rmse) },
-                  { label: 'MAPE', value: `${fmtNum(result.metrics.mape)}%` },
+                  { label: 'Método usado', value: result.forecast.method_used },
+                  { label: 'Confianza', value: `${(result.forecast.confidence_level * 100).toFixed(0)}%` },
+                  // MAPE llega `null` cuando el holdout tiene observaciones en
+                  // cero: `fmtNum` lo pinta como «—» en vez de fabricar un 0.
+                  { label: 'RMSE (unidades)', value: fmtNum(result.forecast.rmse) },
+                  { label: 'MAPE', value: result.forecast.mape == null ? '—' : `${fmtNum(result.forecast.mape)}%` },
                 ].map(({ label, value }) => (
                   <Card key={label}><CardContent className="p-4">
                     <p className="text-xs text-muted-foreground">{label}</p>
@@ -169,12 +172,12 @@ export default function ForecastPage() {
                       ))}
                     </tr></thead>
                     <tbody>
-                      {result.forecast.map((v, i) => (
+                      {result.forecast.values.map((v, i) => (
                         <tr key={i} className="border-b border-border/50 hover:bg-muted/20">
                           <td className="px-4 py-2 text-muted-foreground">+{i + 1}</td>
                           <td className="px-4 py-2 font-medium text-primary">{fmtNum(v, 0)}</td>
-                          <td className="px-4 py-2">{fmtNum(result.confidence_intervals.lower[i], 0)}</td>
-                          <td className="px-4 py-2">{fmtNum(result.confidence_intervals.upper[i], 0)}</td>
+                          <td className="px-4 py-2">{fmtNum(result.forecast.ci_lower[i], 0)}</td>
+                          <td className="px-4 py-2">{fmtNum(result.forecast.ci_upper[i], 0)}</td>
                         </tr>
                       ))}
                     </tbody>

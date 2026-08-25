@@ -376,7 +376,12 @@ class DemandModelService:
         # MAPE sobre un holdout temporal, usando exactamente el método elegido.
         # Production selection may use all history, but validation selection
         # must be made from the training slice only.
-        mape = self._calculate_mape('auto' if requested_method == 'auto' else method)
+        evaluation_method = 'auto' if requested_method == 'auto' else method
+        mape = self._calculate_mape(evaluation_method)
+        # `rmse` estaba declarado en DemandForecast y no se llenaba nunca: el
+        # campo viajaba permanentemente en None. Se calcula sobre el mismo
+        # holdout que MAPE, que además queda definido cuando MAPE no lo está.
+        rmse = self._calculate_rmse(evaluation_method)
 
         return DemandForecast(
             periods=periods,
@@ -386,6 +391,7 @@ class DemandModelService:
             method_used=method,
             confidence_level=self.confidence_level,
             mape=mape,
+            rmse=rmse,
         )
 
     @staticmethod
@@ -439,13 +445,17 @@ class DemandModelService:
             return fitted
         raise ValueError(f"Método '{method}' no soportado.")
 
-    def _calculate_mape(self, method: str) -> Optional[float]:
-        """
-        Calcula MAPE (Mean Absolute Percentage Error) por validación cruzada simple.
-        Usa el último 20% de los datos como conjunto de test.
+    def _backtest(self, method: str):
+        """Corre el holdout temporal y devuelve ``(observado, predicho)``.
+
+        Usa el último 20% de la serie como test y entrena sólo con lo anterior.
+        Cuando el método pedido es ``'auto'`` la selección se rehace sobre la
+        rebanada de entrenamiento: elegir con la serie completa filtraría el
+        futuro dentro de la validación.
 
         Returns:
-            MAPE en porcentaje, o None si no hay suficientes datos.
+            ``(test, preds)`` o ``None`` si no hay datos suficientes o el
+            método falla sobre el tramo de entrenamiento.
         """
         n_test = max(1, self._n // 5)
         train  = self.data[:-n_test]
@@ -456,16 +466,54 @@ class DemandModelService:
 
         evaluation_method = self._select_method(train) if method == 'auto' else method
         try:
-            preds = np.asarray(self._forecast_values(train, n_test, evaluation_method), dtype=float)
-            mask = test != 0
-            if np.any(mask):
-                return round(
-                    float(np.mean(np.abs((test[mask] - preds[mask]) / test[mask])) * 100),
-                    2,
-                )
+            preds = np.asarray(
+                self._forecast_values(train, n_test, evaluation_method), dtype=float
+            )
         except Exception:
-            pass
-        return None
+            return None
+        return test, preds
+
+    def _calculate_mape(self, method: str) -> Optional[float]:
+        """
+        Calcula MAPE (Mean Absolute Percentage Error) por validación cruzada simple.
+        Usa el último 20% de los datos como conjunto de test.
+
+        Returns:
+            MAPE en porcentaje, o None si no hay suficientes datos, o si toda
+            observación del holdout es cero (el error relativo no está definido
+            contra cero y rellenarlo sería inventarlo).
+        """
+        backtest = self._backtest(method)
+        if backtest is None:
+            return None
+        test, preds = backtest
+
+        mask = test != 0
+        if not np.any(mask):
+            return None
+        return round(
+            float(np.mean(np.abs((test[mask] - preds[mask]) / test[mask])) * 100),
+            2,
+        )
+
+    def _calculate_rmse(self, method: str) -> Optional[float]:
+        """
+        Calcula RMSE sobre el MISMO holdout y las MISMAS predicciones que MAPE.
+
+        Existe porque MAPE no está definido cuando el holdout es todo ceros —una
+        serie de demanda parada no es un caso raro— y sin esto el pronóstico se
+        quedaba sin ningún indicador de error. RMSE está siempre definido; va en
+        unidades de la demanda, no en porcentaje, así que acompaña a MAPE en vez
+        de sustituirlo.
+
+        Returns:
+            RMSE en unidades de la serie, o None si no hay datos suficientes.
+        """
+        backtest = self._backtest(method)
+        if backtest is None:
+            return None
+        test, preds = backtest
+        return round(float(np.sqrt(np.mean((test - preds) ** 2))), 4)
 
     # ── Análisis completo ──────────────────────────────────────────────────────
 

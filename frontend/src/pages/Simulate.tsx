@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { runSimulation } from '@/lib/api'
-import { DISTRIBUTIONS, fmtNum, fmtPct, RISK_COLORS } from '@/lib/utils'
+import { DISTRIBUTIONS, fmtNum, fmtPct } from '@/lib/utils'
 import type { SimulationRequest, SimulationResult } from '@/types'
 
 const DEFAULTS: SimulationRequest = {
@@ -34,20 +34,28 @@ export default function Simulate() {
     finally { setLoading(false) }
   }
 
-  const timeSeriesData = result?.time_series.periods.map((p, i) => ({
-    period: p,
-    demand: result.time_series.demand[i],
-    revenue: result.time_series.revenue[i],
-    profit: result.time_series.profit[i],
+  // `time_series` es una lista de puntos por período (no columnas paralelas).
+  const timeSeriesData = result?.time_series.map((p) => ({
+    period: `P${p.period}`,
+    demand: p.demand_mean,
+    revenue: p.revenue_mean,
+    profit: p.profit_mean,
   })) ?? []
 
-  const scenarioData = result ? [
-    { name: 'Pesimista', demand: result.scenarios.pessimist.demand, revenue: result.scenarios.pessimist.revenue, profit: result.scenarios.pessimist.profit, prob: result.scenarios.pessimist.probability },
-    { name: 'Base', demand: result.scenarios.base.demand, revenue: result.scenarios.base.revenue, profit: result.scenarios.base.profit, prob: result.scenarios.base.probability },
-    { name: 'Optimista', demand: result.scenarios.optimist.demand, revenue: result.scenarios.optimist.revenue, profit: result.scenarios.optimist.profit, prob: result.scenarios.optimist.probability },
-  ] : []
+  // `scenarios` es una lista de cinco escenarios nombrados, ordenados por
+  // demanda creciente. El servidor no publica una probabilidad por escenario
+  // —son percentiles de la distribución, no una masa de probabilidad— así que
+  // se muestra el percentil, que es lo que realmente son.
+  const scenarioData = result?.scenarios.map((s) => ({
+    name: s.name,
+    percentile: s.demand_percentile,
+    demand: s.demand_value,
+    revenue: s.revenue,
+    profit: s.gross_profit,
+    margin: s.profit_margin_pct,
+  })) ?? []
 
-  const SCENARIO_COLORS = ['#f87171', '#60a5fa', '#34d399']
+  const SCENARIO_COLORS = ['#f87171', '#fbbf24', '#60a5fa', '#4ade80', '#34d399']
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -141,21 +149,23 @@ export default function Simulate() {
                 </CardContent></Card>
 
                 <Card><CardContent className="p-4">
-                  <div className="flex items-start justify-between"><p className="text-xs text-muted-foreground">Beneficio esperado</p><DollarSign className="h-4 w-4 text-emerald-400" /></div>
-                  <p className="text-2xl font-bold text-emerald-400 mt-2">Bs. {fmtNum(result.profit.mean, 0)}</p>
-                  <p className="text-[11px] text-muted-foreground">± {fmtNum(result.profit.std, 0)}</p>
+                  <div className="flex items-start justify-between"><p className="text-xs text-muted-foreground">Beneficio típico (mediana)</p><DollarSign className="h-4 w-4 text-emerald-400" /></div>
+                  <p className="text-2xl font-bold text-emerald-400 mt-2">Bs. {fmtNum(result.profit.median, 0)}</p>
+                  <p className="text-[11px] text-muted-foreground">Media: Bs. {fmtNum(result.profit.mean, 0)} · ± {fmtNum(result.profit.std, 0)}</p>
                 </CardContent></Card>
 
                 <Card><CardContent className="p-4">
-                  <div className="flex items-start justify-between"><p className="text-xs text-muted-foreground">VaR 95%</p><AlertTriangle className="h-4 w-4 text-amber-400" /></div>
-                  <p className="text-2xl font-bold text-amber-400 mt-2">Bs. {fmtNum(Math.abs(result.profit.var_95), 0)}</p>
-                  <p className="text-[11px] text-muted-foreground">Pérdida máxima esperada</p>
+                  <div className="flex items-start justify-between"><p className="text-xs text-muted-foreground">VaR {fmtPct(result.risk.var_confidence_level)}</p><AlertTriangle className="h-4 w-4 text-amber-400" /></div>
+                  <p className="text-2xl font-bold text-amber-400 mt-2">Bs. {fmtNum(result.profit.var_95, 0)}</p>
+                  <p className="text-[11px] text-muted-foreground">Beneficio en el peor {fmtPct(1 - result.risk.var_confidence_level)} de escenarios</p>
                 </CardContent></Card>
 
                 <Card><CardContent className="p-4">
-                  <div className="flex items-start justify-between"><p className="text-xs text-muted-foreground">Categoría de riesgo</p><TrendingUp className="h-4 w-4 text-muted-foreground" /></div>
-                  <p className={`text-xl font-bold mt-2 capitalize ${RISK_COLORS[result.risk.risk_category?.toLowerCase()] ?? 'text-foreground'}`}>{result.risk.risk_category ?? '—'}</p>
-                  <p className="text-[11px] text-muted-foreground">Prob. pérdida: {fmtPct(result.risk.probability_of_loss)}</p>
+                  <div className="flex items-start justify-between"><p className="text-xs text-muted-foreground">Probabilidad de pérdida</p><TrendingUp className="h-4 w-4 text-muted-foreground" /></div>
+                  {/* Sin semáforo: el servidor no publica una categoría de
+                      riesgo y clasificar aquí sería inventar los umbrales. */}
+                  <p className="text-2xl font-bold mt-2 text-foreground">{fmtPct(result.risk.probability_of_loss)}</p>
+                  <p className="text-[11px] text-muted-foreground">Alcanza el punto de equilibrio: {fmtPct(result.risk.probability_breakeven)}</p>
                 </CardContent></Card>
               </div>
 
@@ -164,17 +174,23 @@ export default function Simulate() {
                 <Card><CardContent className="p-4">
                   <p className="text-xs text-muted-foreground">Ingresos esperados</p>
                   <p className="text-xl font-bold mt-1">Bs. {fmtNum(result.revenue.mean, 0)}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">P5: Bs. {fmtNum(result.revenue.percentile_5, 0)} · P95: Bs. {fmtNum(result.revenue.percentile_95, 0)}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">P5: Bs. {fmtNum(result.revenue.p5, 0)} · P95: Bs. {fmtNum(result.revenue.p95, 0)}</p>
                 </CardContent></Card>
                 <Card><CardContent className="p-4">
                   <p className="text-xs text-muted-foreground">Sharpe Ratio</p>
-                  <p className="text-xl font-bold mt-1">{result.profit.ratio_basis === 'monetary_profit' ? 'N/A' : fmtNum(result.profit.sharpe_ratio)}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{result.profit.ratio_basis === 'monetary_profit' ? 'Requiere retornos periodizados' : 'Retorno ajustado por riesgo'}</p>
+                  {/* El servidor manda `sharpe_ratio: null` y dice por qué en
+                      `ratio_basis`. Presentarlo como N/A es el dato correcto. */}
+                  <p className="text-xl font-bold mt-1">{fmtNum(result.profit.sharpe_ratio)}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {result.profit.sharpe_ratio === null
+                      ? 'No aplica: el beneficio monetario no es una serie de retornos periodizados'
+                      : 'Retorno ajustado por riesgo'}
+                  </p>
                 </CardContent></Card>
                 <Card><CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground">CVaR 95%</p>
-                  <p className="text-xl font-bold mt-1 text-red-400">Bs. {fmtNum(Math.abs(result.profit.cvar_95), 0)}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Pérdida esperada en tail</p>
+                  <p className="text-xs text-muted-foreground">CVaR {fmtPct(result.risk.cvar_confidence_level)}</p>
+                  <p className="text-xl font-bold mt-1">Bs. {fmtNum(result.profit.cvar_95, 0)}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Beneficio medio dentro de esa peor cola</p>
                 </CardContent></Card>
               </div>
 
@@ -205,7 +221,7 @@ export default function Simulate() {
 
               {/* Scenarios */}
               <Card>
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Análisis de escenarios (Pesimista / Base / Optimista)</CardTitle></CardHeader>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Análisis de escenarios (por percentil de demanda)</CardTitle></CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-6">
                     <ResponsiveContainer width="100%" height={180}>
@@ -220,12 +236,12 @@ export default function Simulate() {
                       </BarChart>
                     </ResponsiveContainer>
                     <div className="space-y-3">
-                      {scenarioData.map(({ name, demand, revenue, profit, prob }, i) => (
+                      {scenarioData.map(({ name, percentile, demand, revenue, profit, margin }, i) => (
                         <div key={name} className="flex items-start gap-3 rounded-lg border border-border p-3">
-                          <div className={`mt-1 h-2.5 w-2.5 rounded-full shrink-0`} style={{ background: SCENARIO_COLORS[i] }} />
+                          <div className={`mt-1 h-2.5 w-2.5 rounded-full shrink-0`} style={{ background: SCENARIO_COLORS[i % SCENARIO_COLORS.length] }} />
                           <div className="flex-1 min-w-0 text-xs">
-                            <p className="font-medium">{name} <span className="text-muted-foreground">({fmtPct(prob)} prob.)</span></p>
-                            <p className="text-muted-foreground mt-0.5">Dem: {fmtNum(demand, 0)} · Ing: Bs. {fmtNum(revenue, 0)} · Ben: Bs. {fmtNum(profit, 0)}</p>
+                            <p className="font-medium">{name} <span className="text-muted-foreground">(percentil {fmtNum(percentile, 0)} de demanda)</span></p>
+                            <p className="text-muted-foreground mt-0.5">Dem: {fmtNum(demand, 0)} · Ing: Bs. {fmtNum(revenue, 0)} · Ben: Bs. {fmtNum(profit, 0)} · Margen: {fmtNum(margin, 1)}%</p>
                           </div>
                         </div>
                       ))}
@@ -235,7 +251,7 @@ export default function Simulate() {
               </Card>
 
               <p className="text-[11px] text-muted-foreground text-center">
-                {result.metadata.n_iterations.toLocaleString()} iteraciones · {result.metadata.distribution_type} · {result.metadata.confidence_level * 100}% confianza · {result.metadata.execution_time?.toFixed(2)}s
+                {result.metadata.n_iterations.toLocaleString()} iteraciones · distribución {result.metadata.distribution_used} · {result.metadata.confidence_level * 100}% confianza
               </p>
             </>
           )}
