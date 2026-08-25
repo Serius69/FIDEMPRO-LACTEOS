@@ -16,8 +16,10 @@ ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', '.ngrok.io', '.ngrok-free.app']
 # ─────────────────────────────────────────────
 try:
     import debug_toolbar
-    INSTALLED_APPS += ['debug_toolbar']
-    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    # Copias, no mutación in situ: ambas colecciones vienen de base y son
+    # compartidas con cualquier otro entorno cargado en el mismo proceso.
+    INSTALLED_APPS = INSTALLED_APPS + ['debug_toolbar']
+    MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware'] + list(MIDDLEWARE)
     INTERNAL_IPS = ['127.0.0.1', 'localhost']
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG,
@@ -159,4 +161,4 @@ LOGGING = {
 # ─────────────────────────────────────────────
 # Dashboard — sin cache en desarrollo
 # ─────────────────────────────────────────────
-DASHBOARD_CONFIG['ENABLE_CHART_CACHING'] = False
+DASHBOARD_CONFIG = {**DASHBOARD_CONFIG, 'ENABLE_CHART_CACHING': False}

@@ -33,6 +33,8 @@ STATICFILES_DIRS = [
 ]
 
 # WhiteNoise para servir archivos estáticos
+# Copia: `MIDDLEWARE` es la misma lista de base (ver nota en production.py).
+MIDDLEWARE = list(MIDDLEWARE)
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 # Ver nota en production.py: STATICFILES_STORAGE ya no existe en Django 5.1+.
 STORAGES = {

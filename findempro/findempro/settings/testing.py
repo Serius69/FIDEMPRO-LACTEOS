@@ -155,4 +155,4 @@ AXES_ENABLED = False
 # ─────────────────────────────────────────────
 # Dashboard — sin cache
 # ─────────────────────────────────────────────
-DASHBOARD_CONFIG['ENABLE_CHART_CACHING'] = False
+DASHBOARD_CONFIG = {**DASHBOARD_CONFIG, 'ENABLE_CHART_CACHING': False}

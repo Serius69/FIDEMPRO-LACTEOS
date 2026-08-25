@@ -388,6 +388,11 @@ class ForecastAPIView(APIView):
                     'method_used': forecast.method_used,
                     'confidence_level': forecast.confidence_level,
                     'mape': forecast.mape,
+                    # MAPE no está definido si alguna observación histórica es
+                    # cero. `DemandModelService` ya calcula RMSE, que sí lo
+                    # está; descartarlo aquí dejaba al pronóstico sin ningún
+                    # indicador de error justo en ese caso.
+                    'rmse': forecast.rmse,
                 },
                 'simulation_params': sim_params,
             }

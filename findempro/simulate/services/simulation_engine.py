@@ -470,6 +470,11 @@ class MonteCarloEngine:
             'profit': {
                 'mean': result.profit_mean,
                 'std': result.profit_std,
+                # La mediana es el escenario típico cuando la distribución es
+                # asimétrica; la media no. Se calculaba y se descartaba aquí, de
+                # modo que sólo la veía el simulador público y la SPA
+                # autenticada presentaba la media como «beneficio esperado».
+                'median': result.profit_median,
                 'p5': result.profit_p5,
                 'p95': result.profit_p95,
                 # Monetary profit is not a periodized return series. Keep

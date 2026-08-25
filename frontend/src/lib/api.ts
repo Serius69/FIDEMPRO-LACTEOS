@@ -135,8 +135,17 @@ export async function getBusinessDetails(id: number) {
   return handle(res)
 }
 
-export async function runFullPipeline(businessId: number) {
-  const res = await fetch(`/simulate/api/v1/full-pipeline/${businessId}/`, {
+/**
+ * Pipeline completo (Monte Carlo → Eventos Discretos → Motor de Decisión) sobre
+ * una **Simulation** ya guardada.
+ *
+ * Recibía un `businessId` y lo mandaba a una ruta que resuelve por
+ * `simulation_id`: el backend busca la Simulation del usuario con ese pk y, al
+ * no coincidir los espacios de identificadores, sólo podía devolver 404
+ * «Simulación no encontrada». Nunca ejecutó nada.
+ */
+export async function runFullPipeline(simulationId: number) {
+  const res = await fetch(`/simulate/api/v1/full-pipeline/${simulationId}/`, {
     method: 'POST',
     credentials: 'include',
     headers: headers(),

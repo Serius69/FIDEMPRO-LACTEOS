@@ -3,12 +3,26 @@ import { render, screen, waitFor, fireEvent, within } from '@testing-library/rea
 import Simulate from '@/pages/Simulate'
 import { runSimulation } from '@/lib/api'
 import type { SimulationResult } from '@/types'
+import respuestaReal from './fixtures/api-v1-simulate.json'
 
 // Simulate.tsx corre y muestra el resultado del motor Monte Carlo: VaR,
-// CVaR, beneficio esperado, escenarios. Es la salida financiera más sensible
-// del producto. Verificamos: estado vacío inicial vs. cargando vs. resultado
-// vs. error (cuatro estados distinguibles), y que los montos mostrados sean
-// los reales que vinieron del backend (no ceros de relleno).
+// CVaR, beneficio, escenarios. Es la salida financiera más sensible del
+// producto. Verificamos: estado vacío inicial vs. cargando vs. resultado vs.
+// error (cuatro estados distinguibles), y que los montos mostrados sean los
+// reales que vinieron del backend (no ceros de relleno).
+//
+// ── Sobre el fixture ────────────────────────────────────────────────────────
+// `tests/fixtures/api-v1-simulate.json` es una respuesta CAPTURADA de
+// `POST /simulate/api/v1/simulate/`, no un objeto escrito a mano. El fixture
+// anterior sí lo era, y describía una forma que el servidor nunca emitió
+// (`scenarios` como objeto con claves `pessimist`/`base`/`optimist`,
+// `time_series` como columnas paralelas, `revenue.percentile_5`,
+// `metadata.execution_time`, `risk.risk_category`). Con él este archivo pasaba
+// en verde mientras la página se caía en producción con `undefined.map` en
+// cuanto una simulación terminaba bien.
+//
+// El lado servidor del mismo contrato está fijado en
+// `findempro/simulate/tests/test_api_v1_wire_contract.py`.
 
 vi.mock('@/lib/api', () => ({
   runSimulation: vi.fn(),
@@ -17,20 +31,7 @@ vi.mock('@/lib/api', () => ({
 const mockedRunSimulation = vi.mocked(runSimulation)
 
 function buildResult(overrides: Partial<SimulationResult> = {}): SimulationResult {
-  return {
-    demand: { mean: 1000, std: 150, var_95: -200, cvar_95: -260, distribution: [] },
-    revenue: { mean: 25000, std: 3200, percentile_5: 19000, percentile_95: 31000 },
-    profit: { mean: 13000, std: 2100, var_95: -1800, cvar_95: -2600, sharpe_ratio: 1.42, ratio_basis: 'periodized_returns' },
-    risk: { var_level: 0.95, cvar_level: 0.95, probability_of_loss: 0.08, risk_category: 'bajo' },
-    scenarios: {
-      pessimist: { demand: 700, revenue: 17500, profit: 4000, probability: 0.05 },
-      base: { demand: 1000, revenue: 25000, profit: 13000, probability: 0.9 },
-      optimist: { demand: 1300, revenue: 32500, profit: 20000, probability: 0.05 },
-    },
-    time_series: { demand: [1000, 1010], revenue: [25000, 25200], profit: [13000, 13100], periods: ['1', '2'] },
-    metadata: { n_iterations: 10000, confidence_level: 0.95, distribution_type: 'normal', execution_time: 1.234 },
-    ...overrides,
-  }
+  return { ...(respuestaReal as SimulationResult), ...overrides }
 }
 
 beforeEach(() => {
@@ -71,32 +72,66 @@ describe('Simulate — estados', () => {
 })
 
 describe('Simulate — resultado numérico real', () => {
-  it('renders the actual VaR/CVaR/profit/demand figures returned by the backend, formatted in BOB, not placeholder zeros', async () => {
-    mockedRunSimulation.mockResolvedValue(buildResult())
-
+  async function renderConResultado(overrides: Partial<SimulationResult> = {}) {
+    mockedRunSimulation.mockResolvedValue(buildResult(overrides))
     render(<Simulate />)
     fireEvent.click(screen.getByRole('button', { name: /Ejecutar Simulación/ }))
-
     await waitFor(() => expect(screen.getByText('Demanda media')).toBeInTheDocument())
+  }
 
-    const demandCard = screen.getByText('Demanda media').closest('div')?.parentElement as HTMLElement
-    expect(within(demandCard).getByText('1.000')).toBeInTheDocument() // demand.mean, no cero de relleno
+  it('renders the payload the server actually sends without crashing the result panel', async () => {
+    // La regresión concreta: `time_series.periods.map(...)` y
+    // `scenarios.pessimist.demand` sobre la respuesta real lanzaban TypeError
+    // durante el render, y la página entera desaparecía.
+    await renderConResultado()
 
-    expect(screen.getByText('Bs. 13.000')).toBeInTheDocument() // profit.mean
-    expect(screen.getByText('Bs. 1.800')).toBeInTheDocument() // |profit.var_95|
-    expect(screen.getByText('bajo')).toBeInTheDocument() // risk_category real (no "—", no invented category)
-    expect(screen.getByText(/Prob\. pérdida: 8\.0%/)).toBeInTheDocument()
+    expect(screen.getByText('Series de tiempo — Demanda, Ingresos y Beneficio')).toBeInTheDocument()
+    expect(screen.getByText('Análisis de escenarios (por percentil de demanda)')).toBeInTheDocument()
   })
 
-  it('shows "—" for the risk category when the backend omits it — never a default/invented category like "bajo"', async () => {
-    mockedRunSimulation.mockResolvedValue(buildResult({
-      risk: { var_level: 0.95, cvar_level: 0.95, probability_of_loss: 0.08, risk_category: undefined as unknown as string },
-    }))
+  it('renders the actual demand/profit/VaR figures returned by the backend, formatted in BOB, not placeholder zeros', async () => {
+    await renderConResultado()
 
-    render(<Simulate />)
-    fireEvent.click(screen.getByRole('button', { name: /Ejecutar Simulación/ }))
+    const demandCard = screen.getByText('Demanda media').closest('div')?.parentElement as HTMLElement
+    expect(within(demandCard).getByText('996')).toBeInTheDocument() // demand.mean real
 
-    await waitFor(() => expect(screen.getByText('Demanda media')).toBeInTheDocument())
-    expect(screen.getByText('Categoría de riesgo').closest('div')?.parentElement).toHaveTextContent('—')
+    // Mediana de utilidad — el escenario típico, que la API no exponía.
+    expect(screen.getByText('Bs. 8.012')).toBeInTheDocument()
+    // VaR: cuantil inferior del beneficio, tal cual (no un valor absoluto
+    // repintado como «pérdida máxima», que es lo que se mostraba antes).
+    expect(screen.getByText('Bs. 4.713')).toBeInTheDocument()
+    expect(screen.getByText(/Probabilidad de pérdida/)).toBeInTheDocument()
+  })
+
+  it('lists the five named scenarios the engine returns, by demand percentile', async () => {
+    await renderConResultado()
+
+    // Los cinco percentiles del motor, cada uno una vez. Antes la página sólo
+    // podía pintar tres claves fijas (pessimist/base/optimist) que además no
+    // existían en la respuesta.
+    for (const percentil of [5, 25, 50, 75, 95]) {
+      expect(screen.getByText(new RegExp(`percentil ${percentil} de demanda`))).toBeInTheDocument()
+    }
+    expect(screen.getAllByText(/Muy Optimista/).length).toBeGreaterThan(0)
+  })
+
+  it('reports the Sharpe ratio as unavailable with the server-stated reason, never as a number', async () => {
+    // El servidor manda `sharpe_ratio: null` y explica por qué en
+    // `ratio_basis`; presentar un número aquí sería fabricarlo.
+    await renderConResultado()
+
+    const sharpeCard = screen.getByText('Sharpe Ratio').closest('div') as HTMLElement
+    expect(within(sharpeCard).getByText('—')).toBeInTheDocument()
+    expect(screen.getByText(/no es una serie de retornos periodizados/)).toBeInTheDocument()
+  })
+
+  it('labels VaR/CVaR with the confidence level the server actually used, not a hardcoded 95%', async () => {
+    await renderConResultado({
+      risk: { ...(respuestaReal as SimulationResult).risk,
+              confidence_level: 0.9, var_confidence_level: 0.9, cvar_confidence_level: 0.9 },
+    })
+
+    expect(screen.getByText('VaR 90.0%')).toBeInTheDocument()
+    expect(screen.getByText('CVaR 90.0%')).toBeInTheDocument()
   })
 })

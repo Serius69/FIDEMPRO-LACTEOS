@@ -16,7 +16,9 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 
 # Logging más detallado
-LOGGING['root']['level'] = 'DEBUG'
+# Copia en profundidad de la rama que se toca: `LOGGING` (y su sub-dict 'root')
+# vienen de production y mutarlos in situ le cambiaría el nivel a producción.
+LOGGING = {**LOGGING, 'root': {**LOGGING['root'], 'level': 'DEBUG'}}
 
 # Sentry - Entorno staging
 _STAGING_SENTRY_DSN = os.getenv('SENTRY_DSN', '')
