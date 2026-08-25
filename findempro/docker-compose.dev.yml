@@ -83,7 +83,7 @@ services:
       dockerfile: Dockerfile
       target: runtime
     container_name: findempro_celery_dev
-    command: celery -A findempro worker --loglevel=debug
+    command: celery -A findempro worker --loglevel=debug -Q default,simulations
     environment:
       DJANGO_ENV: development
       DJANGO_SETTINGS_MODULE: findempro.settings.development

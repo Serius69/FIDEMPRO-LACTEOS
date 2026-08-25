@@ -257,6 +257,23 @@ CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 min
 CELERY_ALWAYS_EAGER = os.getenv('CELERY_ALWAYS_EAGER', 'False').lower() in ('true', '1')
 
+# findempro_celery escucha exactamente estas dos colas en TODOS los entornos
+# (ver -Q en docker-compose.dev.yml/.prod.yml). Sin esto, Celery enruta toda
+# tarea sin ruta explicita a su cola implicita 'celery', que el worker nunca
+# escucho: la API responde 202 con un task_id real y el mensaje queda
+# atascado para siempre (36 encontrados en PROD el 2026-08-25 -- ver
+# ops/handoff/20260825-findempro-app/FINDING-celery-default-queue-mismatch-findempro.md).
+# task_default_queue='default' es la autoridad unica: cualquier tarea nueva
+# que no se enrute explicitamente cae aqui, nunca en 'celery'.
+CELERY_TASK_DEFAULT_QUEUE = 'default'
+CELERY_TASK_ROUTES = {
+    # Motor Monte Carlo / analisis pesado -> cola dedicada.
+    'simulate.tasks.run_stateless_simulation': {'queue': 'simulations'},
+    'simulate.tasks.execute_simulation_async': {'queue': 'simulations'},
+    'simulate.tasks.run_sensitivity_async': {'queue': 'simulations'},
+    'modeling.run_business_simulation': {'queue': 'simulations'},
+}
+
 # ─────────────────────────────────────────────
 # Internacionalización
 # ─────────────────────────────────────────────
