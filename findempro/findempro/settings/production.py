@@ -33,6 +33,11 @@ if not ALLOWED_HOSTS:
 # ─────────────────────────────────────────────
 # WhiteNoise debe ir inmediatamente DESPUÉS de SecurityMiddleware.
 # Los middlewares de Prometheus (Before/After) ya están en base.py.
+# `from .base import *` re-liga la MISMA lista que base, no una copia: mutarla
+# in situ reescribe la configuración de cualquier entorno ya cargado. Importar
+# este módulo (p. ej. desde un test que audita los settings de producción)
+# inyectaba WhiteNoise en los settings VIVOS del proceso. Se copia primero.
+MIDDLEWARE = list(MIDDLEWARE)
 _sec_idx = MIDDLEWARE.index('django.middleware.security.SecurityMiddleware')
 MIDDLEWARE.insert(_sec_idx + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
@@ -333,5 +338,9 @@ LOGGING = {
 # ─────────────────────────────────────────────
 # Dashboard caching activo
 # ─────────────────────────────────────────────
-DASHBOARD_CONFIG['ENABLE_CHART_CACHING'] = True
-DASHBOARD_CONFIG['CHART_CACHE_TIMEOUT'] = 3600
+# Copia, no mutación in situ: el dict viene de base y es compartido.
+DASHBOARD_CONFIG = {
+    **DASHBOARD_CONFIG,
+    'ENABLE_CHART_CACHING': True,
+    'CHART_CACHE_TIMEOUT': 3600,
+}
