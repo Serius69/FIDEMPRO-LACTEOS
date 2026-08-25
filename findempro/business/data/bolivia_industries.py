@@ -361,8 +361,17 @@ def _overlay_scraped_context():
                     "fx_usd_bob_official", "fx_usd_bob_parallel"):
             if key in macro and isinstance(macro[key], (int, float)):
                 MARKET_CONTEXT[key] = macro[key]
-        MARKET_CONTEXT["source"] = "scraped"
+        # La procedencia viaja por campo, no como una etiqueta global: desde la
+        # integración con KDP cada ancla puede venir de una fuente distinta
+        # (kdp:dolarapi-bo, kdp:criptoya-bo, kdp:bcb-semanal-bulk) o seguir siendo
+        # el valor curado. Decir "scraped" para todas volvía invisible cuál era cuál.
+        fuentes = data.get("meta", {}).get("sources", {}) or {}
+        MARKET_CONTEXT["sources"] = dict(fuentes)
+        MARKET_CONTEXT["source"] = (
+            "kdp" if any(str(v).startswith("kdp:") for v in fuentes.values())
+            else "scraped" if fuentes else "seed-baseline")
         MARKET_CONTEXT["updated"] = data.get("meta", {}).get("generated_by", "scraper")
+        MARKET_CONTEXT["generated_at"] = data.get("meta", {}).get("generated_at")
     except Exception:  # noqa: BLE001
         pass
 
