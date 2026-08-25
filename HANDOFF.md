@@ -70,8 +70,10 @@ before compilation while allowing signed cash balances.
 Provenance validation now applies to operational and financial DSL records, not
 just scalar variables, preserving the distinction between entered, imported,
 estimated, simulated and AI-suggested values.
-Cached Playwright was tested without installation; Chromium cannot launch on
-this host because `libasound.so.2` is absent, so browser E2E remains unverified.
+Browser E2E is verified as of 2026-08-25: `libasound2t64` is installed and cached
+Chromium launches (151.0.7922.34). `frontend/e2e/` covers Simulate and Forecast
+against the real Django backend across three viewports — 18/18. The claim that
+this host cannot run a browser is obsolete; do not skip browser work on it.
 The 24 built-in sectors now resolve to differentiated, synthetic and editable
 commerce, production/BOM, or service archetypes; they remain templates rather
 than claims about sector economics.
@@ -167,8 +169,10 @@ N/A through HTML, PDF, summaries and API metadata.
   runtime questionnaire fixture persistence, and React forecast/sample mismatch.
 - Still P1 product debt: legacy `simulation_financial_utils`, API/export and
   dashboard paths that use zero for absent monetary fields need a shared
-  nullable financial-series contract and regression tests. Browser E2E remains
-  a separate release gate; cached Chromium needs Ubuntu package `libasound2t64`.
+  nullable financial-series contract and regression tests. Browser E2E is no
+  longer a blocked gate: run it with
+  `FINDEMPRO_E2E_PYTHON=<venv>/bin/python npx playwright test` from `frontend/`
+  (the config boots Django and vite itself and seeds its own login user).
 
 ## Constraints encountered
 
