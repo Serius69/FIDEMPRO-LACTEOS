@@ -98,9 +98,15 @@ jobs:
         working-directory: findempro
         run: pytest -p no:warnings --tb=short --junitxml=../backend-junit.xml
 
+      # Node 22, no 20: este job es el UNICO que corre `npm run test:components`,
+      # y vitest carga jsdom. El lockfile trae jsdom@30 (engines
+      # `^22.22.2 || ^24.15.0 || >=26`) y undici@8 (`>=22.19.0`); bajo Node 20
+      # undici revienta con `webidl.util.markAsUncloneable is not a function` y
+      # los 10 archivos de test fallan al arrancar el worker. El job de frontend
+      # de ci.yml sigue en 20 porque solo instala y compila (vite/tsc), sin jsdom.
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
