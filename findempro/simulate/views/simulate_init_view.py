@@ -3,7 +3,7 @@ Simulate Init View - Vista mejorada para configuración de simulaciones
 Incluye optimizaciones de performance, mejor manejo de errores y arquitectura modular
 """
 
-from django.views.generic import View, TemplateView
+from django.views.generic import RedirectView, View, TemplateView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.cache import cache
@@ -237,13 +237,25 @@ class BaseSimulationView(LoginRequiredMixin):
             return redirect('simulate:simulate.show')
 
 
-class AppsView(LoginRequiredMixin, TemplateView):
-    """Vista de aplicaciones de simulación"""
-    template_name = 'simulate/apps.html'
-    
-    @method_decorator(cache_page(300))  # Cache por 5 minutos
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
+class AppsView(LoginRequiredMixin, RedirectView):
+    """Índice de la app: `/simulate/` lleva a la pantalla real de simulación.
+
+    Antes era un `TemplateView` con `template_name = 'simulate/apps.html'`, y esa plantilla
+    **nunca existió** — no está en el árbol ni aparece en la historia de git. O sea que esta
+    URL, que es la raíz de la app y está detrás de login, respondía `TemplateDoesNotExist`
+    (500) a cualquier usuario autenticado que la visitara.
+
+    Pasó desapercibido porque nada la enlaza: las referencias del menú van a
+    `simulate.show` (6), `simulate.list` (4), `simulate.result` (3) y `simulate.add` (1);
+    a `simulate.index`, ninguna. Pero una URL sin enlazar sigue siendo visitable — por
+    marcador, por historial o escribiéndola.
+
+    Se conserva la ruta en vez de borrarla: la raíz de una app es un sitio al que la gente
+    llega, y un redirect deja al usuario donde quería estar en lugar de darle un 404.
+    """
+
+    permanent = False                      # 302: si algún día hay índice propio, no queda cacheado
+    pattern_name = 'simulate:simulate.show'
 
 
 class SimulateShowView(BaseSimulationView, View):
