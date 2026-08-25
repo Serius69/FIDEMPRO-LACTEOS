@@ -57,8 +57,8 @@ export default function ForecastPage() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-72 shrink-0 border-r border-border overflow-y-auto p-4 space-y-4">
+      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+        <aside className="w-full shrink-0 border-b border-border overflow-y-auto p-4 space-y-4 md:w-72 md:border-b-0 md:border-r">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-1.5">
               <Label className="text-[11px]">Datos históricos (separados por comas)</Label>

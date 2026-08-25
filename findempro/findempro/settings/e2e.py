@@ -40,3 +40,18 @@ CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
 task_always_eager = True
 task_eager_propagates = True
+
+# El navegador del E2E entra por el dev-server de Vite (127.0.0.1:5188), que
+# proxya a Django. El origen que ve el navegador y el host que ve Django son
+# distintos, así que sin declararlo Django rechaza por CSRF todo POST de un
+# usuario con sesión: el login de allauth y, detrás, `/simulate/api/v1/…`.
+# Sólo aplica a este entorno desechable; producción sigue leyendo su propia
+# lista desde CSRF_TRUSTED_ORIGINS.
+CSRF_TRUSTED_ORIGINS = [
+    o.strip()
+    for o in os.getenv(
+        'E2E_CSRF_TRUSTED_ORIGINS',
+        'http://127.0.0.1:5188,http://localhost:5188',
+    ).split(',')
+    if o.strip()
+]

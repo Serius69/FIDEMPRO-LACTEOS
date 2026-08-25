@@ -67,9 +67,9 @@ export default function Simulate() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
         {/* Config panel */}
-        <aside className="w-72 shrink-0 border-r border-border overflow-y-auto">
+        <aside className="w-full shrink-0 border-b border-border overflow-y-auto md:w-72 md:border-b-0 md:border-r">
           <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
             <Section label="Demanda">
               <Field label="Media de demanda (unidades)"><Input type="number" step="1" {...register('demand_mean', { valueAsNumber: true })} /></Field>
