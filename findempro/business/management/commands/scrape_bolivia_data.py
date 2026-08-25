@@ -17,6 +17,7 @@ Ejemplos:
     python manage.py scrape_bolivia_data --dry-run  # muestra sin escribir
     python manage.py scrape_bolivia_data --timeout 20
 """
+import datetime as _dt
 import json
 import logging
 import re
@@ -94,7 +95,8 @@ class Command(BaseCommand):
             "meta": {
                 "sources": sources,
                 "generated_by": "manage.py scrape_bolivia_data",
-                "note": "best-effort scraping con fallback curado (INE/BCB/prensa 2024-2025)",
+                "generated_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+                "note": "KDP primero (observado); si no responde, valor curado marcado como tal",
             },
         }
         if ipc:
@@ -136,17 +138,13 @@ class Command(BaseCommand):
         except Exception as exc:  # noqa: BLE001
             logger.warning("KDP no dio el oficial (%s) — se intenta el scraping", exc)
 
-        for url in (BCB_TC_URL, BCB_URL):
-            try:
-                html = self._fetch(url, timeout)
-                # Busca patrones tipo "6,96" cercanos a 'dólar'/'venta'.
-                candidates = re.findall(r"\b(6[.,]9\d)\b", html)
-                for c in candidates:
-                    val = float(c.replace(",", "."))
-                    if 6.5 <= val <= 7.5:
-                        return round(val, 2), "bcb-scraped"
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("Scrape FX falló en %s: %s", url, exc)
+        # El scraping regex quedó retirado del path activo (2026-08-25).
+        # Buscaba `\b(6[.,]9\d)\b` y sólo aceptaba 6,5–7,5, así que no podía
+        # observar 11,50 aunque el BCB lo publicara: no era un respaldo, era una
+        # ruta que sólo podía acertar bajo el régimen 2011-2025. Con KDP
+        # sirviendo el oficial observado, mantenerla sería dejar código muerto
+        # ejecutable que devuelve un valor mal por construcción.
+        # Si KDP no responde, se conserva el valor curado y se marca como tal.
         return None, "fallback-curado"
 
     def _scrape_inflation(self, timeout):
