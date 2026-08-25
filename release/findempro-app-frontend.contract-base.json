@@ -37,7 +37,7 @@
     "product_has_multiple_components": true,
     "public_url": "https://app.kapitalya.com.bo",
     "source_lineage": "DEPLOYED_LINEAGE",
-    "base_prod_sha": "5ab767ee4a2e2020c6de5efd03e4b788d3764d96",
+    "base_prod_sha": "40013c22beafbbd1589024c08242a82ba545ab9a",
     "db_changed": false,
     "stateful": false,
     "schema_change_class": "NONE",
@@ -49,11 +49,16 @@
       "read cash-flow and supply-chain results",
       "export or download a result"
     ],
-    "no_new_visible_delta": true,
+    "no_new_visible_delta": false,
     "prod_ready": false,
     "component": "findempro-app-frontend",
-    "frontend_changed": false,
+    "frontend_changed": true,
     "backend_changed": false,
-    "expected_visible_changes": []
+    "expected_visible_changes": [
+      "/app/ Simulacion: la pagina ya no se cae al terminar una simulacion correcta; antes rompia el render con cada respuesta 200",
+      "/app/ Pronostico: la pagina ya no se cae al terminar un pronostico correcto",
+      "escenarios: cinco escenarios por percentil de demanda en vez de tres etiquetas Pesimista/Base/Optimista con una probabilidad que el servidor nunca publico",
+      "Sharpe ratio y categoria de riesgo: se muestra 'no aplica' y la probabilidad de perdida en vez de fabricar un valor"
+    ]
   }
 }
