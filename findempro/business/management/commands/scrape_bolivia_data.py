@@ -71,6 +71,17 @@ class Command(BaseCommand):
             macro["fx_usd_bob_official"] = fx
         sources["fx_usd_bob_official"] = fx_src
 
+        # 1b) Paralelo (libro P2P observado vía KDP). El valor curado de 13,0
+        # quedó de 2025; el libro real se mueve todas las semanas.
+        try:
+            from business import kdp_source
+            par, par_src = kdp_source.fetch_paralelo()
+            macro["fx_usd_bob_parallel"] = par
+            sources["fx_usd_bob_parallel"] = par_src
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("KDP no dio el paralelo (%s) — se conserva el curado", exc)
+            sources["fx_usd_bob_parallel"] = "fallback-curado"
+
         # 2) Inflación (INE).
         infl, infl_src, ipc = self._scrape_inflation(timeout)
         if infl is not None:
@@ -111,7 +122,20 @@ class Command(BaseCommand):
         return resp.text
 
     def _scrape_fx(self, timeout):
-        """Extrae Bs/USD de la página del BCB; fallback al valor oficial fijo."""
+        """Tipo de cambio oficial Bs/USD.
+
+        Orden: KDP (observado) → scraping del BCB → valor curado.
+
+        El scraping de abajo sólo acepta 6,5–7,5 porque se escribió cuando
+        Bolivia sostenía Bs 6,96. Con el oficial en 11,50 ese filtro descarta el
+        valor real, así que dejó de poder observar nada: por eso KDP va primero.
+        """
+        try:
+            from business import kdp_source
+            return kdp_source.fetch_fx_oficial()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("KDP no dio el oficial (%s) — se intenta el scraping", exc)
+
         for url in (BCB_TC_URL, BCB_URL):
             try:
                 html = self._fetch(url, timeout)
@@ -136,6 +160,14 @@ class Command(BaseCommand):
         sobre la home (que exige contexto anual para no confundir la variación
         mensual ~2 % con la anual) y, en última instancia, al valor curado.
         """
+        # 0) KDP — serie mensual real del BCB, la única observada de las tres.
+        try:
+            from business import kdp_source
+            val, src = kdp_source.fetch_inflacion_anual()
+            return val, src, None
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("KDP no dio la inflación (%s) — se intenta INE", exc)
+
         # 1) Nota de prensa mensual del IPC (WP REST) — fuente estable.
         try:
             from business.management.commands.ingest_ine_series import (
