@@ -1,0 +1,103 @@
+{
+  "product": "findempro",
+  "migrations": {
+    "status": "not_run",
+    "pending": [],
+    "zero_downtime_verified": null
+  },
+  "database_compatibility": {
+    "status": "not_run",
+    "rollback_safe": true,
+    "min_compatible_app_version": null,
+    "engine": null
+  },
+  "config_schema": {
+    "version": "1",
+    "required_env": [
+      "VITE_BACKEND_URL"
+    ],
+    "breaking_changes_since": []
+  },
+  "healthchecks": [
+    {
+      "name": "live",
+      "kind": "http",
+      "target": "/",
+      "expect": "200",
+      "timeout_seconds": 10
+    }
+  ],
+  "rollback": {
+    "target_digest": null,
+    "target_manifest": null,
+    "method": "none_first_release",
+    "verified": false
+  },
+  "delivery": {
+    "product_has_multiple_components": true,
+    "public_url": "https://app.kapitalya.com.bo",
+    "source_lineage": "DEPLOYED_LINEAGE",
+    "base_prod_sha": "40013c22beafbbd1589024c08242a82ba545ab9a",
+    "db_changed": false,
+    "stateful": false,
+    "schema_change_class": "NONE",
+    "target_runtime": "docker-compose",
+    "rollback_requirements": "Swap the image digest. No migration is required, so the previous image reads the same schema. Throttle scopes are declared per environment, so a rollback must not be paired with a partial settings revert.",
+    "primary_workflows": [
+      "sign in and reach the authenticated dashboard",
+      "create and run a simulation",
+      "read cash-flow and supply-chain results",
+      "export or download a result"
+    ],
+    "no_new_visible_delta": false,
+    "prod_ready": false,
+    "component": "findempro-app-frontend",
+    "frontend_changed": true,
+    "backend_changed": false,
+    "expected_visible_changes": [
+      "/app/ Simulacion: la pagina ya no se cae al terminar una simulacion correcta; antes rompia el render con cada respuesta 200",
+      "/app/ Pronostico: la pagina ya no se cae al terminar un pronostico correcto",
+      "escenarios: cinco escenarios por percentil de demanda en vez de tres etiquetas Pesimista/Base/Optimista con una probabilidad que el servidor nunca publico",
+      "Sharpe ratio y categoria de riesgo: se muestra 'no aplica' y la probabilidad de perdida en vez de fabricar un valor"
+    ]
+  },
+  "schema_version": "2.0.0",
+  "repo": {
+    "url": "https://github.com/Serius69/FindemproAI.git",
+    "commit": "f88196d2db52ecf12fdbe257ada4b2fa15f9c536",
+    "branch": "main",
+    "tag": "",
+    "dirty": false
+  },
+  "artifact": {
+    "image": "ghcr.io/Serius69/FindemproAI/findempro-app-frontend",
+    "tag": "main",
+    "digest": "sha256:92a71efc86da0a273b948026d41fa7ad31dded75d919b5908cb3b885cb7c65ac",
+    "digest_source": "registry",
+    "base_image_digest": null,
+    "size_bytes": null
+  },
+  "build": {
+    "built_at": "2026-08-25T03:57:02Z",
+    "builder": {
+      "host": "github-actions",
+      "tool": "docker-buildx",
+      "tool_version": "github.com/docker/buildx v0.36.1 1d8dde89b8aba914e05e45366770736fea1fd690",
+      "reproducible": null
+    }
+  },
+  "tests": {
+    "status": "passed",
+    "suites": [
+      {
+        "name": "backend",
+        "status": "passed",
+        "passed": 1109,
+        "failed": 0,
+        "skipped": 0,
+        "runner": "pytest",
+        "evidence_path": "backend-junit.xml"
+      }
+    ]
+  }
+}
