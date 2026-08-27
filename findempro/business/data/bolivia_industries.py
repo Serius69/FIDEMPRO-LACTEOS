@@ -40,8 +40,19 @@ MARKET_CONTEXT = {
     "inflation_annual_pct": 10.0,    # cierre 2024 (INE); YTD 2025 ~18%
     "fx_usd_bob_official": 6.96,     # BCB (fijo desde 2011)
     "fx_usd_bob_parallel": 13.0,     # mercado paralelo 2025 (referencia)
-    "source": "seed-baseline",       # 'scraped' cuando lo actualiza el scraper
+    "source": "seed-baseline",       # 'kdp' cuando lo refresca el consumidor
     "updated": "2025 (curado)",
+    # Procedencia por clave. Arranca en FALLBACK para las cuatro anclas porque
+    # eso es lo que son mientras nadie las haya observado: valores curados de
+    # 2025. `_overlay_scraped_context` las sube a OBSERVED_REAL sólo cuando el
+    # JSON del consumidor de KDP lo dice. Sin esta línea, un import en frío
+    # entregaría el peg de 2011 sin nada que advirtiera de qué es.
+    "provenance": {k: "FALLBACK" for k in (
+        "min_wage_month_bs", "inflation_annual_pct",
+        "fx_usd_bob_official", "fx_usd_bob_parallel")},
+    "freshness": {},
+    "freshness_status": "SOURCE_DOWN",
+    "data_timestamp": None,
 }
 
 # Meses pico reutilizables.
@@ -347,8 +358,13 @@ def get_spec(business_type: int):
 
 
 def _overlay_scraped_context():
-    """Si existe bolivia_market_data.json (del scraper), superpone los valores
-    macro reales sobre MARKET_CONTEXT. Best-effort: nunca rompe el import."""
+    """Superpone sobre MARKET_CONTEXT lo que escribió el consumidor de KDP.
+
+    Best-effort: nunca rompe el import. Pero best-effort NO significa que un
+    valor pueda entrar sin etiqueta — si el JSON trae un número sin procedencia,
+    se toma como FALLBACK, que es lo que un valor sin procedencia es en el mejor
+    de los casos. Ver ``business.provenance``.
+    """
     import json
     from pathlib import Path
     path = Path(__file__).resolve().parent / "bolivia_market_data.json"
@@ -357,21 +373,30 @@ def _overlay_scraped_context():
             return
         data = json.loads(path.read_text(encoding="utf-8"))
         macro = data.get("macro", {})
+        meta = data.get("meta", {}) or {}
+        procedencia = meta.get("provenance", {}) or {}
         for key in ("min_wage_month_bs", "inflation_annual_pct",
                     "fx_usd_bob_official", "fx_usd_bob_parallel"):
             if key in macro and isinstance(macro[key], (int, float)):
                 MARKET_CONTEXT[key] = macro[key]
-        # La procedencia viaja por campo, no como una etiqueta global: desde la
-        # integración con KDP cada ancla puede venir de una fuente distinta
-        # (kdp:dolarapi-bo, kdp:criptoya-bo, kdp:bcb-semanal-bulk) o seguir siendo
-        # el valor curado. Decir "scraped" para todas volvía invisible cuál era cuál.
-        fuentes = data.get("meta", {}).get("sources", {}) or {}
+                # La etiqueta viaja PEGADA al valor: se escriben juntos o no se
+                # escribe ninguno. Separarlos es exactamente cómo un curado
+                # acaba leyéndose como medición tres capas más arriba.
+                MARKET_CONTEXT["provenance"][key] = procedencia.get(key, "FALLBACK")
+        # La procedencia viaja por campo, no como una etiqueta global: cada ancla
+        # puede venir de una fuente distinta (kdp:dolarapi-bo, kdp:criptoya-bo,
+        # kdp-event:bcb-semanal-bulk) o seguir siendo el valor curado. Decir
+        # "scraped" para todas volvía invisible cuál era cuál.
+        fuentes = meta.get("sources", {}) or {}
         MARKET_CONTEXT["sources"] = dict(fuentes)
+        MARKET_CONTEXT["freshness"] = dict(meta.get("freshness", {}) or {})
+        MARKET_CONTEXT["freshness_status"] = meta.get("freshness_status", "SOURCE_DOWN")
+        MARKET_CONTEXT["data_timestamp"] = meta.get("data_timestamp")
         MARKET_CONTEXT["source"] = (
-            "kdp" if any(str(v).startswith("kdp:") for v in fuentes.values())
+            "kdp" if any(str(v).startswith("kdp") for v in fuentes.values())
             else "scraped" if fuentes else "seed-baseline")
-        MARKET_CONTEXT["updated"] = data.get("meta", {}).get("generated_by", "scraper")
-        MARKET_CONTEXT["generated_at"] = data.get("meta", {}).get("generated_at")
+        MARKET_CONTEXT["updated"] = meta.get("generated_by", "scraper")
+        MARKET_CONTEXT["generated_at"] = meta.get("generated_at")
     except Exception:  # noqa: BLE001
         pass
 

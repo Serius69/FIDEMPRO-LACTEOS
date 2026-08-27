@@ -40,8 +40,10 @@ PEG_ALLOWLIST = {
     "business/data/bolivia_industries.py":
         "MARKET_CONTEXT: valor CURADO de respaldo, alcanzable sólo si KDP no "
         "responde, y se reporta siempre como `fallback-curado`.",
-    "business/management/commands/scrape_bolivia_data.py":
-        "CURATED: el mismo respaldo, en el comando que lo escribe.",
+    "business/data/curated_market.py":
+        "CURATED: el mismo respaldo de 6,96, ahora en su propio módulo porque "
+        "también lo necesita la tarea de Celery que consume eventos de KDP. "
+        "Sale siempre etiquetado FALLBACK, nunca como observación.",
 }
 
 PEG_VALUES = {6.96, 6.86, 6.98}
@@ -132,14 +134,34 @@ def test_el_curado_nunca_se_reporta_como_observado():
     assert 'f"kdp:' in src, "la fuente KDP debe identificarse con prefijo kdp:"
 
 
-def test_kdp_rechaza_provenance_no_observada_en_las_tres_anclas():
-    """Las tres anclas macro tienen que validar provenance, no sólo una."""
-    src = (BUSINESS / "kdp_source.py").read_text(encoding="utf-8")
-    for fn in ("fetch_fx_oficial", "fetch_inflacion_anual", "fetch_paralelo"):
-        i = src.index(f"def {fn}")
-        j = src.find("\ndef ", i + 1)
-        cuerpo = src[i:j if j > 0 else len(src)]
-        assert "provenance" in cuerpo, f"{fn} no valida provenance"
+def test_kdp_rechaza_provenance_no_observada_en_las_tres_anclas(monkeypatch):
+    """Las tres anclas macro tienen que validar provenance, no sólo una.
+
+    Era una comprobación de texto sobre el cuerpo de cada `fetch_*`. Dejó de
+    servir cuando la validación se centralizó en `_latest_reading` — el texto
+    ya no está en la función, pero la garantía sí. Se comprueba por
+    comportamiento, que además es más difícil de satisfacer por accidente:
+    ninguna de las tres puede devolver un número si KDP no lo marcó `observed`.
+    """
+    from unittest.mock import Mock
+
+    from business import kdp_source
+
+    monkeypatch.setenv("KDP_API_TOKEN", "kdpt_test")
+    payloads = {
+        "fetch_fx_oficial": {"value": 11.5, "provenance": "fallback", "quality": "ok",
+                             "observed_at": "2026-08-24T00:00:00+00:00"},
+        "fetch_paralelo": {"value": 11.9, "provenance": "estimated", "quality": "ok",
+                           "observed_at": "2026-08-24T00:00:00+00:00"},
+        "fetch_inflacion_anual": {"provenance": "constructed", "observations": [
+            {"fecha": "2026-07-31", "valor": 4.93}]},
+    }
+    for fn, payload in payloads.items():
+        monkeypatch.setattr(kdp_source.requests, "get",
+                            lambda *a, **k: Mock(status_code=200, json=lambda: payload,
+                                                 raise_for_status=Mock()))
+        with pytest.raises(kdp_source.KdpUnavailable, match="provenance"):
+            getattr(kdp_source, fn)()
 
 
 def test_la_allowlist_del_peg_esta_justificada_y_acotada():

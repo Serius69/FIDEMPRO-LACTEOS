@@ -41,6 +41,14 @@ urlpatterns = [
         name='business.delete'
     ),
     
+    # API: contexto macro con procedencia y frescura (contrato KDP §4.6).
+    # Sin cache_page a propósito: cachear frescura es servir una frescura vieja.
+    path(
+        'api/market-context/',
+        views.market_context_view,
+        name='business.market_context'
+    ),
+
     # API: Obtener detalles de negocio (para AJAX)
     path(
         'api/details/<int:pk>/', 

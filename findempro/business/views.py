@@ -273,3 +273,30 @@ def get_business_details_view(request, pk):
             "error": "Error interno del servidor",
             "details": str(e)  # Cambiar por settings.DEBUG check si es necesario
         }, status=500)
+
+@login_required
+def market_context_view(request):
+    """Contexto macro con procedencia y frescura — contrato de migración §4.6.
+
+    El estado (`FRESH`/`DEGRADED`/`STALE`/`SOURCE_DOWN`) y el `data_timestamp`
+    tienen que llegar hasta la API, no quedarse en un JSON del disco. Un dato
+    viejo mostrado como actual es el fallo que la plataforma existe para
+    impedir, y un curado mostrado como observación es peor todavía: aquí cada
+    ancla viaja con `provenance` y con `is_observation`, así que un cliente que
+    sólo acepte mediciones puede filtrarlas sin adivinar.
+    """
+    from business import kdp_events, provenance as prov
+
+    ctx = kdp_events.load_market_context()
+    claves = ("fx_usd_bob_official", "fx_usd_bob_parallel",
+              "inflation_annual_pct", "min_wage_month_bs")
+    anclas = {k: prov.describe(ctx, k) for k in claves}
+    return JsonResponse({
+        "freshness_status": ctx.get("freshness_status", prov.SOURCE_DOWN),
+        "data_timestamp": ctx.get("data_timestamp"),
+        "anchors": anclas,
+        # Lo que un modelo puede consumir como medición, y nada más.
+        "observations": {k: v["value"] for k, v in anclas.items()
+                         if v["is_observation"]},
+        "kdp": ctx.get("kdp", {}),
+    })

@@ -6,6 +6,32 @@ demanda por rubro boliviano) en ``business/data/bolivia_sector_series.json``,
 que la calibración del generador de demanda usa para dar estacionalidad real a
 las simulaciones (en vez de ruido gaussiano plano).
 
+Clasificación frente a KDP (contrato de migración §4.7)
+------------------------------------------------------
+Esto es una ingesta entera y paralela a la plataforma, así que hay que decir qué
+pasa con cada trozo:
+
+· Perfiles estacionales por sector (`BUSINESS_TYPE_SEASONALITY`) → **UNRELATED**.
+  Son un núcleo curado del producto (Alasitas, Carnaval, aguinaldo, cosecha
+  altiplánica). KDP no publica estacionalidad sectorial boliviana y no está en
+  su registro de fuentes: no hay nada que migrar.
+· IPC por WP REST del INE (`_fetch_ipc_wp`) → **RETAINED_FOR_RECONCILIATION**.
+  KDP sí ingiere `ine-bo-wp` (`registry/sources.yaml`), pero su colector
+  (`kdp/collectors/ine.py`) publica **una sola serie**:
+  `ine.publicaciones.count`, el número de publicaciones por mes. Dice
+  explícitamente que no inventa series numéricas que no ha parseado, y la nota
+  del IPC —con su variación mensual, interanual, acumulada y **por ciudad**— no
+  la parsea nadie. La desagregación regional no existe en la plataforma, así que
+  borrar esto perdería un dato que KDP no tiene. Cuando KDP publique el IPC del
+  INE, este camino pasa a REMOVED_AS_PRIMARY_PATH.
+· Ping de alcanzabilidad al BCB (`_refresh_live`) → **REMOVED_AS_PRIMARY_PATH**.
+  Comprobar si bcb.gob.bo responde es duplicar el trabajo del colector de KDP y
+  no aporta ningún dato; queda como señal informativa en `meta`, nunca como vía
+  de frescura.
+
+El contexto macro (oficial, paralelo, inflación) **no** se toma de aquí: lo
+refresca la tarea Celery `business.consume_kdp_events`.
+
 Fuentes:
   · INE (ine.gob.bo) — IPC (variación mensual/interanual), señal de actividad.
   · BCB (bcb.gob.bo) — tipo de cambio (contexto macro).

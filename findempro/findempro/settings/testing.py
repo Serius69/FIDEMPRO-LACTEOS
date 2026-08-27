@@ -160,3 +160,17 @@ FINDEMPRO_COMMERCIAL_GATES_MODE = 'shadow'
 # Dashboard — sin cache
 # ─────────────────────────────────────────────
 DASHBOARD_CONFIG = {**DASHBOARD_CONFIG, 'ENABLE_CHART_CACHING': False}
+
+# ─────────────────────────────────────────────
+# KDP — token de juguete y estado aislado
+# ─────────────────────────────────────────────
+# La API de KDP exige token en todos los /v1/*, así que `business.kdp_source`
+# se niega a salir sin uno: sin este valor los tests que simulan la capa HTTP
+# fallarían por falta de credencial en vez de por lo que están probando. La
+# prueba que va contra la API real de DEV lee KDP_API_TOKEN del entorno, que
+# tiene prioridad sobre este relleno.
+KDP_API_TOKEN = os.getenv('KDP_API_TOKEN', 'kdpt_testing_placeholder')
+# El estado del consumidor NUNCA debe caer sobre el del desarrollador: un test
+# que avanzara el cursor real haría que la siguiente corrida de verdad se
+# saltara eventos sin que nada lo dijera.
+KDP_STATE_DIR = os.getenv('KDP_STATE_DIR', os.path.join(BASE_DIR, 'var', 'kdp-test'))

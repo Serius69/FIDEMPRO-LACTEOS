@@ -1,121 +1,108 @@
 """
 manage.py scrape_bolivia_data
 =============================
-Recolecta datos reales del mercado boliviano por web scraping y los consolida en
-``business/data/bolivia_market_data.json``, que el sembrado (``seed_bolivia``)
-usa para anclar precios y variables macro.
+Refresca ``business/data/bolivia_market_data.json``, que el sembrado
+(``seed_bolivia``) usa para anclar precios y variables macro.
 
-Fuentes:
-  · BCB  (bcb.gob.bo) — tipo de cambio oficial USD/BOB.
-  · INE  (ine.gob.bo) — inflación / IPC.
-El scraping es **best-effort**: si una fuente no responde o cambia su HTML, se
-conserva el valor curado de referencia (``MARKET_CONTEXT``) y se marca la fuente
-como ``fallback``. Así el pipeline nunca se rompe por un sitio caído.
+Qué era y qué es ahora
+----------------------
+Era el **único** camino de frescura de Findempro, y no lo disparaba nada: sin
+cron, sin entrada de beat, sin timer. El oficial, el paralelo y la inflación
+tenían la frescura del último día que alguien se acordó de teclear esto.
+
+Desde la migración a eventos (2026-08-27) el camino primario es la tarea de
+Celery ``business.consume_kdp_events``, programada en ``CELERY_BEAT_SCHEDULE``.
+Este comando queda como **red de seguridad declarada**: hace lo mismo (delega en
+``business.kdp_events.consume``, que a su vez usa ``business.kdp_source`` para
+las lecturas puntuales) y, sólo si KDP no pudo dar la inflación, intenta la nota
+de prensa del INE antes de resignarse al valor curado.
+
+Clasificación de los caminos antiguos (contrato §4.7)
+-----------------------------------------------------
+· ``_scrape_fx`` (regex 6,5–7,5 sobre bcb.gob.bo)  → REMOVED_AS_PRIMARY_PATH.
+  Retirado del path activo el 2026-08-25 y eliminado aquí: una banda anclada al
+  peg 2011-2025 no puede observar 11,50, así que no era un respaldo sino una
+  ruta que sólo podía acertar bajo un régimen que ya no existe.
+· IPC por WP REST del INE                          → RETAINED_AS_SAFETY_NET.
+  KDP ingiere `ine-bo-wp`, pero su colector publica **sólo**
+  `ine.publicaciones.count`: no parsea la nota del IPC. Mientras eso siga así,
+  este camino es la única vía cuando la serie del BCB no llega.
+· regex de inflación sobre la home del INE          → REMOVED_AS_PRIMARY_PATH.
+  Tercer eslabón detrás de dos que ya cubren el caso; se conserva sólo detrás de
+  ellos y nunca como vía de frescura.
 
 Ejemplos:
-    python manage.py scrape_bolivia_data            # scrapea y escribe el JSON
+    python manage.py scrape_bolivia_data            # refresca y escribe el JSON
     python manage.py scrape_bolivia_data --dry-run  # muestra sin escribir
-    python manage.py scrape_bolivia_data --timeout 20
 """
-import datetime as _dt
-import json
 import logging
 import re
-from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
+from business import kdp_events, provenance as prov
+from business.data.curated_market import (
+    CURATED, CURATED_PRICES, CURATED_SOURCE,  # noqa: F401 — reexport histórico
+)
+
 logger = logging.getLogger(__name__)
 
-OUTPUT_PATH = Path(__file__).resolve().parents[2] / "data" / "bolivia_market_data.json"
+OUTPUT_PATH = kdp_events.MARKET_DATA_PATH
 
-BCB_URL = "https://www.bcb.gob.bo/"
-BCB_TC_URL = "https://www.bcb.gob.bo/?q=cotizaciones_tc"
+# Home del INE: sólo la usa el regex legacy, que es el último eslabón.
 INE_URL = "https://www.ine.gob.bo/"
-
-# Anclas curadas (fuente: INE/BCB/prensa 2024-2025) usadas como fallback.
-CURATED = {
-    "min_wage_month_bs": 2750.0,
-    "inflation_annual_pct": 10.0,
-    "fx_usd_bob_official": 6.96,
-    "fx_usd_bob_parallel": 13.0,
-}
-
-# Precios minoristas ancla por producto (Bs) — refrescables manualmente o por
-# ampliaciones futuras del scraper. Reflejan cifras de mercado 2025.
-CURATED_PRICES = {
-    "leche_litro": 7.50, "queso_kg": 42.0, "yogur_litro": 17.0,
-    "pan_unidad": 0.60, "empanada_unidad": 6.0,
-    "carne_res_kg": 60.0, "pollo_kg": 25.0,
-    "papa_kg": 4.30, "tomate_kg": 5.20, "arroz_kg": 13.0, "azucar_kg": 7.50,
-    "almuerzo": 16.0, "consulta_medica": 150.0,
-    "cemento_bolsa": 60.0, "ladrillo_unidad": 1.40,
-    "pasaje_urbano": 2.30, "colegio_privado_mes": 900.0, "curso": 200.0,
-}
 
 
 class Command(BaseCommand):
-    help = "Scrapea datos macro/precios de Bolivia (BCB/INE) a bolivia_market_data.json."
+    help = ("Red de seguridad del contexto macro. El camino programado es la "
+            "tarea Celery business.consume_kdp_events.")
 
     def add_arguments(self, parser):
         parser.add_argument("--dry-run", action="store_true", help="No escribe el archivo.")
         parser.add_argument("--timeout", type=int, default=15, help="Timeout HTTP en segundos.")
 
     def handle(self, *args, **opts):
-        timeout = opts["timeout"]
-        sources = {}
-        macro = dict(CURATED)
+        self.stdout.write(self.style.WARNING(
+            "Este comando no es el camino primario: lo es la tarea Celery "
+            "'business.consume_kdp_events' (CELERY_BEAT_SCHEDULE, cada 10 min)."))
 
-        # 1) Tipo de cambio oficial (BCB).
-        fx, fx_src = self._scrape_fx(timeout)
-        if fx is not None:
-            macro["fx_usd_bob_official"] = fx
-        sources["fx_usd_bob_official"] = fx_src
+        informe = kdp_events.consume(write=not opts["dry_run"])
+        datos = informe.get("market_data") or {}
+        meta = datos.get("meta", {})
+        procedencia = dict(meta.get("provenance") or {})
 
-        # 1b) Paralelo (libro P2P observado vía KDP). El valor curado de 13,0
-        # quedó de 2025; el libro real se mueve todas las semanas.
-        try:
-            from business import kdp_source
-            par, par_src = kdp_source.fetch_paralelo()
-            macro["fx_usd_bob_parallel"] = par
-            sources["fx_usd_bob_parallel"] = par_src
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("KDP no dio el paralelo (%s) — se conserva el curado", exc)
-            sources["fx_usd_bob_parallel"] = "fallback-curado"
+        # Red de seguridad: sólo si la inflación acabó siendo un curado.
+        if (not opts["dry_run"]
+                and procedencia.get("inflation_annual_pct") == prov.FALLBACK):
+            ipc = self._inflacion_desde_ine(opts["timeout"])
+            if ipc:
+                valor, fuente, sello = ipc
+                datos = kdp_events.override_field(
+                    "inflation_annual_pct", value=valor, source=fuente,
+                    provenance=prov.OBSERVED_REAL, data_timestamp=sello,
+                    freshness_status=prov.DEGRADED,
+                    note=("red de seguridad: publicado por el INE, NO pasó por "
+                          "KDP ni por sus controles de calidad"))
+                meta = datos["meta"]
+            else:
+                logger.warning("Ni KDP ni el INE dieron la inflación — "
+                               "se conserva el curado (fallback-curado)")
 
-        # 2) Inflación (INE).
-        infl, infl_src, ipc = self._scrape_inflation(timeout)
-        if infl is not None:
-            macro["inflation_annual_pct"] = infl
-        sources["inflation_annual_pct"] = infl_src
-
-        payload = {
-            "macro": macro,
-            "prices_bs": CURATED_PRICES,
-            "meta": {
-                "sources": sources,
-                "generated_by": "manage.py scrape_bolivia_data",
-                "generated_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),
-                "note": "KDP primero (observado); si no responde, valor curado marcado como tal",
-            },
-        }
-        if ipc:
-            payload["meta"]["ipc"] = ipc
-
-        self.stdout.write(self.style.MIGRATE_HEADING("Datos macro recolectados:"))
-        for k, v in macro.items():
-            src = sources.get(k, "curado")
-            self.stdout.write(f"  {k:26} = {v:<10} [{src}]")
+        self.stdout.write(self.style.MIGRATE_HEADING(
+            f"Datos macro [{meta.get('freshness_status', '?')}]:"))
+        for k, v in (datos.get("macro") or {}).items():
+            etiqueta = (meta.get("provenance") or {}).get(k, prov.FALLBACK)
+            fuente = (meta.get("sources") or {}).get(k, CURATED_SOURCE)
+            estilo = (self.style.SUCCESS if prov.is_observation(etiqueta)
+                      else self.style.WARNING)
+            self.stdout.write(estilo(f"  {k:26} = {v:<10} [{etiqueta}] {fuente}"))
 
         if opts["dry_run"]:
             self.stdout.write(self.style.WARNING("--dry-run: no se escribió el archivo."))
-            self.stdout.write(json.dumps(payload, indent=2, ensure_ascii=False))
             return
-
-        OUTPUT_PATH.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
         self.stdout.write(self.style.SUCCESS(f"Escrito: {OUTPUT_PATH}"))
 
-    # ── scrapers best-effort ─────────────────────────────────────────────────
+    # ── red de seguridad ─────────────────────────────────────────────────────
     def _fetch(self, url, timeout):
         import requests
         headers = {"User-Agent": "Mozilla/5.0 (FindemproAI market data collector)"}
@@ -123,49 +110,15 @@ class Command(BaseCommand):
         resp.raise_for_status()
         return resp.text
 
-    def _scrape_fx(self, timeout):
-        """Tipo de cambio oficial Bs/USD.
+    def _inflacion_desde_ine(self, timeout):
+        """Inflación interanual del INE. Devuelve ``(valor, fuente, fecha)`` o None.
 
-        Orden: KDP (observado) → scraping del BCB → valor curado.
-
-        El scraping de abajo sólo acepta 6,5–7,5 porque se escribió cuando
-        Bolivia sostenía Bs 6,96. Con el oficial en 11,50 ese filtro descarta el
-        valor real, así que dejó de poder observar nada: por eso KDP va primero.
+        RETAINED_AS_SAFETY_NET: sólo corre cuando KDP no pudo dar la serie del
+        BCB. El número que devuelve es real —lo publica el INE— pero no pasó por
+        la plataforma, así que viaja con su propia fuente (``ine-wp-rest``,
+        nunca ``kdp:``) para que se pueda distinguir de una observación curada
+        por KDP.
         """
-        try:
-            from business import kdp_source
-            return kdp_source.fetch_fx_oficial()
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("KDP no dio el oficial (%s) — se intenta el scraping", exc)
-
-        # El scraping regex quedó retirado del path activo (2026-08-25).
-        # Buscaba `\b(6[.,]9\d)\b` y sólo aceptaba 6,5–7,5, así que no podía
-        # observar 11,50 aunque el BCB lo publicara: no era un respaldo, era una
-        # ruta que sólo podía acertar bajo el régimen 2011-2025. Con KDP
-        # sirviendo el oficial observado, mantenerla sería dejar código muerto
-        # ejecutable que devuelve un valor mal por construcción.
-        # Si KDP no responde, se conserva el valor curado y se marca como tal.
-        return None, "fallback-curado"
-
-    def _scrape_inflation(self, timeout):
-        """Lee la inflación *interanual* real del INE; fallback al valor curado.
-
-        Devuelve ``(valor, fuente, ipc_detalle | None)``.
-
-        Vía preferida: la nota de prensa mensual del IPC por **WP REST API**
-        (misma lógica que ``ingest_ine_series``) — trae el nivel a 12 meses de
-        forma estructurada y fiable. Si no está disponible, cae al regex legacy
-        sobre la home (que exige contexto anual para no confundir la variación
-        mensual ~2 % con la anual) y, en última instancia, al valor curado.
-        """
-        # 0) KDP — serie mensual real del BCB, la única observada de las tres.
-        try:
-            from business import kdp_source
-            val, src = kdp_source.fetch_inflacion_anual()
-            return val, src, None
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("KDP no dio la inflación (%s) — se intenta INE", exc)
-
         # 1) Nota de prensa mensual del IPC (WP REST) — fuente estable.
         try:
             from business.management.commands.ingest_ine_series import (
@@ -173,11 +126,12 @@ class Command(BaseCommand):
             )
             ipc = IneSeriesCommand()._fetch_ipc_wp(timeout)
             if ipc and ipc.get("annual_pct") is not None:
-                return ipc["annual_pct"], "ine-wp-rest", ipc
+                return ipc["annual_pct"], "ine-wp-rest", ipc.get("date")
         except Exception as exc:  # noqa: BLE001
             logger.warning("IPC vía WP REST no disponible: %s", exc)
 
-        # 2) Legacy: regex sobre la home del INE.
+        # 2) Legacy: regex sobre la home del INE. Exige contexto anual para no
+        #    confundir la variación mensual (~2 %) con la interanual.
         annual_ctx = r"(?:acumulad|doce meses|a 12 meses|interanual|anual)"
         try:
             html = self._fetch(INE_URL, timeout)
@@ -193,4 +147,4 @@ class Command(BaseCommand):
                         return round(val, 2), "ine-scraped", None
         except Exception as exc:  # noqa: BLE001
             logger.warning("Scrape inflación falló: %s", exc)
-        return None, "fallback-curado", None
+        return None
