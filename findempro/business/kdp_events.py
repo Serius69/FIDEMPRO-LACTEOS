@@ -114,6 +114,10 @@ class ConsumerState:
         #: series_key → último valor observado (contexto sectorial completo)
         self.series_latest: dict = dict(raw.get("series_latest") or {})
         self.last_drain_at: str | None = raw.get("last_drain_at")
+        #: última `schema_version` vista. Se guarda porque una corrida sin
+        #: eventos no la vería, y publicar `null` haría parecer que el
+        #: consumidor no sabe contra qué esquema está trabajando.
+        self.schema_version: str | None = raw.get("schema_version")
         self._seen_index = set(self.seen_events)
 
     # -- idempotencia ------------------------------------------------------
@@ -156,6 +160,7 @@ class ConsumerState:
             "seen_events": self.seen_events,
             "series_latest": self.series_latest,
             "last_drain_at": self.last_drain_at,
+            "schema_version": self.schema_version,
         }
         self.path.parent.mkdir(parents=True, exist_ok=True)
         # Atómico: un corte a mitad de escritura dejaría un JSON truncado, que
@@ -293,7 +298,9 @@ def consume(*, client=None, write: bool = True, apply_point_reads: bool = True,
         if eid:
             estado.remember(eid)
         informe["events_applied"] += 1
-        informe["schema_version"] = ev.get("schema_version") or informe["schema_version"]
+        if ev.get("schema_version"):
+            informe["schema_version"] = ev["schema_version"]
+            estado.schema_version = ev["schema_version"]
 
         pub = _parse(ev.get("published_at"))
         if pub.year > 1:
@@ -436,6 +443,11 @@ def build_market_context(estado: ConsumerState, informe: dict,
         "freshness_status": prov.DEGRADED,
         "age_seconds": None,
         "note": "DS 5383 (2025); KDP no publica el salario mínimo",
+        # No entra en el agregado: es un decreto, no una serie, y KDP no lo
+        # publica ni lo va a publicar. Contarlo dejaría `freshness_status` en
+        # DEGRADED para siempre, y un semáforo que está siempre en ámbar deja
+        # de mirarse. Su etiqueta individual sigue diciendo FALLBACK.
+        "permanent_fallback": True,
     }
 
     macro = {k: v["value"] for k, v in campos.items()}
@@ -446,7 +458,8 @@ def build_market_context(estado: ConsumerState, informe: dict,
         for k, v in campos.items()
     }
 
-    estados = [v["freshness_status"] for v in campos.values()]
+    estados = [v["freshness_status"] for v in campos.values()
+               if not v.get("permanent_fallback")]
     if informe.get("degraded_reason"):
         estados.append(prov.SOURCE_DOWN)
     global_freshness = prov.worst_freshness(estados)
@@ -461,7 +474,7 @@ def build_market_context(estado: ConsumerState, informe: dict,
         "events_duplicate": informe.get("events_duplicate"),
         "events_out_of_order": informe.get("events_out_of_order"),
         "lag_events": informe.get("lag_events"),
-        "schema_version": informe.get("schema_version"),
+        "schema_version": informe.get("schema_version") or estado.schema_version,
         "available": informe.get("kdp_available"),
         "degraded_reason": informe.get("degraded_reason"),
         "drained_at": _now().isoformat(),
@@ -565,7 +578,8 @@ def override_field(key: str, *, value, source: str, provenance: str,
         "note": note,
     }
     meta["freshness_status"] = prov.worst_freshness(
-        [v.get("freshness_status") for v in frescura.values()])
+        [v.get("freshness_status") for v in frescura.values()
+         if not v.get("permanent_fallback")])
     sellos = [v.get("data_timestamp") for v in frescura.values() if v.get("data_timestamp")]
     meta["data_timestamp"] = max(sellos) if sellos else None
     tmp = destino.with_suffix(".json.tmp")

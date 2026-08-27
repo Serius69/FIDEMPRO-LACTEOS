@@ -516,6 +516,45 @@ def test_market_context_de_bolivia_industries_lleva_la_etiqueta(estado_aislado):
     assert bi.MARKET_CONTEXT["freshness_status"] in prov.FRESHNESS
 
 
+def test_la_schema_version_sobrevive_una_corrida_sin_eventos(estado_aislado):
+    """Una corrida vacía no puede borrar contra qué esquema se está trabajando.
+
+    El beat corre cada 10 minutos y este dataset se mueve una vez por semana:
+    casi todas las corridas son vacías. Si la versión se recalculara sólo desde
+    los eventos del momento, el JSON publicaría `null` la mayor parte del tiempo.
+    """
+    reciente = (datetime.now(timezone.utc) - timedelta(days=5)).isoformat()
+    _consumir(ClienteFalso([_evento(1, serie="s", event_time=reciente,
+                                    schema="1.0.0")]), estado_aislado)
+    vacia = _consumir(ClienteFalso([]), estado_aislado)
+    assert vacia["events_applied"] == 0
+    assert vacia["market_data"]["meta"]["kdp"]["schema_version"] == "1.0.0"
+
+
+def test_un_curado_permanente_no_deja_el_semaforo_en_ambar(estado_aislado, settings):
+    """El salario mínimo es un decreto: KDP no lo publica ni lo va a publicar.
+
+    Contarlo en el agregado dejaría `freshness_status` en DEGRADED para siempre,
+    y un semáforo que está siempre en ámbar deja de mirarse. Su etiqueta
+    individual sigue siendo FALLBACK: no se esconde, se saca del promedio.
+    """
+    settings.KDP_MAX_AGE_S = 63072000
+    reciente = (datetime.now(timezone.utc) - timedelta(days=5)).isoformat()
+    informe = _consumir(
+        ClienteFalso([_evento(1, serie="bcb.inflacion_total_variacion_a_doce_meses",
+                              valor=4.93, event_time=reciente)]),
+        estado_aislado)
+    meta = informe["market_data"]["meta"]
+    assert meta["provenance"]["min_wage_month_bs"] == prov.FALLBACK
+    assert meta["freshness"]["min_wage_month_bs"]["permanent_fallback"] is True
+    # Las lecturas puntuales están apagadas, así que el oficial y el paralelo
+    # sí degradan y el agregado lo refleja — pero por ellos, no por el decreto.
+    assert meta["freshness_status"] == prov.SOURCE_DOWN
+    assert prov.observed_value(
+        kdp_events.load_market_context(estado_aislado / "market.json"),
+        "min_wage_month_bs") is None
+
+
 # ══════════════════════════════════════════════════ programación sin humanos
 def test_la_tarea_esta_registrada_y_programada(settings):
     """Nadie tiene que teclear nada: el beat la dispara.

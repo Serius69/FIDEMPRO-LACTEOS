@@ -193,8 +193,17 @@ def read_inflacion_anual() -> Reading:
 
     Camino de reconciliación: la vía primaria de la inflación es el evento de
     ``findempro_sector_bo`` (`bcb.inflacion_total_variacion_a_doce_meses`). Esta
-    lectura puntual sigue existiendo para el arranque en frío — cuando aún no se
-    ha drenado un solo evento y el cursor está en cero.
+    lectura puntual queda para el arranque en frío — cuando aún no se ha drenado
+    un solo evento y el cursor está en cero.
+
+    OJO (verificado 2026-08-27): ese endpoint es la superficie de **Insights**, y
+    el token de Findempro recibe **403** sobre él. Es decir: este camino no puede
+    funcionar con esta credencial, y no es un fallo a arreglar aflojando el
+    alcance del token — un token que llega a los datos de otro producto deja de
+    ser una credencial. En la práctica no se nota porque `consume()` drena antes
+    de proyectar, así que el valor sale del evento; si aun así no hubiera
+    ninguno, esto levanta y el ancla sale etiquetada FALLBACK, que es lo
+    correcto.
     """
     payload = _get("/v1/products/insights/series/inflacion_doce_meses")
     if payload.get("provenance") != "observed":
