@@ -1,9 +1,9 @@
 {
   "macro": {
-    "min_wage_month_bs": 2750.0,
     "inflation_annual_pct": 4.93,
-    "fx_usd_bob_official": 11.5,
-    "fx_usd_bob_parallel": 11.73
+    "fx_usd_bob_official": 11.71,
+    "fx_usd_bob_parallel": 12.01,
+    "min_wage_month_bs": 2750.0
   },
   "prices_bs": {
     "leche_litro": 7.5,
@@ -27,12 +27,71 @@
   },
   "meta": {
     "sources": {
+      "inflation_annual_pct": "kdp-event:bcb-semanal-bulk",
       "fx_usd_bob_official": "kdp:dolarapi-bo",
       "fx_usd_bob_parallel": "kdp:criptoya-bo",
-      "inflation_annual_pct": "kdp:bcb-semanal-bulk"
+      "min_wage_month_bs": "fallback-curado"
     },
-    "generated_by": "manage.py scrape_bolivia_data",
-    "generated_at": "2026-08-25T04:14:12.624686+00:00",
-    "note": "KDP primero (observado); si no responde, valor curado marcado como tal"
+    "provenance": {
+      "inflation_annual_pct": "OBSERVED_REAL",
+      "fx_usd_bob_official": "STALE",
+      "fx_usd_bob_parallel": "OBSERVED_REAL",
+      "min_wage_month_bs": "FALLBACK"
+    },
+    "freshness": {
+      "inflation_annual_pct": {
+        "source": "kdp-event:bcb-semanal-bulk",
+        "provenance": "OBSERVED_REAL",
+        "data_timestamp": "2026-07-31T00:00:00+00:00",
+        "freshness_status": "FRESH",
+        "age_seconds": 2402100.8,
+        "series_key": "bcb.inflacion_total_variacion_a_doce_meses",
+        "seq": 20868
+      },
+      "fx_usd_bob_official": {
+        "source": "kdp:dolarapi-bo",
+        "provenance": "STALE",
+        "data_timestamp": "2026-08-27T00:00:00+00:00",
+        "freshness_status": "STALE",
+        "age_seconds": 69300.8
+      },
+      "fx_usd_bob_parallel": {
+        "source": "kdp:criptoya-bo",
+        "provenance": "OBSERVED_REAL",
+        "data_timestamp": "2026-08-27T19:13:56+00:00",
+        "freshness_status": "FRESH",
+        "age_seconds": 64.9
+      },
+      "min_wage_month_bs": {
+        "source": "fallback-curado",
+        "provenance": "FALLBACK",
+        "data_timestamp": null,
+        "freshness_status": "DEGRADED",
+        "age_seconds": null,
+        "note": "DS 5383 (2025); KDP no publica el salario mínimo",
+        "permanent_fallback": true
+      }
+    },
+    "freshness_status": "STALE",
+    "data_timestamp": "2026-08-27T19:13:56+00:00",
+    "prices_provenance": "FALLBACK",
+    "kdp": {
+      "mode": "CURSOR_STREAM",
+      "consumer": "Findempro",
+      "dataset_id": "findempro_sector_bo",
+      "cursor_seq": 20878,
+      "events_applied": 0,
+      "events_duplicate": 0,
+      "events_out_of_order": 0,
+      "lag_events": 0,
+      "schema_version": "1.0.0",
+      "available": true,
+      "degraded_reason": null,
+      "drained_at": "2026-08-27T19:15:00.862060+00:00",
+      "series_tracked": 949
+    },
+    "generated_by": "celery beat · business.consume_kdp_events",
+    "generated_at": "2026-08-27T19:15:00.862078+00:00",
+    "note": "Consumo por cursor de KDP. Cada ancla lleva su procedencia: OBSERVED_REAL es medición, FALLBACK es el curado de respaldo. Nunca se presentan como lo mismo."
   }
 }
