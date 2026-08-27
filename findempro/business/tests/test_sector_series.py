@@ -232,58 +232,62 @@ def test_regional_price_pressure_none_without_signal(tmp_path, monkeypatch):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# scrape_bolivia_data — inflación interanual vía WP REST con fallback
+# scrape_bolivia_data — la red de seguridad, por DEBAJO de KDP
 # ─────────────────────────────────────────────────────────────────────────────
-def _sin_kdp(monkeypatch):
-    """Neutraliza la capa KDP para poder ejercitar las de abajo.
-
-    Desde la integración, `_scrape_inflation` consulta KDP antes que INE. Estos
-    dos tests documentan el orden por DEBAJO de KDP, así que lo apagan a
-    propósito en vez de depender de que el servicio no esté corriendo.
-    """
-    from business import kdp_source
-
-    def caido():
-        raise kdp_source.KdpUnavailable("KDP apagado en el test")
-
-    monkeypatch.setattr(kdp_source, "fetch_inflacion_anual", caido)
-    monkeypatch.setattr(kdp_source, "fetch_fx_oficial", caido)
-
-
-def test_scrape_inflation_prefiere_kdp_cuando_esta(monkeypatch):
-    from business.management.commands.scrape_bolivia_data import Command
-    from business import kdp_source
-    monkeypatch.setattr(kdp_source, "fetch_inflacion_anual",
-                        lambda: (4.93, "kdp:bcb-semanal-bulk"))
-    val, src, detail = Command()._scrape_inflation(timeout=1)
-    assert val == 4.93
-    assert src == "kdp:bcb-semanal-bulk"
-    assert detail is None
-
-
-def test_scrape_inflation_prefers_wp_rest(monkeypatch):
+# Desde la migración a eventos (2026-08-27) el comando ya no es el camino de
+# frescura: lo es la tarea Celery `business.consume_kdp_events`. `_scrape_fx` y
+# `_scrape_inflation` desaparecieron; lo que queda es `_inflacion_desde_ine`,
+# que SÓLO corre cuando KDP no pudo dar la inflación. Estos tests documentan ese
+# escalón de abajo y que el de arriba no lo invoca cuando no hace falta.
+def test_la_red_de_seguridad_prefiere_wp_rest(monkeypatch):
     from business.management.commands.scrape_bolivia_data import Command
     from business.management.commands import ingest_ine_series
-    _sin_kdp(monkeypatch)
-    ipc = {"period": "junio de 2026", "annual_pct": 9.23, "regional": {"Oruro": 3.86}}
+    ipc = {"period": "junio de 2026", "annual_pct": 9.23, "date": "2026-07-05",
+           "regional": {"Oruro": 3.86}}
     monkeypatch.setattr(ingest_ine_series.Command, "_fetch_ipc_wp",
                         lambda self, timeout: ipc)
-    val, src, detail = Command()._scrape_inflation(timeout=1)
+    val, src, sello = Command()._inflacion_desde_ine(timeout=1)
     assert val == 9.23
+    # NO lleva prefijo kdp:. Es un número real del INE que no pasó por la
+    # plataforma, y confundirlo con uno que sí pasó sería el fallo silencioso.
     assert src == "ine-wp-rest"
-    assert detail is ipc
+    assert not src.startswith("kdp")
+    assert sello == "2026-07-05"
 
 
-def test_scrape_inflation_falls_back_to_curated(monkeypatch):
+def test_la_red_de_seguridad_se_rinde_sin_inventar(monkeypatch):
     from business.management.commands.scrape_bolivia_data import Command
     from business.management.commands import ingest_ine_series
 
     def boom(self, timeout):
         raise RuntimeError("INE caído")
 
-    _sin_kdp(monkeypatch)
     monkeypatch.setattr(ingest_ine_series.Command, "_fetch_ipc_wp", boom)
     monkeypatch.setattr(Command, "_fetch", boom)
-    val, src, detail = Command()._scrape_inflation(timeout=1)
-    assert val is None and detail is None
-    assert src == "fallback-curado"
+    # Devuelve None: el curado lo pone la capa de arriba, etiquetado FALLBACK.
+    # Que este escalón devolviera un número sería inventarlo.
+    assert Command()._inflacion_desde_ine(timeout=1) is None
+
+
+def test_el_comando_no_toca_el_ine_si_kdp_dio_la_inflacion(monkeypatch):
+    """La red de seguridad es red, no camino: no se pisa si no hace falta."""
+    from business.management.commands.scrape_bolivia_data import Command
+    from business.management.commands import ingest_ine_series
+    from business import kdp_events
+
+    monkeypatch.setattr(kdp_events, "consume", lambda **kw: {
+        "consumer": "Findempro", "dataset_id": "findempro_sector_bo",
+        "market_data": {
+            "macro": {"inflation_annual_pct": 4.93},
+            "meta": {"provenance": {"inflation_annual_pct": "OBSERVED_REAL"},
+                     "sources": {"inflation_annual_pct": "kdp-event:bcb-semanal-bulk"},
+                     "freshness_status": "FRESH"},
+        },
+    })
+
+    def prohibido(self, timeout):
+        raise AssertionError("se consultó al INE teniendo el dato de KDP")
+
+    monkeypatch.setattr(ingest_ine_series.Command, "_fetch_ipc_wp", prohibido)
+    monkeypatch.setattr(Command, "_fetch", prohibido)
+    Command().handle(dry_run=False, timeout=1)
