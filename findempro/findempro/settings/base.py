@@ -258,6 +258,45 @@ CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 min
 CELERY_ALWAYS_EAGER = os.getenv('CELERY_ALWAYS_EAGER', 'False').lower() in ('true', '1')
 
 # ─────────────────────────────────────────────
+# KDP — Kapitalya Data Platform (consumidor de eventos)
+# ─────────────────────────────────────────────
+# Findempro consume el dataset `findempro_sector_bo` en modo CURSOR_STREAM: no
+# mantiene una conexión abierta, guarda un número (el `seq`) y aplica sólo lo
+# nuevo. La política declarada en la plataforma
+# (`registry/consumer_policies.yaml`) es on_stale=WARN, on_unavailable=DEGRADE,
+# allow_lkg=true, require_provenance=true, max_age_s=63072000.
+#
+# El token es de Findempro y sólo alcanza sus datasets: NUNCA va al código.
+KDP_API_URL = os.getenv('KDP_API_URL', 'http://127.0.0.1:8099')
+KDP_API_TOKEN = os.getenv('KDP_API_TOKEN', '')
+KDP_TIMEOUT = float(os.getenv('KDP_TIMEOUT', '20'))
+KDP_CONSUMER_ID = os.getenv('KDP_CONSUMER_ID', 'Findempro')
+KDP_DATASET_ID = os.getenv('KDP_DATASET_ID', 'findempro_sector_bo')
+KDP_EXPECT_SCHEMA = os.getenv('KDP_EXPECT_SCHEMA', '1.x')
+# World Bank publica una vez al año: dos años de tolerancia es la política, no
+# un descuido. Lo que no se tolera es un valor curado disfrazado de observación.
+KDP_MAX_AGE_S = int(os.getenv('KDP_MAX_AGE_S', str(63072000)))
+# Estado local del consumidor: cursor + última `event_time` por partition_key.
+# Fuera de git y fuera del árbol de datos versionado; se recrea solo si falta,
+# pero borrarlo hace que el consumidor reprocese (idempotente, no destructivo).
+KDP_STATE_DIR = os.getenv('KDP_STATE_DIR', os.path.join(BASE_DIR, 'var', 'kdp'))
+
+# Programación. Esto es lo que sustituye a "alguien teclea el comando": el
+# beat de Celery (django_celery_beat.schedulers:DatabaseScheduler, ya desplegado
+# en docker-compose.dev.yml y docker-compose.prod.yml) sincroniza este dict a la
+# base al arrancar y dispara la tarea sin intervención humana.
+CELERY_BEAT_SCHEDULE = {
+    'business.consume-kdp-events': {
+        'task': 'business.consume_kdp_events',
+        # Cada 10 minutos. El dataset se mueve poco (BCB semanal, World Bank
+        # anual), pero el coste de un drain vacío es una petición HTTP: la
+        # cadencia la fija el tiempo que se tolera ir atrasado, no el volumen.
+        'schedule': float(os.getenv('KDP_CONSUME_INTERVAL_S', '600')),
+        'options': {'expires': 540},
+    },
+}
+
+# ─────────────────────────────────────────────
 # Internacionalización
 # ─────────────────────────────────────────────
 LANGUAGE_CODE = 'es'
