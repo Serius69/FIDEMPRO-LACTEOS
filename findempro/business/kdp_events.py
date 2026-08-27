@@ -195,9 +195,16 @@ def build_consumer(client=None):
                            timeout=int(float(_conf("KDP_TIMEOUT", 20))),
                            token=token)
     cp = Checkpoint(state_dir() / "cursor.json")
+    # `remember=0` apaga la ventana de idempotencia EN MEMORIA del cliente, y no
+    # es un descuido: este consumidor arranca y muere en cada tick del beat, así
+    # que una ventana de proceso no protegería de nada tras el reinicio. La
+    # idempotencia la lleva `ConsumerState`, que la persiste. Con las dos
+    # activas el duplicado se descartaba antes de llegar al handler y el informe
+    # decía cero duplicados: una defensa que funciona pero no se puede medir es
+    # indistinguible de una que no está.
     ec = EventConsumer(client, _conf("KDP_CONSUMER_ID", "Findempro"),
                        _conf("KDP_DATASET_ID", "findempro_sector_bo"),
-                       checkpoint=cp)
+                       checkpoint=cp, remember=0)
     return ec, cp
 
 
@@ -227,7 +234,8 @@ def _drain_with_retry(consumer, handler, *, attempts: int = 3,
     raise ultimo  # noqa: RSE102 — se propaga la última, ya con contexto en el log
 
 
-def consume(*, client=None, write: bool = True, apply_point_reads: bool = True) -> dict:
+def consume(*, client=None, write: bool = True, apply_point_reads: bool = True,
+            path: Path | None = None) -> dict:
     """Drena el cursor, aplica lo nuevo y reescribe el contexto macro.
 
     Devuelve un informe con las métricas del contrato §7. No levanta si KDP no
@@ -319,7 +327,7 @@ def consume(*, client=None, write: bool = True, apply_point_reads: bool = True) 
 
     if write:
         informe["market_data"] = write_market_context(
-            estado, informe, apply_point_reads=apply_point_reads)
+            estado, informe, apply_point_reads=apply_point_reads, path=path)
 
     informe["duration_ms"] = round((time.monotonic() - t0) * 1000.0, 1)
     return informe

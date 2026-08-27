@@ -357,7 +357,7 @@ def get_spec(business_type: int):
     return INDUSTRIES.get(business_type)
 
 
-def _overlay_scraped_context():
+def _overlay_scraped_context(path=None):
     """Superpone sobre MARKET_CONTEXT lo que escribió el consumidor de KDP.
 
     Best-effort: nunca rompe el import. Pero best-effort NO significa que un
@@ -367,7 +367,7 @@ def _overlay_scraped_context():
     """
     import json
     from pathlib import Path
-    path = Path(__file__).resolve().parent / "bolivia_market_data.json"
+    path = Path(path) if path else Path(__file__).resolve().parent / "bolivia_market_data.json"
     try:
         if not path.exists():
             return
