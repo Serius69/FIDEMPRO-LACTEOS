@@ -66,6 +66,7 @@ RUN mkdir -p \
         /app/media \
         /app/media/chart_images \
         /app/logs \
+        /app/var/kdp \
     && chown -R appuser:appuser /app \
     && chown -R appuser:appuser /home/appuser/.local
 
