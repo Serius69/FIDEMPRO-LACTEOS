@@ -36,6 +36,14 @@ class SimulationProject(models.Model):
         User, on_delete=models.CASCADE, null=True, blank=True,
         related_name="canvas_projects",
     )
+    organization = models.ForeignKey(
+        "tenancy.Organization",
+        on_delete=models.PROTECT,
+        related_name="simulation_projects",
+        null=True,
+        blank=True,
+        db_index=True,
+    )
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     domain = models.CharField(max_length=50, choices=DOMAIN_CHOICES, default="dairy")
@@ -46,6 +54,12 @@ class SimulationProject(models.Model):
     class Meta:
         app_label = "simulate"
         ordering = ["-updated_at"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(organization__isnull=False),
+                name="canvas_project_requires_organization",
+            )
+        ]
 
     def __str__(self):
         return self.name
@@ -54,6 +68,10 @@ class SimulationProject(models.Model):
         return _DEFAULT_RUN_SPECS.copy()
 
     def save(self, *args, **kwargs):
+        if self.organization_id is None and self.user_id:
+            from tenancy.services import ensure_default_organization
+
+            self.organization = ensure_default_organization(self.user)
         if not self.run_specs:
             self.run_specs = self.get_default_run_specs()
         super().save(*args, **kwargs)
@@ -215,12 +233,23 @@ class CanvasSimulationRun(models.Model):
         ("sensitivity", "Sensitivity Analysis"),
         ("scenario", "Scenario"),
     ]
+    STATUS_CHOICES = [
+        ("queued", "Queued"),
+        ("running", "Running"),
+        ("completed", "Completed"),
+        ("failed", "Failed"),
+        ("cancelled", "Cancelled"),
+    ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     project = models.ForeignKey(
         SimulationProject, on_delete=models.CASCADE, related_name="runs",
     )
     run_type = models.CharField(max_length=20, choices=RUN_TYPES, default="montecarlo")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="queued", db_index=True)
+    progress = models.PositiveSmallIntegerField(default=0)
+    error = models.TextField(blank=True)
+    idempotency_key = models.CharField(max_length=180, blank=True)
     parameters_snapshot = models.JSONField(null=True, blank=True)
     results = models.JSONField(null=True, blank=True)
     statistics = models.JSONField(null=True, blank=True)
@@ -233,6 +262,14 @@ class CanvasSimulationRun(models.Model):
         ordering = ["-created_at"]
         indexes = [
             models.Index(fields=["project", "-created_at"]),
+            models.Index(fields=["project", "status"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "idempotency_key"],
+                condition=~models.Q(idempotency_key=""),
+                name="uniq_canvas_run_idempotency",
+            )
         ]
 
     def __str__(self):

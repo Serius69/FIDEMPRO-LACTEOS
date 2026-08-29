@@ -8,11 +8,12 @@ Adaptado de la spec Flask → Django REST Framework:
   jsonify()   → Response()
   abort(404)  → raise NotFound()
 """
+import logging
 import json
 import time
 import uuid
-import logging
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
@@ -43,6 +44,17 @@ from ..canvas_serializers import (
 )
 from ..core.model_compiler import ModelCompiler, ModelCompilerError
 from ..models import RiskAlert
+from findempro.throttles import ExportThrottle, SimulateThrottle
+from tenancy.models import UsageEvent
+from tenancy.permissions import OrganizationWritePermission
+from tenancy.services import (
+    enforce_monthly_usage,
+    enforce_quota,
+    get_request_organization,
+    record_resource_usage,
+    record_usage,
+    require_entitlement,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +72,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
     DELETE /api/v2/projects/{id}/      → eliminar en cascada
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationWritePermission]
 
     def get_queryset(self):
-        base = SimulationProject.objects.filter(user=self.request.user)
+        base = SimulationProject.objects.filter(
+            organization=get_request_organization(self.request)
+        )
         if self.action == 'list':
             # Optimización lista: Count via JOIN (evita N+1) + Prefetch limitado para last_run
             return (
@@ -94,14 +108,30 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return SimulationProjectDetailSerializer
 
     def perform_create(self, serializer):
-        project = serializer.save(user=self.request.user)
-        _seed_dairy_template(project)
+        organization = get_request_organization(self.request)
+        from modeling.models import BusinessModelDefinition
 
-    @action(detail=True, methods=["get"])
+        active_projects = (
+            SimulationProject.objects.filter(organization=organization).count()
+            + BusinessModelDefinition.objects.filter(
+                business__organization=organization,
+                status__in=("draft", "validated", "published"),
+            ).count()
+        )
+        enforce_quota(organization, "active_projects", active_projects)
+        project = serializer.save(user=self.request.user, organization=organization)
+        _seed_dairy_template(project)
+        record_usage(organization, UsageEvent.Metric.PROJECT_CREATED, 1, "canvas.project", project.id)
+
+    @action(detail=True, methods=["get"], throttle_classes=[ExportThrottle])
     def export(self, request, pk=None):
         """Exporta el proyecto completo como JSON portable."""
+        organization = get_request_organization(request)
+        require_entitlement(organization, "exports", "canvas.export", pk)
+        enforce_monthly_usage(organization, "exports", UsageEvent.Metric.EXPORT)
         project = self.get_object()
         data = SimulationProjectDetailSerializer(project).data
+        record_usage(organization, UsageEvent.Metric.EXPORT, 1, "canvas.export", project.id)
         return Response(data)
 
     @action(detail=False, methods=["post"])
@@ -116,9 +146,21 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        organization = get_request_organization(request)
+        from modeling.models import BusinessModelDefinition
+
+        active_projects = (
+            SimulationProject.objects.filter(organization=organization).count()
+            + BusinessModelDefinition.objects.filter(
+                business__organization=organization,
+                status__in=("draft", "validated", "published"),
+            ).count()
+        )
+        enforce_quota(organization, "active_projects", active_projects)
         with transaction.atomic():
             project = SimulationProject.objects.create(
                 user=request.user,
+                organization=organization,
                 name=data.get("name", "Proyecto Importado"),
                 description=data.get("description", ""),
                 domain=data.get("domain", "dairy"),
@@ -153,6 +195,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 except Exception:
                     pass  # edge inválido se omite
 
+        record_usage(
+            organization, UsageEvent.Metric.PROJECT_CREATED, 1,
+            "canvas.project.import", project.id,
+        )
+
         return Response(
             SimulationProjectDetailSerializer(project).data,
             status=status.HTTP_201_CREATED,
@@ -180,13 +227,13 @@ class NodeViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = ModelNodeSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationWritePermission]
 
     def _get_project(self):
         return get_object_or_404(
             SimulationProject,
             pk=self.kwargs["project_pk"],
-            user=self.request.user,
+            organization=get_request_organization(self.request),
         )
 
     def get_queryset(self):
@@ -229,13 +276,13 @@ class EdgeViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = ModelEdgeSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationWritePermission]
 
     def _get_project(self):
         return get_object_or_404(
             SimulationProject,
             pk=self.kwargs["project_pk"],
-            user=self.request.user,
+            organization=get_request_organization(self.request),
         )
 
     def get_queryset(self):
@@ -257,14 +304,29 @@ class SimulationRunView(APIView):
     Body: {run_type: 'montecarlo'|'des'|'scenario', override_params: {...}, scenario: 'optimistic'|...}
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationWritePermission]
+    throttle_classes = [SimulateThrottle]
 
     def post(self, request, project_pk):
-        project = get_object_or_404(SimulationProject, pk=project_pk, user=request.user)
+        organization = get_request_organization(request)
+        project = get_object_or_404(SimulationProject, pk=project_pk, organization=organization)
 
         run_type = request.data.get("run_type", "montecarlo")
         override_params = request.data.get("override_params", {})
         scenario = request.data.get("scenario", "expected")
+        if run_type in {"des", "scenario"}:
+            require_entitlement(organization, "advanced_simulation", "canvas.simulate", project.id)
+        enforce_monthly_usage(organization, "simulation_runs", UsageEvent.Metric.SIMULATION_RUN)
+
+        idempotency_key = str(
+            request.headers.get("Idempotency-Key") or request.data.get("idempotency_key") or ""
+        )[:180]
+        if idempotency_key:
+            existing = CanvasSimulationRun.objects.filter(
+                project=project, idempotency_key=idempotency_key
+            ).first()
+            if existing:
+                return Response(CanvasSimulationRunSerializer(existing).data)
 
         nodes = list(project.nodes.values(
             "id", "node_type", "label", "equation", "initial_value",
@@ -292,6 +354,41 @@ class SimulationRunView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        run = CanvasSimulationRun.objects.create(
+            project=project,
+            run_type=run_type,
+            parameters_snapshot=run_specs,
+            n_runs=run_specs.get("n_runs_montecarlo", 1000),
+            status="queued",
+            progress=0,
+            idempotency_key=idempotency_key,
+        )
+        record_usage(
+            organization, UsageEvent.Metric.SIMULATION_RUN, 1,
+            "canvas.simulation", run.id, {"run_type": run_type},
+        )
+        if run_type == "scenario":
+            record_usage(
+                organization, UsageEvent.Metric.SCENARIO_RUN, 1,
+                "canvas.scenario", run.id, {"scenario": scenario},
+            )
+        sync_limit = max(1, int(getattr(settings, "FINDEMPRO_CANVAS_SYNC_MAX_RUNS", 5000)))
+        if run.n_runs and run.n_runs > sync_limit:
+            from simulate.tasks import execute_canvas_run_async
+
+            task = execute_canvas_run_async.delay(str(run.id), scenario=scenario)
+            return Response(
+                {
+                    "run_id": str(run.id),
+                    "task_id": task.id,
+                    "status": "queued",
+                    "status_url": f"/api/v2/projects/{project.id}/runs/{run.id}/",
+                },
+                status=status.HTTP_202_ACCEPTED,
+            )
+        run.status = "running"
+        run.progress = 10
+        run.save(update_fields=["status", "progress"])
         t_start = time.time()
         results = {}
         stats = {}
@@ -310,14 +407,24 @@ class SimulationRunView(APIView):
 
         duration_ms = int((time.time() - t_start) * 1000)
 
-        run = CanvasSimulationRun.objects.create(
-            project=project,
-            run_type=run_type,
-            parameters_snapshot=run_specs,
-            results=results,
-            statistics=stats,
-            run_duration_ms=duration_ms,
-            n_runs=run_specs.get("n_runs_montecarlo", 1000),
+        run.results = results
+        run.statistics = stats
+        run.run_duration_ms = duration_ms
+        run.status = "completed"
+        run.progress = 100
+        run.save(update_fields=["results", "statistics", "run_duration_ms", "status", "progress"])
+        record_usage(
+            organization, UsageEvent.Metric.SIMULATION_RUNTIME, duration_ms / 1000,
+            "canvas.simulation.runtime", run.id, {"cost": "COST_UNKNOWN"},
+        )
+        record_resource_usage(
+            organization, "CPU_SIMULATION", duration_ms / 1000, "seconds",
+            "canvas.simulation", run.id, {"cost": "COST_UNKNOWN"},
+        )
+        record_resource_usage(
+            organization, "STORAGE",
+            len(json.dumps({"results": results, "statistics": stats}, default=str).encode("utf-8")),
+            "bytes", "canvas.result", run.id, {"cost": "COST_UNKNOWN"},
         )
 
         return Response({
@@ -342,10 +449,11 @@ class SimulationLiveUpdateView(APIView):
     Body: {param_changes: {variable_label: new_value, ...}}
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationWritePermission]
+    throttle_classes = [SimulateThrottle]
 
     def post(self, request, project_pk):
-        project = get_object_or_404(SimulationProject, pk=project_pk, user=request.user)
+        project = get_object_or_404(SimulationProject, pk=project_pk, organization=get_request_organization(request))
         param_changes = request.data.get("param_changes", {})
 
         if not param_changes:
@@ -404,10 +512,10 @@ class SimulationValidateView(APIView):
     Valida el modelo antes de simular: ciclos, ecuaciones faltantes, tipos de nodos.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationWritePermission]
 
     def post(self, request, project_pk):
-        project = get_object_or_404(SimulationProject, pk=project_pk, user=request.user)
+        project = get_object_or_404(SimulationProject, pk=project_pk, organization=get_request_organization(request))
 
         nodes = list(project.nodes.values(
             "id", "node_type", "label", "equation", "initial_value", "units",
@@ -443,10 +551,10 @@ class CausalDiagramView(APIView):
     Retorna datos del Causal Loop Diagram (Map View) en formato Cytoscape.js.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationWritePermission]
 
     def get(self, request, project_pk):
-        project = get_object_or_404(SimulationProject, pk=project_pk, user=request.user)
+        project = get_object_or_404(SimulationProject, pk=project_pk, organization=get_request_organization(request))
 
         nodes = list(project.nodes.values(
             "id", "node_type", "label", "position_x", "position_y",
@@ -484,10 +592,11 @@ class SensitivityAnalysisView(APIView):
         seed          int    — semilla aleatoria (default: del proyecto)
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationWritePermission]
+    throttle_classes = [SimulateThrottle]
 
     def post(self, request, project_pk):
-        project = get_object_or_404(SimulationProject, pk=project_pk, user=request.user)
+        project = get_object_or_404(SimulationProject, pk=project_pk, organization=get_request_organization(request))
 
         variation_pct = float(request.data.get('variation_pct', 0.20))
         n_runs = int(request.data.get('n_runs', 500))
@@ -585,13 +694,17 @@ class RiskAlertViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = RiskAlertSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationWritePermission]
 
     def get_queryset(self):
-        return RiskAlert.objects.filter(user=self.request.user).select_related('fk_product')
+        organization = get_request_organization(self.request)
+        return RiskAlert.objects.filter(organization=organization).select_related('fk_product')
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        serializer.save(
+            user=self.request.user,
+            organization=get_request_organization(self.request),
+        )
 
 
 class SimulationRunListView(APIView):
@@ -600,10 +713,10 @@ class SimulationRunListView(APIView):
     GET  /api/v2/projects/{pid}/runs/{rid}/    → detalle de una corrida
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationWritePermission]
 
     def get(self, request, project_pk, run_pk=None):
-        project = get_object_or_404(SimulationProject, pk=project_pk, user=request.user)
+        project = get_object_or_404(SimulationProject, pk=project_pk, organization=get_request_organization(request))
 
         if run_pk:
             run = get_object_or_404(CanvasSimulationRun, pk=run_pk, project=project)
@@ -612,6 +725,23 @@ class SimulationRunListView(APIView):
         runs = project.runs.all()[:50]
         return Response(CanvasSimulationRunSerializer(runs, many=True).data)
 
+    def post(self, request, project_pk, run_pk=None):
+        """Cooperatively cancel an organization-scoped queued/running run."""
+        if not run_pk:
+            return Response({"error": "run_id_required"}, status=status.HTTP_400_BAD_REQUEST)
+        project = get_object_or_404(
+            SimulationProject,
+            pk=project_pk,
+            organization=get_request_organization(request),
+        )
+        run = get_object_or_404(CanvasSimulationRun, pk=run_pk, project=project)
+        updated = CanvasSimulationRun.objects.filter(
+            pk=run.pk, status__in=("queued", "running")
+        ).update(status="cancelled", progress=100)
+        if not updated:
+            return Response({"error": "not_cancellable", "status": run.status}, status=status.HTTP_409_CONFLICT)
+        return Response({"run_id": str(run.id), "status": "cancelled"})
+
 
 # ─── INTERFACE WINDOW ─────────────────────────────────────────────────────────
 
@@ -619,13 +749,13 @@ class PageViewSet(viewsets.ModelViewSet):
     """CRUD de páginas de la Interface Window."""
 
     serializer_class = InterfacePageSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationWritePermission]
 
     def _get_project(self):
         return get_object_or_404(
             SimulationProject,
             pk=self.kwargs["project_pk"],
-            user=self.request.user,
+            organization=get_request_organization(self.request),
         )
 
     def get_queryset(self):
@@ -641,13 +771,13 @@ class WidgetViewSet(viewsets.ModelViewSet):
     """CRUD de widgets dentro de una página."""
 
     serializer_class = InterfaceWidgetSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, OrganizationWritePermission]
 
     def _get_page(self):
         return get_object_or_404(
             InterfacePage,
             pk=self.kwargs["page_pk"],
-            project__user=self.request.user,
+            project__organization=get_request_organization(self.request),
         )
 
     def get_queryset(self):

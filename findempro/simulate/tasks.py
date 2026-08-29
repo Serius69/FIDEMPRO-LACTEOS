@@ -322,6 +322,83 @@ def run_sensitivity_async(
         self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
 
 
+@shared_task(bind=True, name="simulate.execute_canvas_run_async", max_retries=2)
+def execute_canvas_run_async(self, run_id: str, scenario: str = "expected") -> Dict[str, Any]:
+    """Execute a large canvas run through the existing simulations queue."""
+    import json
+    import time
+
+    from simulate.canvas_models import CanvasSimulationRun
+    from simulate.core.model_compiler import ModelCompiler
+    from simulate.views.canvas_views import _run_des, _run_montecarlo, _run_scenario
+    from tenancy.models import UsageEvent
+    from tenancy.services import record_resource_usage, record_usage
+
+    run = CanvasSimulationRun.objects.select_related("project__organization").get(id=run_id)
+    if run.status == "cancelled":
+        return {"run_id": run_id, "status": "cancelled"}
+    project = run.project
+    organization = project.organization
+    run.status = "running"
+    run.progress = 10
+    run.save(update_fields=["status", "progress"])
+    started = time.monotonic()
+    try:
+        nodes = list(project.nodes.values(
+            "id", "node_type", "label", "equation", "initial_value", "units",
+            "position_x", "position_y", "distribution_config",
+        ))
+        for node in nodes:
+            node["id"] = str(node["id"])
+        edges = list(project.edges.values(
+            "id", "source_node_id", "target_node_id", "edge_type", "line_style", "polarity",
+        ))
+        for edge in edges:
+            edge["id"] = str(edge["id"])
+            edge["source_node_id"] = str(edge["source_node_id"])
+            edge["target_node_id"] = str(edge["target_node_id"])
+        compiler = ModelCompiler(nodes, edges, run.parameters_snapshot or project.run_specs)
+        compiler.compile()
+        run.progress = 30
+        run.save(update_fields=["progress"])
+        if run.run_type == "des":
+            results, statistics = _run_des(compiler.compile_to_des_config())
+        elif run.run_type == "scenario":
+            results, statistics = _run_scenario(compiler.compile_to_montecarlo_config(), scenario)
+        else:
+            results, statistics = _run_montecarlo(compiler.compile_to_montecarlo_config())
+        runtime_seconds = max(0.0, time.monotonic() - started)
+        updated = CanvasSimulationRun.objects.filter(id=run.id, status="running").update(
+            results=results,
+            statistics=statistics,
+            run_duration_ms=int(runtime_seconds * 1000),
+            status="completed",
+            progress=100,
+        )
+        if not updated:
+            return {"run_id": run_id, "status": "cancelled"}
+        record_usage(
+            organization, UsageEvent.Metric.SIMULATION_RUNTIME, runtime_seconds,
+            "canvas.task.runtime", run.id, {"cost": "COST_UNKNOWN"},
+        )
+        record_resource_usage(
+            organization, "CPU_SIMULATION", runtime_seconds, "seconds",
+            "canvas.task", run.id, {"cost": "COST_UNKNOWN"},
+        )
+        record_resource_usage(
+            organization, "STORAGE",
+            len(json.dumps({"results": results, "statistics": statistics}, default=str).encode("utf-8")),
+            "bytes", "canvas.task.result", run.id, {"cost": "COST_UNKNOWN"},
+        )
+        return {"run_id": run_id, "status": "completed"}
+    except Exception as exc:
+        CanvasSimulationRun.objects.filter(id=run.id, status="running").update(
+            status="failed", error=type(exc).__name__, progress=100
+        )
+        logger.exception("Canvas simulation failed", extra={"run_id": run_id})
+        raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
+
+
 @shared_task
 def check_var_alerts_async(
     simulation_id: int,

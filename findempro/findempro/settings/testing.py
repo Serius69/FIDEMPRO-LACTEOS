@@ -152,6 +152,10 @@ LOGGING = {
 # ─────────────────────────────────────────────
 AXES_ENABLED = False
 
+# La suite funcional histórica valida capacidades sin asumir un plan pagado.
+# Los tests de tenancy activan enforcement explícitamente donde corresponde.
+FINDEMPRO_COMMERCIAL_GATES_MODE = 'shadow'
+
 # ─────────────────────────────────────────────
 # Dashboard — sin cache
 # ─────────────────────────────────────────────

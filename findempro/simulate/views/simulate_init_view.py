@@ -23,6 +23,8 @@ from ..utils.simulation_core_utils import SimulationCore
 from ..utils.cache_utils import CacheManager, cache_result, make_cache_key
 from ..utils.chart_demand_utils import ChartDemand
 from ..plan_limits import verificar_limite
+from tenancy.models import UsageEvent
+from tenancy.services import get_request_organization, record_usage
 from modeling.statistics import DistributionFitError, METHOD_VERSION, fit_distributions
 
 # Importaciones condicionales para servicios que pueden no existir
@@ -1359,6 +1361,13 @@ class SimulateShowView(BaseSimulationView, View):
             # Crear simulación usando el servicio
             simulation_service = SimulationCore()
             simulation_instance = simulation_service.create_simulation(simulation_data)
+            record_usage(
+                get_request_organization(request),
+                UsageEvent.Metric.SIMULATION_RUN,
+                1,
+                "legacy.simulation",
+                simulation_instance.id,
+            )
             
             # Actualizar sesión
             request.session['started'] = True

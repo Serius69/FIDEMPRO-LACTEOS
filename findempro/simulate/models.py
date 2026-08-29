@@ -837,6 +837,14 @@ class RiskAlert(models.Model):
         on_delete=models.CASCADE,
         related_name='risk_alerts',
     )
+    organization = models.ForeignKey(
+        'tenancy.Organization',
+        on_delete=models.PROTECT,
+        related_name='risk_alerts',
+        null=True,
+        blank=True,
+        db_index=True,
+    )
     fk_product = models.ForeignKey(
         'product.Product',
         on_delete=models.SET_NULL,
@@ -867,9 +875,22 @@ class RiskAlert(models.Model):
         indexes = [
             models.Index(fields=['user', 'is_active'], name='risk_alert_user_active'),
         ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(organization__isnull=False),
+                name='risk_alert_requires_organization',
+            ),
+        ]
 
     def __str__(self) -> str:
         return f'RiskAlert[{self.user}] VaR<{self.var_threshold} → {self.email}'
+
+    def save(self, *args, **kwargs):
+        if self.organization_id is None and self.user_id:
+            from tenancy.services import ensure_default_organization
+
+            self.organization = ensure_default_organization(self.user)
+        super().save(*args, **kwargs)
 
     def is_triggered(self, var_value: float, cvar_value: float | None = None) -> bool:
         """Retorna True si los valores actuales superan los umbrales configurados."""

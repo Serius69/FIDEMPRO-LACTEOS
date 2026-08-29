@@ -169,6 +169,35 @@ def test_completed_run_report_contains_traceability_and_limitation():
     assert b"conditional" in report.content
 
 
+def test_csv_report_neutralizes_spreadsheet_formulas_from_user_names():
+    user = get_user_model().objects.create_user(username="csv-safe-owner", password="password")
+    business = Business.objects.create(
+        name="=HYPERLINK(\"https://invalid.example\")",
+        location="La Paz",
+        fk_user=user,
+    )
+    definition = BusinessModelDefinition.objects.create(
+        business=business,
+        name="+SUM(1,1)",
+        created_by=user,
+    )
+    version = create_model_version(definition, empty_model_spec(name="CSV safe"), user=user)
+    run = BusinessSimulationRun.objects.create(
+        model_version=version,
+        created_by=user,
+        status="completed",
+        result={"summary": {"mean": 1}},
+    )
+    client = Client()
+    client.force_login(user)
+
+    report = client.get(reverse("modeling:run-report", kwargs={"run_id": run.id}))
+
+    assert report.status_code == 200
+    assert b"'=Hyperlink" in report.content
+    assert b"'+SUM" in report.content
+
+
 def test_sensitivity_endpoint_is_owner_scoped_and_seeded():
     user = get_user_model().objects.create_user(username="sensitivity-owner", password="password")
     business = Business.objects.create(name="Sensitivity retail", location="La Paz", fk_user=user)

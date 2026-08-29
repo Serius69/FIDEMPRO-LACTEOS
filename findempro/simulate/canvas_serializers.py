@@ -25,7 +25,10 @@ class ModelNodeSerializer(serializers.ModelSerializer):
             "style", "distribution_config", "ghost_of_node",
             "metadata", "created_at",
         ]
-        read_only_fields = ["id", "created_at"]
+        read_only_fields = [
+            "id", "project", "results", "statistics", "run_duration_ms", "n_runs",
+            "status", "progress", "error", "created_at",
+        ]
 
     def validate_distribution_config(self, value):
         if value is None:
@@ -110,7 +113,7 @@ class CanvasSimulationRunSerializer(serializers.ModelSerializer):
         fields = [
             "id", "project", "run_type",
             "parameters_snapshot", "results", "statistics",
-            "run_duration_ms", "n_runs", "created_at",
+            "run_duration_ms", "n_runs", "status", "progress", "error", "created_at",
         ]
         read_only_fields = ["id", "created_at"]
 

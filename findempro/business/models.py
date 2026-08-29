@@ -12,13 +12,19 @@ class BusinessQuerySet(models.QuerySet):
         return self.filter(is_active=True)
 
     def by_user(self, user):
-        return self.filter(fk_user=user)
+        return self.filter(
+            organization__memberships__user=user,
+            organization__memberships__is_active=True,
+        ).distinct()
+
+    def for_organization(self, organization):
+        return self.filter(organization=organization)
 
     def by_industry(self, industry_type):
         return self.filter(type=industry_type)
 
     def with_related(self):
-        return self.select_related('fk_user').prefetch_related('products')
+        return self.select_related('fk_user', 'organization').prefetch_related('products')
 
 
 class BusinessManager(models.Manager):
@@ -140,6 +146,15 @@ class Business(models.Model):
         help_text=_('El usuario asociado con el negocio'),
         db_index=True
     )
+    organization = models.ForeignKey(
+        'tenancy.Organization',
+        on_delete=models.PROTECT,
+        related_name='businesses',
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text=_('Organization comercial propietaria. fk_user se conserva como creador legacy.'),
+    )
     
     # Product relation should be defined in Product model with related_name='products'
     # This assumes Product model has: fk_business = ForeignKey(Business, related_name='products', ...)
@@ -175,6 +190,7 @@ class Business(models.Model):
         ordering = ['-date_created']
         indexes = [
             models.Index(fields=['fk_user', 'is_active']),
+            models.Index(fields=['organization', 'is_active']),
             models.Index(fields=['type', 'is_active']),
             models.Index(fields=['location', 'is_active']),
         ]
@@ -183,7 +199,16 @@ class Business(models.Model):
                 fields=['name', 'fk_user'],
                 condition=models.Q(is_active=True),
                 name='unique_active_business_per_user'
-            )
+            ),
+            models.UniqueConstraint(
+                fields=['name', 'organization'],
+                condition=models.Q(is_active=True),
+                name='unique_active_business_per_org',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(organization__isnull=False),
+                name='business_requires_organization',
+            ),
         ]
 
     def __str__(self):
@@ -236,6 +261,10 @@ class Business(models.Model):
 
     def save(self, *args, **kwargs):
         """Override save — normaliza nombre y calcula sector automáticamente."""
+        if self.organization_id is None and self.fk_user_id:
+            from tenancy.services import ensure_default_organization
+
+            self.organization = ensure_default_organization(self.fk_user)
         if self.name:
             self.name = self.name.strip().title()
         # Auto-asignar sector macro según tipo de industria

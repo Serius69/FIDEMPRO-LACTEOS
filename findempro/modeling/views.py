@@ -6,6 +6,7 @@ import json
 import math
 import uuid
 import zipfile
+from itertools import islice
 
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
@@ -29,6 +30,17 @@ from .schema import empty_model_spec, validate_model_spec
 from .services import ModelSpecError, create_model_version, serialize_version
 from .statistics import DistributionFitError, fit_distributions
 from .templates import SECTOR_TEMPLATES, starter_spec
+from tenancy.models import UsageEvent
+from tenancy.abuse import expensive_operation
+from tenancy.services import (
+    enforce_monthly_usage,
+    enforce_quota,
+    get_request_organization,
+    record_resource_usage,
+    record_usage,
+    require_entitlement,
+    require_write,
+)
 
 
 # The legacy Business table stores a stable integer type.  The modeling DSL
@@ -108,18 +120,46 @@ def _validate_import_rows(rows, mapping):
     return valid_rows, error_rows
 
 
-def _owned_model(user, model_id):
+def _validate_xlsx_archive(file_object):
+    """Reject compressed XLSX bombs before openpyxl expands their XML."""
+    position = file_object.tell()
+    try:
+        with zipfile.ZipFile(file_object) as archive:
+            entries = archive.infolist()
+            if len(entries) > 1000 or sum(item.file_size for item in entries) > 20 * 1024 * 1024:
+                raise ValueError("El XLSX expandido supera el límite seguro de 20 MB.")
+    finally:
+        file_object.seek(position)
+
+
+def _csv_safe(value):
+    """Prevent spreadsheet formula execution in user-controlled CSV cells."""
+    text = "" if value is None else str(value)
+    if text.lstrip().startswith(("=", "+", "-", "@", "\t", "\r")):
+        return "'" + text
+    return text
+
+
+def _owned_model(request, model_id):
+    organization = get_request_organization(request)
     return get_object_or_404(
         BusinessModelDefinition.objects.select_related("business", "current_version"),
         id=model_id,
-        business__fk_user=user,
+        business__organization=organization,
     )
+
+
+def _organization_for_write(request):
+    organization = get_request_organization(request)
+    require_write(request.user, organization)
+    return organization
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def template_list(request):
     if request.method == "POST":
+        _organization_for_write(request)
         try:
             body = _json_body(request)
             name = str(body.get("name", "")).strip()
@@ -164,7 +204,9 @@ def template_list(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def business_list(request):
+    organization = get_request_organization(request)
     if request.method == "POST":
+        require_write(request.user, organization)
         try:
             body = _json_body(request)
             name = str(body.get("name", "")).strip()
@@ -179,7 +221,7 @@ def business_list(request):
             valid_types = {choice for choice, _label in Business.BusinessType.choices}
             if business_type not in valid_types:
                 return JsonResponse({"error": "invalid_business", "message": "Tipo de negocio no reconocido."}, status=400)
-            if Business.objects.filter(fk_user=request.user, is_active=True, name__iexact=name).exists():
+            if Business.objects.filter(organization=organization, is_active=True, name__iexact=name).exists():
                 return JsonResponse({"error": "business_exists", "message": "Ya existe un negocio activo con ese nombre."}, status=409)
             business = Business(
                 name=name,
@@ -187,6 +229,7 @@ def business_list(request):
                 type=business_type,
                 description=str(body.get("description", "")).strip()[:1000],
                 fk_user=request.user,
+                organization=organization,
             )
             business.full_clean()
             business.save()
@@ -198,15 +241,16 @@ def business_list(request):
         except (TypeError, ValueError) as exc:
             return JsonResponse({"error": "invalid_business", "message": str(exc)}, status=400)
 
-    businesses = Business.objects.filter(fk_user=request.user, is_active=True).order_by("name")
+    businesses = Business.objects.filter(organization=organization, is_active=True).order_by("name")
     return JsonResponse({"businesses": [{"id": item.id, "name": item.name, "sector": item.industry_sector, "type": item.type} for item in businesses]})
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def model_list_create(request):
+    organization = get_request_organization(request)
     if request.method == "GET":
-        models = BusinessModelDefinition.objects.filter(business__fk_user=request.user).select_related("business", "current_version")
+        models = BusinessModelDefinition.objects.filter(business__organization=organization).select_related("business", "current_version")
         return JsonResponse({"models": [{
             "id": str(item.id), "name": item.name, "business_id": item.business_id,
             "business_name": item.business.name, "sector": item.sector, "status": item.status,
@@ -214,11 +258,17 @@ def model_list_create(request):
             "readiness": (item.current_version.validation or {}).get("readiness") if item.current_version else None,
         } for item in models]})
     try:
+        require_write(request.user, organization)
+        active_projects = BusinessModelDefinition.objects.filter(
+            business__organization=organization,
+            status__in=("draft", "validated", "published"),
+        ).count()
+        enforce_quota(organization, "active_projects", active_projects)
         body = _json_body(request)
         status = body.get("status", "validated")
         if status not in {choice for choice, _label in BusinessModelDefinition.STATUS_CHOICES}:
             return JsonResponse({"error": "invalid_status", "message": "Estado de modelo no reconocido."}, status=400)
-        business = get_object_or_404(Business, id=body.get("business_id"), fk_user=request.user)
+        business = get_object_or_404(Business, id=body.get("business_id"), organization=organization)
         # Omitted spec means "start from a template"; an explicitly supplied
         # empty/malformed spec must be validated and rejected rather than
         # silently replaced with a different business model.
@@ -231,6 +281,10 @@ def model_list_create(request):
                 description=body.get("description", ""), sector=body.get("sector") or spec.get("metadata", {}).get("sector", "generic"), created_by=request.user,
             )
             version = create_model_version(definition, spec, user=request.user, status=status)
+        record_usage(
+            organization, UsageEvent.Metric.PROJECT_CREATED, 1,
+            "modeling.model", definition.id,
+        )
         return JsonResponse({"model": {"id": str(definition.id), "name": definition.name, "business_id": definition.business_id, "sector": definition.sector, "status": definition.status, "version": serialize_version(version)}}, status=201)
     except ModelSpecError as exc:
         return JsonResponse({"error": "invalid_model", "validation": exc.validation}, status=400)
@@ -241,7 +295,7 @@ def model_list_create(request):
 @login_required
 @require_GET
 def model_detail(request, model_id):
-    definition = _owned_model(request.user, model_id)
+    definition = _owned_model(request, model_id)
     return JsonResponse({
         "id": str(definition.id), "name": definition.name, "description": definition.description,
         "business_id": definition.business_id, "sector": definition.sector, "status": definition.status,
@@ -252,9 +306,13 @@ def model_detail(request, model_id):
 
 @login_required
 @require_GET
+@expensive_operation("export")
 def model_export(request, model_id):
     """Download the immutable version envelope for backup/review/reuse."""
-    definition = _owned_model(request.user, model_id)
+    definition = _owned_model(request, model_id)
+    organization = get_request_organization(request)
+    require_entitlement(organization, "exports", "modeling.model_export", model_id)
+    enforce_monthly_usage(organization, "exports", UsageEvent.Metric.EXPORT)
     if not definition.current_version:
         return JsonResponse({"error": "model_has_no_version"}, status=404)
     version = definition.current_version
@@ -274,13 +332,14 @@ def model_export(request, model_id):
     }
     response = HttpResponse(json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2), content_type="application/json; charset=utf-8")
     response["Content-Disposition"] = f'attachment; filename="findempro-model-{definition.id}-v{version.version}.json"'
+    record_usage(organization, UsageEvent.Metric.EXPORT, 1, "modeling.model_export", model_id)
     return response
 
 
 @login_required
 @require_http_methods(["POST"])
 def model_validate(request, model_id):
-    definition = _owned_model(request.user, model_id)
+    definition = _owned_model(request, model_id)
     try:
         body = _json_body(request)
     except ValueError as exc:
@@ -292,7 +351,7 @@ def model_validate(request, model_id):
 @login_required
 @require_GET
 def model_diagrams(request, model_id):
-    definition = _owned_model(request.user, model_id)
+    definition = _owned_model(request, model_id)
     spec = definition.current_version.spec if definition.current_version else empty_model_spec(name=definition.name, sector=definition.sector)
     return JsonResponse({"model_id": str(definition.id), "version": definition.current_version.version if definition.current_version else None, "diagrams": build_diagrams(spec)})
 
@@ -300,7 +359,8 @@ def model_diagrams(request, model_id):
 @login_required
 @require_http_methods(["POST"])
 def model_version_create(request, model_id):
-    definition = _owned_model(request.user, model_id)
+    definition = _owned_model(request, model_id)
+    _organization_for_write(request)
     try:
         body = _json_body(request)
         status = body.get("status", "validated")
@@ -317,12 +377,13 @@ def model_version_create(request, model_id):
 @login_required
 @require_http_methods(["GET", "POST"])
 def scenario_list_create(request, model_id):
-    definition = _owned_model(request.user, model_id)
+    definition = _owned_model(request, model_id)
     if not definition.current_version:
         return JsonResponse({"error": "model_has_no_version"}, status=400)
     if request.method == "GET":
         scenarios = definition.current_version.scenarios.all()
         return JsonResponse({"scenarios": [{"id": str(item.id), "name": item.name, "label": item.label, "changes": item.changes} for item in scenarios]})
+    _organization_for_write(request)
     try:
         body = _json_body(request)
     except ValueError as exc:
@@ -350,9 +411,11 @@ def scenario_list_create(request, model_id):
 
 @login_required
 @require_http_methods(["POST"])
+@expensive_operation("import")
 def data_import_create(request, model_id):
     """Create a bounded import receipt; imported rows remain explicitly sourced."""
-    definition = _owned_model(request.user, model_id)
+    definition = _owned_model(request, model_id)
+    organization = _organization_for_write(request)
     if not definition.current_version:
         return JsonResponse({"error": "model_has_no_version"}, status=400)
     source_name = request.FILES.get("file").name if request.FILES.get("file") else "request.json"
@@ -371,8 +434,9 @@ def data_import_create(request, model_id):
                 rows = list(csv.DictReader(io.TextIOWrapper(uploaded.file, encoding="utf-8-sig", newline="")))
             elif fmt == "xlsx":
                 from openpyxl import load_workbook
+                _validate_xlsx_archive(uploaded.file)
                 sheet = load_workbook(uploaded.file, read_only=True, data_only=True).active
-                values = list(sheet.values)
+                values = list(islice(sheet.values, 10_002))
                 headers = [str(value) for value in (values[0] if values else [])]
                 rows = [dict(zip(headers, row)) for row in values[1:]]
             else:
@@ -387,6 +451,12 @@ def data_import_create(request, model_id):
             return JsonResponse({"error": "invalid_import"}, status=400)
         if len(rows) > 10_000:
             return JsonResponse({"error": "too_many_rows", "message": "El límite es 10.000 filas."}, status=400)
+        dataset_count = BusinessDataImport.objects.filter(
+            model_version__definition__business__organization=organization,
+            status="validated",
+        ).count()
+        enforce_quota(organization, "datasets", dataset_count)
+        enforce_quota(organization, "dataset_rows", 0, len(rows))
         if not isinstance(mapping, dict) or any(not isinstance(source, str) or not isinstance(target, str) for source, target in mapping.items()):
             return JsonResponse({"error": "invalid_mapping", "message": "El mapeo debe ser un objeto de columnas a variables."}, status=400)
         known_targets = {item.get("id") for section in ("variables", "parameters", "stocks") for item in definition.current_version.spec.get(section, []) if isinstance(item, dict) and item.get("id")}
@@ -402,6 +472,11 @@ def data_import_create(request, model_id):
             error_rows=error_rows, rows_imported=len(valid_rows), created_by=request.user,
             provenance={"kind": "IMPORTED", "source_name": source_name, "format": fmt},
         )
+        record_usage(organization, UsageEvent.Metric.DATASET_INGESTED, 1, "modeling.import", receipt.id)
+        record_usage(organization, UsageEvent.Metric.DATASET_ROWS, receipt.rows_imported, "modeling.import.rows", receipt.id)
+        size_bytes = request.FILES["file"].size if request.FILES else len(request.body or b"")
+        record_usage(organization, UsageEvent.Metric.STORAGE, size_bytes, "modeling.import.storage", receipt.id)
+        record_resource_usage(organization, "STORAGE", size_bytes, "bytes", "modeling.import", receipt.id)
         return JsonResponse({"import": {"id": str(receipt.id), "status": receipt.status, "rows_imported": receipt.rows_imported, "error_rows": receipt.error_rows, "provenance": receipt.provenance}}, status=201)
     except (ValueError, KeyError, UnicodeDecodeError, zipfile.BadZipFile) as exc:
         return JsonResponse({"error": "invalid_import", "message": str(exc)}, status=400)
@@ -409,8 +484,10 @@ def data_import_create(request, model_id):
 
 @login_required
 @require_http_methods(["POST"])
+@expensive_operation("simulation")
 def model_simulate(request, model_id):
-    definition = _owned_model(request.user, model_id)
+    definition = _owned_model(request, model_id)
+    organization = _organization_for_write(request)
     if not definition.current_version:
         return JsonResponse({"error": "model_has_no_version", "message": "Valida una versión antes de simular."}, status=400)
     try:
@@ -421,11 +498,15 @@ def model_simulate(request, model_id):
     engine = body.get("engine", "monte_carlo")
     if engine not in SUPPORTED_ENGINES:
         return JsonResponse({"error": "invalid_engine", "message": "Engine no soportado."}, status=400)
+    if engine != "monte_carlo":
+        require_entitlement(organization, "advanced_simulation", "modeling.simulate", model_id)
+    enforce_monthly_usage(organization, "simulation_runs", UsageEvent.Metric.SIMULATION_RUN)
     if iterations < 1 or iterations > 100_000:
         return JsonResponse({"error": "invalid_iterations", "message": "iterations debe estar entre 1 y 100.000."}, status=400)
     max_active = max(1, int(getattr(settings, "MODELING_MAX_ACTIVE_RUNS", 4)))
     active_runs = BusinessSimulationRun.objects.filter(
-        created_by=request.user, status__in=("queued", "running")
+        model_version__definition__business__organization=organization,
+        status__in=("queued", "running")
     ).count()
     if active_runs >= max_active:
         return JsonResponse(
@@ -441,7 +522,7 @@ def model_simulate(request, model_id):
     scenario = None
     if body.get("scenario_id"):
         try:
-            scenario = get_object_or_404(BusinessScenario, id=uuid.UUID(str(body["scenario_id"])), model_version=definition.current_version, created_by=request.user)
+            scenario = get_object_or_404(BusinessScenario, id=uuid.UUID(str(body["scenario_id"])), model_version=definition.current_version)
         except (ValueError, TypeError):
             return JsonResponse({"error": "invalid_scenario", "message": "scenario_id no es válido."}, status=400)
     run = BusinessSimulationRun.objects.create(
@@ -452,6 +533,16 @@ def model_simulate(request, model_id):
         parameters_snapshot={"iterations": iterations, "seed": seed},
         created_by=request.user,
     )
+    record_usage(
+        organization, UsageEvent.Metric.SIMULATION_RUN, 1,
+        "modeling.simulation", run.id,
+        {"engine": engine, "iterations": iterations},
+    )
+    if scenario:
+        record_usage(
+            organization, UsageEvent.Metric.SCENARIO_RUN, 1,
+            "modeling.scenario", run.id, {"scenario_id": str(scenario.id)},
+        )
     from .tasks import run_business_simulation
     task = run_business_simulation.delay(str(run.id), iterations=iterations, seed=seed)
     return JsonResponse({"run_id": str(run.id), "task_id": task.id, "status": run.status, "status_url": f"/modeling/runs/{run.id}/"}, status=202)
@@ -459,8 +550,11 @@ def model_simulate(request, model_id):
 
 @login_required
 @require_http_methods(["POST"])
+@expensive_operation("sensitivity")
 def model_sensitivity(request, model_id):
-    definition = _owned_model(request.user, model_id)
+    definition = _owned_model(request, model_id)
+    organization = _organization_for_write(request)
+    require_entitlement(organization, "advanced_simulation", "modeling.sensitivity", model_id)
     if not definition.current_version:
         return JsonResponse({"error": "model_has_no_version"}, status=400)
     try:
@@ -482,7 +576,9 @@ def model_sensitivity(request, model_id):
 @require_http_methods(["POST"])
 def model_distribution_fit(request, model_id):
     """Return reviewed candidate fits without mutating the immutable model."""
-    _owned_model(request.user, model_id)
+    _owned_model(request, model_id)
+    organization = get_request_organization(request)
+    require_entitlement(organization, "advanced_distributions", "modeling.distribution_fit", model_id)
     try:
         body = _json_body(request)
         result = fit_distributions(
@@ -497,11 +593,15 @@ def model_distribution_fit(request, model_id):
 
 @login_required
 @require_GET
+@expensive_operation("export")
 def run_report(request, run_id):
+    organization = get_request_organization(request)
+    require_entitlement(organization, "exports", "modeling.run_report", run_id)
+    enforce_monthly_usage(organization, "exports", UsageEvent.Metric.EXPORT)
     run = get_object_or_404(
         BusinessSimulationRun.objects.select_related("model_version__definition__business", "scenario"),
         id=run_id,
-        model_version__definition__business__fk_user=request.user,
+        model_version__definition__business__organization=organization,
         status="completed",
     )
     summary = (run.result or {}).get("summary", {})
@@ -509,12 +609,12 @@ def run_report(request, run_id):
     response["Content-Disposition"] = f'attachment; filename="findempro-run-{run.id}.csv"'
     writer = csv.writer(response)
     writer.writerow(["FindemproAI simulation report"])
-    writer.writerow(["business", run.model_version.definition.business.name])
-    writer.writerow(["model", run.model_version.definition.name])
+    writer.writerow(["business", _csv_safe(run.model_version.definition.business.name)])
+    writer.writerow(["model", _csv_safe(run.model_version.definition.name)])
     writer.writerow(["model_version", run.model_version.version])
     writer.writerow(["schema_version", run.model_version.schema_version])
     writer.writerow(["model_hash", run.model_version.content_hash])
-    writer.writerow(["scenario", run.scenario.name if run.scenario else "BASE"])
+    writer.writerow(["scenario", _csv_safe(run.scenario.name if run.scenario else "BASE")])
     writer.writerow(["engine", run.engine])
     writer.writerow(["seed", run.seed if run.seed is not None else ""])
     writer.writerow(["iterations", (run.parameters_snapshot or {}).get("iterations", "")])
@@ -528,13 +628,15 @@ def run_report(request, run_id):
         writer.writerow(["financial_summary", json.dumps(summary["financial"], ensure_ascii=False, sort_keys=True)])
     writer.writerow([])
     writer.writerow(["limitation", "Results are conditional on model, data, assumptions, distributions, parameters and scenario; they are not a guarantee of business reality."])
+    record_usage(organization, UsageEvent.Metric.EXPORT, 1, "modeling.run_report", run.id)
     return response
 
 
 @login_required
 @require_GET
 def run_list(request):
-    runs = BusinessSimulationRun.objects.filter(model_version__definition__business__fk_user=request.user).select_related(
+    organization = get_request_organization(request)
+    runs = BusinessSimulationRun.objects.filter(model_version__definition__business__organization=organization).select_related(
         "model_version__definition__business", "scenario"
     )[:100]
     return JsonResponse({"runs": [{
@@ -565,7 +667,9 @@ def run_compare(request):
         run_ids = [uuid.UUID(value) for value in raw_ids]
     except ValueError:
         return JsonResponse({"error": "invalid_comparison", "message": "Una ejecución seleccionada no es válida."}, status=400)
-    runs = list(BusinessSimulationRun.objects.filter(id__in=run_ids, model_version__definition__business__fk_user=request.user, status="completed").select_related("model_version", "scenario"))
+    organization = get_request_organization(request)
+    require_entitlement(organization, "scenario_comparison", "modeling.run_compare", request.GET.get("ids", ""))
+    runs = list(BusinessSimulationRun.objects.filter(id__in=run_ids, model_version__definition__business__organization=organization, status="completed").select_related("model_version", "scenario"))
     if len(runs) != len(set(run_ids)):
         return JsonResponse({"error": "comparison_not_available", "message": "Una o más ejecuciones no pertenecen al usuario o no están completadas."}, status=404)
     hashes = {run.model_version.content_hash for run in runs}
@@ -590,7 +694,8 @@ def run_compare(request):
 @require_http_methods(["POST"])
 def run_cancel(request, run_id):
     """Cooperatively cancel a queued/running owner-scoped execution."""
-    run = get_object_or_404(BusinessSimulationRun, id=run_id, model_version__definition__business__fk_user=request.user)
+    organization = _organization_for_write(request)
+    run = get_object_or_404(BusinessSimulationRun, id=run_id, model_version__definition__business__organization=organization)
     if run.status not in {"queued", "running"}:
         return JsonResponse({"error": "not_cancellable", "message": "Solo se pueden cancelar ejecuciones encoladas o activas.", "status": run.status}, status=409)
     updated = BusinessSimulationRun.objects.filter(id=run.id, status__in=["queued", "running"]).update(status="cancelled", finished_at=timezone.now())
@@ -603,7 +708,8 @@ def run_cancel(request, run_id):
 @login_required
 @require_GET
 def run_detail(request, run_id):
-    run = get_object_or_404(BusinessSimulationRun.objects.select_related("model_version"), id=run_id, model_version__definition__business__fk_user=request.user)
+    organization = get_request_organization(request)
+    run = get_object_or_404(BusinessSimulationRun.objects.select_related("model_version"), id=run_id, model_version__definition__business__organization=organization)
     return JsonResponse({
         "run_id": str(run.id), "status": run.status, "progress": run.progress, "engine": run.engine,
         "seed": run.seed, "result": run.result if run.status == "completed" else None,

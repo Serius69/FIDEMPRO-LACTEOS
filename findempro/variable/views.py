@@ -1,6 +1,7 @@
 import re
 import logging
 import os
+import uuid
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Variable, Equation, EquationResult
 from product.models import Product
@@ -20,16 +21,26 @@ from django.core.exceptions import ObjectDoesNotExist
 from sympy import symbols, Eq, solve
 from django.db.models import Q, Count
 from django.db import models
+from tenancy.abuse import consume_abuse_budget
 
 logger = logging.getLogger(__name__)
 
 
-def _generate_with_claude(prompt, max_tokens):
+def _generate_with_claude(prompt, max_tokens, organization=None, actor_id=None):
     """Genera texto con Claude sin convertir la ausencia/falla del LLM en un 500."""
     api_key = os.getenv("ANTHROPIC_API_KEY", "")
-    if not api_key:
+    if not api_key or organization is None:
         return None
 
+    from tenancy.services import has_entitlement
+
+    if not has_entitlement(organization, "ai_analysis"):
+        return None
+    allowed, _window = consume_abuse_budget("ai", organization, actor_id or "organization")
+    if not allowed:
+        return None
+
+    correlation_id = uuid.uuid4()
     try:
         import anthropic
 
@@ -43,9 +54,40 @@ def _generate_with_claude(prompt, max_tokens):
             block.text for block in response.content
             if getattr(block, "type", None) == "text"
         ]
+        from tenancy.models import UsageEvent
+        from tenancy.services import record_resource_usage, record_usage
+
+        usage = getattr(response, "usage", None)
+        metadata = {
+            "model": getattr(settings, "ANTHROPIC_MODEL", "claude-sonnet-5"),
+            "provider": "anthropic",
+            "outcome": "success",
+            "cost": "COST_UNKNOWN",
+        }
+        record_usage(
+            organization, UsageEvent.Metric.AI_CALL, 1,
+            "variable.claude", correlation_id, metadata,
+        )
+        for resource, quantity in (
+            ("AI_INPUT_TOKENS", getattr(usage, "input_tokens", None)),
+            ("AI_OUTPUT_TOKENS", getattr(usage, "output_tokens", None)),
+        ):
+            if quantity is not None:
+                record_resource_usage(
+                    organization, resource, quantity, "tokens",
+                    "variable.claude", correlation_id, metadata,
+                )
         return "".join(text_blocks).strip() or None
     except Exception:
         logger.warning("Claude no disponible; se usará el fallback local.", exc_info=True)
+        from tenancy.models import UsageEvent
+        from tenancy.services import record_usage
+
+        record_usage(
+            organization, UsageEvent.Metric.AI_CALL, 1,
+            "variable.claude", correlation_id,
+            {"provider": "anthropic", "outcome": "error", "cost": "COST_UNKNOWN"},
+        )
         return None
 
 
@@ -327,7 +369,12 @@ def create_or_update_variable_view(request, pk=None):
                         f"{variable_name}"
                     )
                     initials = _normalise_initials(
-                        _generate_with_claude(initial_prompt, max_tokens=8),
+                        _generate_with_claude(
+                            initial_prompt,
+                            max_tokens=8,
+                            organization=request.organization,
+                            actor_id=request.user.pk,
+                        ),
                         variable_name,
                     )
 
@@ -577,7 +624,12 @@ def generate_variable_questions(request, variable):
         django_variable = f"{variable.name} = models.{variable.get_type_display()}Field()"
         prompt = f"Create a question to gather and add precise data to a financial test form for the company's Variable:\n\n{django_variable}\n\nQuestion:"
         
-        generated = _generate_with_claude(prompt, max_tokens=100)
+        generated = _generate_with_claude(
+            prompt,
+            max_tokens=100,
+            organization=request.organization,
+            actor_id=request.user.pk,
+        )
         question = [generated or f"¿Cuál es el valor para {variable.name}?"]
             
     except Exception as e:

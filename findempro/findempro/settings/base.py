@@ -47,6 +47,7 @@ DEFAULT_APPS = [
 ]
 
 LOCAL_APPS = [
+    "tenancy.apps.TenancyConfig",
     "dashboards",
     "pages",
     "product",
@@ -89,6 +90,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'tenancy.middleware.OrganizationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
@@ -106,14 +108,18 @@ HUB_JWT_SECRET = os.getenv('HUB_JWT_SECRET', '')
 HUB_URL = os.getenv('HUB_URL', 'https://kapitalya.com.bo')
 HUB_UPGRADE_URL = os.getenv('HUB_UPGRADE_URL', '')
 
-# Límites de uso por plan. Desactivados por defecto para preservar el flujo
-# existente durante el rollout.
-PLAN_GATES_ENABLED = os.getenv('PLAN_GATES_ENABLED', 'False').lower() in ('true', '1', 'yes')
-PLAN_SIM_LIMITS = {
-    'basico': 10,
-    'pro': 100,
-    'empresa': None,
-}
+# Rollout comercial centralizado. ``shadow`` registra decisiones sin bloquear;
+# ``enforce`` aplica entitlements/cuotas. Nunca se usa para antiabuso HTTP.
+FINDEMPRO_COMMERCIAL_GATES_MODE = os.getenv(
+    'FINDEMPRO_COMMERCIAL_GATES_MODE', 'enforce'
+).lower()
+if FINDEMPRO_COMMERCIAL_GATES_MODE not in {'shadow', 'enforce'}:
+    raise RuntimeError('FINDEMPRO_COMMERCIAL_GATES_MODE debe ser shadow o enforce')
+
+# Alias de transición para el único gate legado. El servicio de tenancy es la
+# autoridad; se conserva para instalaciones que aún exportan la variable vieja.
+PLAN_GATES_ENABLED = FINDEMPRO_COMMERCIAL_GATES_MODE == 'enforce'
+PLAN_SIM_LIMITS = {'basico': 10, 'pro': 100, 'empresa': None}
 
 # ─────────────────────────────────────────────
 # URLs / Templates / WSGI
@@ -272,6 +278,7 @@ CELERY_TASK_ROUTES = {
     'simulate.tasks.execute_simulation_async': {'queue': 'simulations'},
     'simulate.tasks.run_sensitivity_async': {'queue': 'simulations'},
     'modeling.run_business_simulation': {'queue': 'simulations'},
+    'simulate.execute_canvas_run_async': {'queue': 'simulations'},
 }
 
 # ─────────────────────────────────────────────
@@ -406,6 +413,7 @@ ANTHROPIC_MODEL = os.getenv('ANTHROPIC_MODEL', 'claude-sonnet-5')
 # Bounded execution and model compilation for the configurable business-model
 # runner. Deployments may tune these guards without changing the model DSL.
 MODELING_MAX_ACTIVE_RUNS = int(os.getenv('MODELING_MAX_ACTIVE_RUNS', '4'))
+FINDEMPRO_CANVAS_SYNC_MAX_RUNS = int(os.getenv('FINDEMPRO_CANVAS_SYNC_MAX_RUNS', '5000'))
 MODELING_MAX_MODEL_NODES = int(os.getenv('MODELING_MAX_MODEL_NODES', '1000'))
 MODELING_MAX_MODEL_EDGES = int(os.getenv('MODELING_MAX_MODEL_EDGES', '5000'))
 MODELING_MAX_EXPRESSION_LENGTH = int(os.getenv('MODELING_MAX_EXPRESSION_LENGTH', '500'))

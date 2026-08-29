@@ -78,6 +78,7 @@ urlpatterns = [
     path('user/', include('user.urls')),
     path('finance/', include('finance.urls')),
     path('modeling/', include('modeling.urls')),
+    path('api/subscription/', include('tenancy.urls')),
 
     # Authentication
     path(
@@ -109,6 +110,7 @@ urlpatterns = [
 # Error handlers
 handler404 = 'findempro.urls.error_404'
 handler500 = 'findempro.urls.error_500'
+handler403 = 'tenancy.views.permission_denied'
 
 # IMPORTANTE: Servir archivos estáticos y media en desarrollo
 if settings.DEBUG:
