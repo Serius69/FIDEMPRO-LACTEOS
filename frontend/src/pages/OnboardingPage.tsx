@@ -157,13 +157,21 @@ export default function OnboardingPage() {
         </div>
       )}
       {estado.escenarios && (
-        <ResultadoSimulacion
-          escenarios={estado.escenarios}
-          tipoNegocio={estado.tipoNegocio}
-          horizonte={estado.horizonte}
-          nombreNegocio={estado.nombreNegocio}
-          onNuevaSim={reiniciar}
-        />
+        <>
+          <ResultadoSimulacion
+            escenarios={estado.escenarios}
+            tipoNegocio={estado.tipoNegocio}
+            horizonte={estado.horizonte}
+            nombreNegocio={estado.nombreNegocio}
+            onNuevaSim={reiniciar}
+          />
+          <div className="mx-auto mb-8 max-w-2xl px-4 text-center">
+            <a href="/account/signup/?next=/businesses" className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+              Guardar un proyecto Free
+            </a>
+            <p className="mt-2 text-xs text-muted-foreground">Crea tu Organization; este diagnóstico no guarda datos personales.</p>
+          </div>
+        </>
       )}
     </div>
   )

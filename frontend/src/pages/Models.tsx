@@ -32,6 +32,9 @@ export default function Models() {
     try {
       const response = await createBusinessModel({ business_id: business.id, name: `${template.name} · modelo`, sector: template.sector, spec: template.spec })
       setModels((current) => [...current, { ...response.model, business_name: business.name, current_version: response.model.version.version, readiness: response.model.version.validation?.readiness }])
+      setError('')
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'No se pudo crear el modelo.')
     } finally { setCreating(false) }
   }
 

@@ -16,7 +16,7 @@ function headers(extra: Record<string, string> = {}): HeadersInit {
 }
 
 async function handle<T>(res: Response): Promise<T> {
-  if (res.status === 401 || res.status === 403) {
+  if (res.status === 401) {
     window.location.href = `${DJANGO_LOGIN}?next=${encodeURIComponent(window.location.pathname)}`
     throw new Error('Not authenticated')
   }
@@ -33,6 +33,27 @@ async function handle<T>(res: Response): Promise<T> {
   const ct = res.headers.get('content-type') ?? ''
   if (ct.includes('application/json')) return res.json() as Promise<T>
   return res.text() as unknown as T
+}
+
+export interface SubscriptionContext {
+  organization: { id: string; name: string; slug: string }
+  membership: { role: 'OWNER' | 'ADMIN' | 'MEMBER' | 'READ_ONLY' }
+  subscription: {
+    plan: 'FREE' | 'STARTER' | 'GROWTH' | 'PRO' | 'BUSINESS'
+    effective_plan: 'FREE' | 'STARTER' | 'GROWTH' | 'PRO' | 'BUSINESS'
+    status: 'ACTIVE' | 'CANCELLED'
+    trial_started_at: string | null
+    trial_ends_at: string | null
+    trial_plan: string | null
+  }
+  entitlements: string[]
+  quotas: Record<string, number | null>
+  upgrade_url: string
+}
+
+export async function getSubscriptionContext(): Promise<SubscriptionContext> {
+  const res = await fetch('/api/subscription/context/', { credentials: 'include', headers: headers() })
+  return handle(res)
 }
 
 export async function checkAuth(): Promise<boolean> {

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { backendUrl } from '@/lib/config'
+import { SubscriptionStatus } from '@/components/SubscriptionStatus'
 
 const NAV = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -56,6 +57,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <ExternalLink className="h-3.5 w-3.5" /> Django Admin →
           </a>
         </div>
+        <SubscriptionStatus />
       </nav>
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <nav aria-label="Navegación móvil" className="flex shrink-0 gap-1 overflow-x-auto border-b border-border bg-card/30 px-2 py-2 md:hidden">
