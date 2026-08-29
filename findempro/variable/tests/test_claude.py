@@ -5,7 +5,6 @@ from unittest.mock import Mock
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-
 from tenancy.services import change_plan, ensure_default_organization
 from variable.views import (
     _fallback_initials,
@@ -49,3 +48,27 @@ def test_claude_uses_sonnet_and_prompt_cache(monkeypatch):
     anthropic_module.Anthropic.assert_called_once_with(api_key="test-key")
     assert create.call_args.kwargs["model"] == "claude-sonnet-5"
     assert create.call_args.kwargs["cache_control"] == {"type": "ephemeral"}
+
+
+@pytest.mark.django_db
+def test_claude_timeout_uses_fallback_and_records_failed_usage(monkeypatch):
+    from tenancy.models import UsageEvent
+
+    user = get_user_model().objects.create_user(username="claude-timeout")
+    organization = ensure_default_organization(user)
+    change_plan(organization, "PRO")
+    cache.clear()
+    client = Mock()
+    client.messages.create.side_effect = TimeoutError("deterministic stub timeout")
+    anthropic_module = SimpleNamespace(Anthropic=Mock(return_value=client))
+    monkeypatch.setitem(sys.modules, "anthropic", anthropic_module)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+
+    result = _generate_with_claude(
+        "prompt estable", max_tokens=100, organization=organization, actor_id=user.pk
+    )
+
+    assert result is None
+    event = UsageEvent.objects.get(organization=organization, metric=UsageEvent.Metric.AI_CALL)
+    assert event.metadata["outcome"] == "error"
+    assert event.metadata["cost"] == "COST_UNKNOWN"

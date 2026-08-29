@@ -1,11 +1,11 @@
 import json
 
 import pytest
+from business.models import Business
 from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 
-from business.models import Business
 from modeling.models import BusinessModelDefinition, BusinessSimulationRun
 from modeling.schema import empty_model_spec
 from modeling.services import create_model_version
@@ -40,6 +40,32 @@ def test_failed_task_persists_safe_error_envelope_without_internal_message(monke
     payload = client.get(reverse("modeling:run-detail", kwargs={"run_id": run.id})).json()
     assert payload["error"]["how_to_fix"]
     assert "secret" not in json.dumps(payload)
+
+
+def test_simulation_timeout_persists_failed_lifecycle_and_safe_error(monkeypatch):
+    from modeling.tasks import run_business_simulation
+
+    owner = get_user_model().objects.create_user(username="timeout-owner", password="password")
+    business = Business.objects.create(name="Timeout business", location="La Paz", fk_user=owner)
+    definition = BusinessModelDefinition.objects.create(
+        business=business, name="Timeout model", created_by=owner
+    )
+    version = create_model_version(definition, empty_model_spec(name="Timeout model"), user=owner)
+    run = BusinessSimulationRun.objects.create(
+        model_version=version, engine="monte_carlo", created_by=owner
+    )
+
+    def time_out(*args, **kwargs):
+        raise TimeoutError("provider/internal detail must not leak")
+
+    monkeypatch.setattr("modeling.tasks.run_engine", time_out)
+    with pytest.raises(TimeoutError):
+        run_business_simulation.run(str(run.id))
+
+    run.refresh_from_db()
+    assert run.status == "failed"
+    assert run.finished_at is not None
+    assert "internal detail" not in run.error
 
 
 def test_model_simulation_persists_reproducible_result():
@@ -167,6 +193,27 @@ def test_completed_run_report_contains_traceability_and_limitation():
     assert b"schema_version" in report.content
     assert b"iterations" in report.content
     assert b"conditional" in report.content
+
+
+def test_failed_run_cannot_be_exported_and_remains_coherent():
+    user = get_user_model().objects.create_user(username="failed-export-owner", password="password")
+    business = Business.objects.create(name="Failed export", location="La Paz", fk_user=user)
+    definition = BusinessModelDefinition.objects.create(
+        business=business, name="Failed export model", created_by=user
+    )
+    version = create_model_version(definition, empty_model_spec(name="Failed export model"), user=user)
+    run = BusinessSimulationRun.objects.create(
+        model_version=version, created_by=user, status="failed", error='{"code":"simulation_failed"}'
+    )
+    client = Client()
+    client.force_login(user)
+
+    response = client.get(reverse("modeling:run-report", kwargs={"run_id": run.id}))
+
+    assert response.status_code == 404
+    run.refresh_from_db()
+    assert run.status == "failed"
+    assert run.result == {}
 
 
 def test_csv_report_neutralizes_spreadsheet_formulas_from_user_names():
@@ -316,6 +363,7 @@ def test_simulation_api_selects_engine_and_rejects_unknown_engine():
 
 def test_queued_run_can_be_cancelled_and_task_does_not_complete_it():
     from django.utils import timezone
+
     from modeling.models import BusinessSimulationRun
     from modeling.tasks import run_business_simulation
 

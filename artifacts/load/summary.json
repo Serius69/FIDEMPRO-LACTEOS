@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "environment": "DEV",
+  "host": "tromay-dev",
+  "base_sha": "b6d6add8e1629ddc2231bc16ffd248f610c38f19",
+  "customer": "Organization",
+  "free_to_paid_ratio": 3,
+  "load_ready_for_initial_market": "PASS",
+  "verification_scope": "DECLARED_DEV_RUNTIME_CONCURRENCY_15",
+  "tiers": {
+    "S0": {"status": "VERIFIED_PASS", "rps": 8.25, "p95_ms": 18.62, "error_rate": 0, "cpu_peak_percent_host": 7.237, "ram_peak_mb": 493.418},
+    "S1_25": {"status": "VERIFIED_PASS", "rps": 47.267, "p95_ms": 45.212, "error_rate": 0, "cpu_peak_percent_host": 14.438, "ram_peak_mb": 508.074},
+    "S2_100": {"status": "VERIFIED_PASS", "rps": 57.678, "p95_ms": 51.73, "error_rate": 0.000193, "cpu_peak_percent_host": 14.966, "ram_peak_mb": 513.027, "concurrency": 15},
+    "S3_500": {"status": "NOT_RUN_CAPACITY_GUARD", "metrics": "NOT_MEASURABLE"},
+    "S4_1000": {"status": "NOT_RUN_CAPACITY_GUARD", "metrics": "NOT_MEASURABLE"}
+  },
+  "saturation": {
+    "point": "BETWEEN_CONCURRENCY_15_AND_25_AT_S2_MIX",
+    "primary_bottleneck": "SQLITE_WRITE_CONTENTION_ON_SIMULATION_SUBMIT_AND_METERING",
+    "secondary_bottleneck": "SIMULATION_QUEUE_WAIT_DEPTH"
+  },
+  "security": {"cross_tenant_under_load": "PASS", "usage_attribution_under_load": "PASS"},
+  "external_ai_capacity": "NOT_MEASURABLE",
+  "runtime_limitations": [
+    "PostgreSQL, Redis and production WSGI capacity are not represented.",
+    "Filesystem broker is a reproducible DEV stub.",
+    "S2 verifies 15 concurrent sessions, not every provisioned user concurrently."
+  ]
+}

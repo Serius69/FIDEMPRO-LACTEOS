@@ -16,7 +16,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from .testing import *  # noqa: F401,F403
+from .testing import *
 
 _sqlite_path = os.getenv(
     'E2E_SQLITE_PATH',
@@ -40,6 +40,29 @@ CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
 task_always_eager = True
 task_eager_propagates = True
+
+# The capacity harness can replace eager execution with a disposable local
+# filesystem broker and a real Celery worker.  This is DEV-only and never reads
+# Redis/PostgreSQL credentials or external runtime configuration.
+if os.getenv('FINDEMPRO_LOAD_ASYNC') == '1':
+    _broker_root = Path(os.environ['FINDEMPRO_LOAD_BROKER_DIR'])
+    CELERY_TASK_ALWAYS_EAGER = False
+    CELERY_TASK_EAGER_PROPAGATES = False
+    CELERY_BROKER_URL = 'filesystem://'
+    CELERY_BROKER_TRANSPORT_OPTIONS = {
+        'data_folder_in': str(_broker_root / 'queue'),
+        'data_folder_out': str(_broker_root / 'queue'),
+        'data_folder_processed': str(_broker_root / 'processed'),
+        'control_folder': str(_broker_root / 'control'),
+    }
+    task_always_eager = False
+    task_eager_propagates = False
+
+if os.getenv('FINDEMPRO_LOAD_METRICS') == '1':
+    MIDDLEWARE = [*MIDDLEWARE, 'tenancy.load_metrics.LoadMetricsMiddleware']
+    FINDEMPRO_COMMERCIAL_GATES_MODE = os.getenv(
+        'FINDEMPRO_COMMERCIAL_GATES_MODE', FINDEMPRO_COMMERCIAL_GATES_MODE
+    )
 
 # El navegador del E2E entra por el dev-server de Vite (127.0.0.1:5188), que
 # proxya a Django. El origen que ve el navegador y el host que ve Django son
