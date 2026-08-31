@@ -12,6 +12,10 @@ from business.models import Business
 class BusinessModelDefinition(models.Model):
     """Container owned by a Business; versions hold immutable model meaning."""
 
+    class ReferenceDataSource(models.TextChoices):
+        CUSTOMER_PRIVATE = "CUSTOMER_PRIVATE", "Datos privados del cliente"
+        KDP_GOVERNED = "KDP_GOVERNED", "Referencias compartidas gobernadas por KDP"
+
     STATUS_CHOICES = [
         ("draft", "Borrador"),
         ("validated", "Validado"),
@@ -26,6 +30,15 @@ class BusinessModelDefinition(models.Model):
     name = models.CharField(max_length=180)
     description = models.TextField(blank=True)
     sector = models.CharField(max_length=80, default="generic", db_index=True)
+    reference_data_source = models.CharField(
+        max_length=20,
+        choices=ReferenceDataSource.choices,
+        default=ReferenceDataSource.CUSTOMER_PRIVATE,
+        help_text=(
+            "Selecciona la autoridad para datos de referencia compartidos. "
+            "Los modelos, imports y resultados privados siempre permanecen en Findempro."
+        ),
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
     current_version = models.ForeignKey(
         "BusinessModelVersion",
@@ -198,6 +211,12 @@ class BusinessSimulationRun(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="queued")
     seed = models.BigIntegerField(null=True, blank=True)
     parameters_snapshot = models.JSONField(default=dict, blank=True)
+    reference_data_source = models.CharField(
+        max_length=20,
+        choices=BusinessModelDefinition.ReferenceDataSource.choices,
+        default=BusinessModelDefinition.ReferenceDataSource.CUSTOMER_PRIVATE,
+        editable=False,
+    )
     result = models.JSONField(default=dict, blank=True)
     error = models.TextField(blank=True)
     progress = models.PositiveSmallIntegerField(default=0)

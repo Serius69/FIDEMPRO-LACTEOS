@@ -93,6 +93,15 @@ def _simulation_parameters(body):
     return raw_iterations, seed
 
 
+def _reference_data_source(value):
+    allowed = {choice for choice, _label in BusinessModelDefinition.ReferenceDataSource.choices}
+    if value not in allowed:
+        raise ValueError(
+            "reference_data_source debe ser CUSTOMER_PRIVATE o KDP_GOVERNED."
+        )
+    return value
+
+
 def _validate_import_rows(rows, mapping):
     """Validate mapped model inputs without mutating or executing imported data."""
     valid_rows = []
@@ -254,6 +263,7 @@ def model_list_create(request):
         return JsonResponse({"models": [{
             "id": str(item.id), "name": item.name, "business_id": item.business_id,
             "business_name": item.business.name, "sector": item.sector, "status": item.status,
+            "reference_data_source": item.reference_data_source,
             "current_version": item.current_version.version if item.current_version else None,
             "readiness": (item.current_version.validation or {}).get("readiness") if item.current_version else None,
         } for item in models]})
@@ -269,6 +279,12 @@ def model_list_create(request):
         if status not in {choice for choice, _label in BusinessModelDefinition.STATUS_CHOICES}:
             return JsonResponse({"error": "invalid_status", "message": "Estado de modelo no reconocido."}, status=400)
         business = get_object_or_404(Business, id=body.get("business_id"), organization=organization)
+        reference_data_source = _reference_data_source(
+            body.get(
+                "reference_data_source",
+                BusinessModelDefinition.ReferenceDataSource.CUSTOMER_PRIVATE,
+            )
+        )
         # Omitted spec means "start from a template"; an explicitly supplied
         # empty/malformed spec must be validated and rejected rather than
         # silently replaced with a different business model.
@@ -278,14 +294,15 @@ def model_list_create(request):
         with transaction.atomic():
             definition = BusinessModelDefinition.objects.create(
                 business=business, name=body.get("name") or spec.get("metadata", {}).get("name", "Modelo sin nombre"),
-                description=body.get("description", ""), sector=body.get("sector") or spec.get("metadata", {}).get("sector", "generic"), created_by=request.user,
+                description=body.get("description", ""), sector=body.get("sector") or spec.get("metadata", {}).get("sector", "generic"),
+                reference_data_source=reference_data_source, created_by=request.user,
             )
             version = create_model_version(definition, spec, user=request.user, status=status)
         record_usage(
             organization, UsageEvent.Metric.PROJECT_CREATED, 1,
             "modeling.model", definition.id,
         )
-        return JsonResponse({"model": {"id": str(definition.id), "name": definition.name, "business_id": definition.business_id, "sector": definition.sector, "status": definition.status, "version": serialize_version(version)}}, status=201)
+        return JsonResponse({"model": {"id": str(definition.id), "name": definition.name, "business_id": definition.business_id, "sector": definition.sector, "status": definition.status, "reference_data_source": definition.reference_data_source, "version": serialize_version(version)}}, status=201)
     except ModelSpecError as exc:
         return JsonResponse({"error": "invalid_model", "validation": exc.validation}, status=400)
     except ValueError as exc:
@@ -299,6 +316,7 @@ def model_detail(request, model_id):
     return JsonResponse({
         "id": str(definition.id), "name": definition.name, "description": definition.description,
         "business_id": definition.business_id, "sector": definition.sector, "status": definition.status,
+        "reference_data_source": definition.reference_data_source,
         "current_version": serialize_version(definition.current_version) if definition.current_version else None,
         "versions": [serialize_version(version) for version in definition.versions.all()],
     })
@@ -530,7 +548,12 @@ def model_simulate(request, model_id):
         scenario=scenario,
         engine=engine,
         seed=seed,
-        parameters_snapshot={"iterations": iterations, "seed": seed},
+        parameters_snapshot={
+            "iterations": iterations,
+            "seed": seed,
+            "reference_data_source": definition.reference_data_source,
+        },
+        reference_data_source=definition.reference_data_source,
         created_by=request.user,
     )
     record_usage(

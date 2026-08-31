@@ -71,7 +71,12 @@ def test_simulation_timeout_persists_failed_lifecycle_and_safe_error(monkeypatch
 def test_model_simulation_persists_reproducible_result():
     user = get_user_model().objects.create_user(username="sim-owner", password="password")
     business = Business.objects.create(name="Retail", location="La Paz", fk_user=user)
-    definition = BusinessModelDefinition.objects.create(business=business, name="Retail twin", created_by=user)
+    definition = BusinessModelDefinition.objects.create(
+        business=business,
+        name="Retail twin",
+        reference_data_source=BusinessModelDefinition.ReferenceDataSource.KDP_GOVERNED,
+        created_by=user,
+    )
     spec = empty_model_spec(name="Retail twin", sector="retail")
     spec["metadata"]["horizon"] = 1
     spec["variables"] = [{"id": "price", "value": 10}, {"id": "sales", "value": 2}]
@@ -91,6 +96,9 @@ def test_model_simulation_persists_reproducible_result():
     assert traceability["content_hash"] == definition.current_version.content_hash
     assert traceability["model_version"] == 1
     assert traceability["seed"] == 7
+    persisted_run = BusinessSimulationRun.objects.get(id=enqueue.json()["run_id"])
+    assert persisted_run.reference_data_source == "KDP_GOVERNED"
+    assert persisted_run.parameters_snapshot["reference_data_source"] == "KDP_GOVERNED"
 
 
 def test_model_simulation_applies_versioned_scenario_changes():

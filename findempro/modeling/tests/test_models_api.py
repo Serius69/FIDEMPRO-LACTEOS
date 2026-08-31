@@ -91,6 +91,49 @@ def test_model_api_creates_valid_version_for_owned_business():
     payload = response.json()["model"]
     assert payload["version"]["version"] == 1
     assert payload["version"]["content_hash"]
+    assert payload["reference_data_source"] == "CUSTOMER_PRIVATE"
+
+
+def test_model_api_accepts_explicit_kdp_governed_reference_selector():
+    user = make_user("kdp-reference-owner")
+    business = make_business(user)
+    client = Client()
+    client.force_login(user)
+
+    response = client.post(
+        reverse("modeling:model-list-create"),
+        data={
+            "business_id": business.id,
+            "name": "Modelo con referencias KDP",
+            "spec": empty_model_spec(name="Modelo KDP", sector="retail"),
+            "reference_data_source": "KDP_GOVERNED",
+        },
+        content_type="application/json",
+    )
+
+    assert response.status_code == 201
+    definition = BusinessModelDefinition.objects.get(id=response.json()["model"]["id"])
+    assert definition.reference_data_source == "KDP_GOVERNED"
+
+
+def test_model_api_rejects_ambiguous_reference_selector():
+    user = make_user("invalid-reference-owner")
+    business = make_business(user)
+    client = Client()
+    client.force_login(user)
+
+    response = client.post(
+        reverse("modeling:model-list-create"),
+        data={
+            "business_id": business.id,
+            "name": "Modelo ambiguo",
+            "reference_data_source": "MIXED_OR_UNKNOWN",
+        },
+        content_type="application/json",
+    )
+
+    assert response.status_code == 400
+    assert response.json()["error"] == "invalid_request"
 
 
 def test_model_export_contains_immutable_hash_and_is_owner_scoped():

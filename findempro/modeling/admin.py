@@ -5,8 +5,8 @@ from .models import BusinessDataImport, BusinessModelDefinition, BusinessModelTe
 
 @admin.register(BusinessModelDefinition)
 class BusinessModelDefinitionAdmin(admin.ModelAdmin):
-    list_display = ("name", "business", "sector", "status", "updated_at")
-    list_filter = ("status", "sector")
+    list_display = ("name", "business", "sector", "reference_data_source", "status", "updated_at")
+    list_filter = ("status", "sector", "reference_data_source")
     search_fields = ("name", "business__name")
 
 
@@ -31,8 +31,8 @@ class BusinessScenarioAdmin(admin.ModelAdmin):
 
 @admin.register(BusinessSimulationRun)
 class BusinessSimulationRunAdmin(admin.ModelAdmin):
-    list_display = ("id", "model_version", "engine", "status", "progress", "created_at")
-    list_filter = ("engine", "status")
+    list_display = ("id", "model_version", "engine", "reference_data_source", "status", "progress", "created_at")
+    list_filter = ("engine", "status", "reference_data_source")
 
 
 @admin.register(BusinessDataImport)
