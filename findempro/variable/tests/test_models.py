@@ -41,7 +41,7 @@ def test_variable_creation():
     assert variable.description == "Test description"
     assert variable.fk_product == product
     assert variable.is_active is True
-    assert variable.get_photo_url() == "/media/images/variable/variable-dummy-img.jpg"
+    assert variable.get_photo_url() == "/static/images/product/product-dummy-img.webp"
 
 
 @pytest.mark.django_db

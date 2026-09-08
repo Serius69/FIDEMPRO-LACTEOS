@@ -433,7 +433,7 @@ def get_product_details(request, pk):
             "id": product.id,
             "name": product.name,
             "type": product.type,
-            "image_src": product.image_src.url if product.image_src else None,
+            "image_src": product.get_photo_url() if product.image_src else None,
             "fk_business": product.fk_business.id,
             "description": product.description,
             "is_ready": product.is_ready,
@@ -705,7 +705,7 @@ def get_area_details_view(request, pk):
         area_details = {
             "id": area.id,
             "name": area.name,
-            "image_src": area.image_src.url if area.image_src else None,
+            "image_src": area.get_photo_url() if area.image_src else None,
             "fk_product": area.fk_product.id,
             "description": area.description,
             "is_checked_for_simulation": area.is_checked_for_simulation,

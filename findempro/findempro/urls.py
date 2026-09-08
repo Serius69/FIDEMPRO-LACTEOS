@@ -13,6 +13,7 @@ from django.shortcuts import render
 from .health import health_check, health_ready, health_live
 from hub_auth import views as hub_auth_views
 from simulate.views.public_views import PublicMonteCarloAPIView
+from tenancy.media import private_image
 
 
 def hub_logout(request):
@@ -44,6 +45,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    path("private-media/<str:kind>/<int:pk>/", private_image, name="private-media"),
     # SSO del Hub ligado a state: el satelite inicia en hub/login/ y el Hub vuelve
     # a hub/callback/ (el unico sitio donde se canjea un project_token).
     path('hub/login/', hub_auth_views.hub_login, name='hub-login'),

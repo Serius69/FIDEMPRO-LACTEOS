@@ -1,3 +1,4 @@
+from django.urls import reverse
 from django.db import models
 from product.models import Product, Area
 
@@ -35,9 +36,9 @@ class Variable(models.Model):
 
     def get_photo_url(self):
         if self.image_src and hasattr(self.image_src, 'url'):
-            return self.image_src.url
+            return reverse("private-media", kwargs={"kind": "variable", "pk": self.pk})
         else:
-            return "/media/images/variable/variable-dummy-img.jpg"
+            return "/static/images/product/product-dummy-img.webp"
     
     def get_type_display(self):
         """Return the display name for the type"""

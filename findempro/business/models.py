@@ -231,7 +231,7 @@ class Business(models.Model):
             str: URL de la imagen o imagen por defecto
         """
         if self.image_src and hasattr(self.image_src, 'url'):
-            return self.image_src.url
+            return reverse("private-media", kwargs={"kind": "business", "pk": self.pk})
         return "/static/images/business/business-dummy-img.webp"
 
     @property

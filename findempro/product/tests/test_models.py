@@ -61,7 +61,7 @@ def test_product_get_photo_url_with_image():
         image_src=valid_image(),
         fk_business=make_business(),
     )
-    assert product.get_photo_url() == product.image_src.url
+    assert product.get_photo_url() == f"/private-media/product/{product.pk}/"
 
 
 @pytest.mark.django_db
@@ -103,7 +103,7 @@ def test_area_get_photo_url_with_image():
         image_src=valid_image(),
         fk_product=product,
     )
-    assert area.get_photo_url() == area.image_src.url
+    assert area.get_photo_url() == f"/private-media/area/{area.pk}/"
 
 
 @pytest.mark.django_db

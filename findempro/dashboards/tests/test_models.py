@@ -72,7 +72,7 @@ def test_chart_get_photo_url_with_image():
         "test_image.png", b"file_content", content_type="image/png"
     )
     chart.save()
-    assert chart.get_photo_url() == chart.chart_image.url
+    assert chart.get_photo_url() == f"/private-media/chart/{chart.pk}/"
 
 
 @pytest.mark.django_db

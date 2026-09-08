@@ -178,7 +178,7 @@ class Product(models.Model):
     def get_photo_url(self) -> str:
         """Obtener URL de la imagen del producto"""
         if self.image_src and hasattr(self.image_src, 'url'):
-            return self.image_src.url
+            return reverse("private-media", kwargs={"kind": "product", "pk": self.pk})
         else:
             return "/static/images/product/product-dummy-img.webp"
 
@@ -296,7 +296,7 @@ class Area(models.Model):
     def get_photo_url(self) -> str:
         """Obtener URL de la imagen del área"""
         if self.image_src and hasattr(self.image_src, 'url'):
-            return self.image_src.url
+            return reverse("private-media", kwargs={"kind": "area", "pk": self.pk})
         else:
             return "/static/images/area/area-dummy-img.webp"
 

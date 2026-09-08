@@ -1,0 +1,15 @@
+# Private uploaded images and cached PDF authorization
+
+The existing business/profile upload flows returned storage `/media/` URLs, but production URL routing served those files only with DEBUG enabled. Uploaded images therefore failed to render when the deployment correctly omitted a public media alias.
+
+`/private-media/<kind>/<id>/` resolves existing business, product, area, variable, chart and profile image fields through database objects. Business-derived images require the authenticated business owner, the current active organization and a current active membership; active peers or staff from the same/another organization receive404. Profile images remain accessible only to their own user. Object/parent deactivation, revoked membership and changed organization context are rechecked on every request. No arbitrary storage path is accepted.
+
+The resolved local file must stay inside MEDIA_ROOT. The response reads at most5MiB, validates actual PNG/JPEG/WebP bytes and at most25million pixels, then serves those exact validated bytes with correct Content-Type, nosniff and private/no-store cache headers. Missing, unsupported and escaping files return404. Model image helpers and existing product/area JSON image consumers use object URLs; public static placeholders remain available. The variable's previously unserved media placeholder now uses the existing static product placeholder. This does not expose a general media or document directory.
+
+The PDF download route also had a demonstrated stale-access problem: user-keyed cached PDF bytes survived organization membership revocation and business ownership transfer. It now checks active report/product/business, current organization/member and actual business owner before looking up cached bytes. Unauthorized or stale ownership returns404 with no shared cache. PDF generation/storage and unrelated report routes are unchanged.
+
+Validation uses generated in-memory raster images and synthetic tenants only. Negative regressions first reproduced cached PDF revocation/ownership failures and same-organization image disclosure for all five business-derived kinds. Full backend pytest is required. The real DEV profile form upload, reload/display and second-account denial use a separate SQLite database with DEBUG=False and no media alias; only static assets are served by the DEV runner. Historical live-KDP tests require the external DEV API/token and must remain explicitly distinguished from these local tests. Existing legacy page JavaScript errors are recorded separately; successful upload/display does not certify all legacy JavaScript.
+
+No migration, public media alias, source publication, Stage transfer, deployment, owner UAT or certification is performed by this change.
+
+Final DEV evidence: full pytest1218PASS,5existing live-KDP prerequisiteSKIP;16 private-media/PDF cases included. Real browser profile flow4checksPASS on final code. Browser also records inherited legacy `bootstrap`/`Swal`/fetch errors; this change does not certify those unrelated page scripts. No React source changed, so prior65ab frontend build/lint/typecheck evidence remains its own lineage.

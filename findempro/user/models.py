@@ -1,3 +1,4 @@
+from django.urls import reverse
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, pre_delete
@@ -149,7 +150,7 @@ class UserProfile(models.Model):
     def get_photo_url(self) -> str:
         """Obtener URL de la imagen de perfil"""
         if self.image_src and hasattr(self.image_src, 'url'):
-            return self.image_src.url
+            return reverse("private-media", kwargs={"kind": "profile", "pk": self.pk})
         else:
             return "/static/images/users/user-dummy-img.webp"
     

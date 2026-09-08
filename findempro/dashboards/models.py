@@ -1,3 +1,4 @@
+from django.urls import reverse
 from django.db import models
 from django.core.validators import MinLengthValidator, FileExtensionValidator
 from django.core.exceptions import ValidationError
@@ -285,7 +286,7 @@ class Chart(models.Model):
     def get_photo_url(self) -> str:
         """Retorna la URL de la imagen del gráfico"""
         if self.chart_image and hasattr(self.chart_image, 'url'):
-            return self.chart_image.url
+            return reverse("private-media", kwargs={"kind": "chart", "pk": self.pk})
         return "/static/images/charts/default-chart.png"
     
     def get_cache_key(self) -> str:

@@ -49,7 +49,7 @@ def test_business_get_photo_url_with_image():
         fk_user=user,
         image_src=image,
     )
-    assert business.get_photo_url() == business.image_src.url
+    assert business.get_photo_url() == f"/private-media/business/{business.pk}/"
 
 @pytest.mark.django_db
 def test_business_get_photo_url_without_image():

@@ -31,7 +31,7 @@ def test_user_profile_get_photo_url():
     image = SimpleUploadedFile("test_image.jpg", b"file_content", content_type="image/jpeg")
     user_profile.image_src = image
     user_profile.save()
-    assert user_profile.get_photo_url() == user_profile.image_src.url
+    assert user_profile.get_photo_url() == f"/private-media/profile/{user_profile.pk}/"
 
 
 @pytest.mark.django_db
