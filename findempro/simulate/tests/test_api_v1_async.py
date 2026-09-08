@@ -84,9 +84,9 @@ def test_async_full_flow_enqueue_then_status_success(client):
 
 
 @pytest.mark.django_db
-def test_status_unknown_task_is_pending(client):
-    """Un task_id desconocido devuelve estado pendiente (PENDING), no error."""
+def test_status_unknown_task_is_not_disclosed(client):
+    """Unknown task identifiers have no owner and must not query Celery."""
     url = reverse('simulate:api.v1.simulate_status', args=['nonexistent-task-id-123'])
     resp = client.get(url)
-    assert resp.status_code == 200
-    assert resp.json()['state'] == 'pending'
+    assert resp.status_code == 404
+    assert resp.json() == {'error': 'Simulation not found.'}

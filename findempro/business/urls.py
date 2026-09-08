@@ -1,5 +1,5 @@
 from django.urls import path
-from django.views.decorators.cache import cache_page
+from django.views.decorators.cache import never_cache
 
 from business import views
 
@@ -52,7 +52,7 @@ urlpatterns = [
     # API: Obtener detalles de negocio (para AJAX)
     path(
         'api/details/<int:pk>/', 
-        cache_page(60 * 5)(views.get_business_details_view), 
+        never_cache(views.get_business_details_view),
         name='business.get_business_details_view'
     ),
 ]

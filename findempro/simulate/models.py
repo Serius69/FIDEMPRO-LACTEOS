@@ -903,3 +903,12 @@ class RiskAlert(models.Model):
         ):
             return True
         return False
+
+
+class StatelessSimulationJob(models.Model):
+    """Durable authorization boundary for otherwise stateless Celery results."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    organization = models.ForeignKey("tenancy.Organization", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)

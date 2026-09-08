@@ -58,7 +58,7 @@ export default function Simulate() {
   const SCENARIO_COLORS = ['#f87171', '#fbbf24', '#60a5fa', '#4ade80', '#34d399']
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex min-h-0 flex-col h-full overflow-hidden">
       <header className="flex items-center gap-3 px-6 py-4 border-b border-border shrink-0">
         <PlayCircle className="h-5 w-5 text-primary" />
         <div>
@@ -67,9 +67,9 @@ export default function Simulate() {
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto xl:flex-row xl:overflow-hidden">
         {/* Config panel */}
-        <aside className="w-full shrink-0 border-b border-border overflow-y-auto md:w-72 md:border-b-0 md:border-r">
+        <aside className="w-full shrink-0 border-b border-border xl:overflow-y-auto xl:w-72 xl:border-b-0 xl:border-r">
           <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
             <Section label="Demanda">
               <Field label="Media de demanda (unidades)"><Input type="number" step="1" {...register('demand_mean', { valueAsNumber: true })} /></Field>
@@ -117,7 +117,7 @@ export default function Simulate() {
         </aside>
 
         {/* Results */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+        <div className="min-w-0 shrink-0 p-4 space-y-5 sm:p-6 xl:flex-1 xl:overflow-y-auto">
           {error && <div role="alert" className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 text-sm text-red-400">{error}</div>}
 
           {!result && !loading && (
@@ -141,7 +141,7 @@ export default function Simulate() {
           {result && (
             <>
               {/* Risk KPIs */}
-              <div className="grid grid-cols-4 gap-4 animate-fade-in">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 animate-fade-in">
                 <Card><CardContent className="p-4">
                   <div className="flex items-start justify-between"><p className="text-xs text-muted-foreground">Demanda media</p><BarChart2 className="h-4 w-4 text-primary" /></div>
                   <p className="text-2xl font-bold text-primary mt-2">{fmtNum(result.demand.mean, 0)}</p>
@@ -170,7 +170,7 @@ export default function Simulate() {
               </div>
 
               {/* Additional metrics */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <Card><CardContent className="p-4">
                   <p className="text-xs text-muted-foreground">Ingresos esperados</p>
                   <p className="text-xl font-bold mt-1">Bs. {fmtNum(result.revenue.mean, 0)}</p>
@@ -223,7 +223,7 @@ export default function Simulate() {
               <Card>
                 <CardHeader className="pb-2"><CardTitle className="text-sm">Análisis de escenarios (por percentil de demanda)</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                     <ResponsiveContainer width="100%" height={180}>
                       <BarChart data={scenarioData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(216 34% 17%)" />

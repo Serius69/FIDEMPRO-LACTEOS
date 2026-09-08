@@ -258,8 +258,21 @@ class SimulateAsyncAPIView(APIView):
         if budget_err is not None:
             return budget_err
 
-        async_result = run_stateless_simulation.delay(config_dict, extra)
-        task_id = async_result.id
+        from simulate.models import StatelessSimulationJob
+        from tenancy.services import get_request_organization, require_write
+
+        organization = get_request_organization(request)
+        require_write(request.user, organization)
+        job = StatelessSimulationJob.objects.create(user=request.user, organization=organization)
+        task_id = str(job.pk)
+        try:
+            run_stateless_simulation.apply_async(args=[config_dict, extra], task_id=task_id)
+        except Exception:
+            # A failed broker publish must not leave a pollable orphan or expose
+            # broker URLs/credentials through an exception string.
+            job.delete()
+            logger.warning("Stateless simulation enqueue failed")
+            return Response({"error": "Simulation queue unavailable."}, status=503)
         return Response(
             {
                 "task_id": task_id,
@@ -295,7 +308,23 @@ class SimulateTaskStatusAPIView(APIView):
     def get(self, request, task_id: str) -> Response:
         from celery.result import AsyncResult
 
-        result = AsyncResult(str(task_id))
+        from uuid import UUID
+        from simulate.models import StatelessSimulationJob
+        from tenancy.services import get_request_organization, membership_for
+
+        try:
+            job_id = UUID(str(task_id))
+        except (ValueError, TypeError, AttributeError):
+            return Response({"error": "Simulation not found."}, status=404)
+        organization = get_request_organization(request)
+        if not membership_for(request.user, organization) or not StatelessSimulationJob.objects.filter(
+            pk=job_id, user=request.user, organization=organization,
+            organization__is_active=True,
+        ).exists():
+            return Response({"error": "Simulation not found."}, status=404)
+        # Never contact the result backend until ownership is established,
+        # including pending, failure and malformed task identifiers.
+        result = AsyncResult(str(job_id))
         state = result.state
 
         if state == 'SUCCESS':
